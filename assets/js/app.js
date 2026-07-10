@@ -23,12 +23,18 @@
 
   var FALLBACK_SITE_DATA = {
     "siteSettings": {
-      "studioName": "北屿营造",
-      "studioSeal": "北屿",
-      "taglineCN": "在黑色天幕中，重构北方高古的空间秩序。",
-      "taglineEN": "Northern Tectonics Reframed for Contemporary Space and Objects.",
-      "intro": "以建筑、器物、空间研究和数字模型为方法，把传统营造的秩序转译为当代生活与展示系统。",
-      "philosophy": "我们关注北方建筑的尺度、风、影、材料和秩序，也关注产品在手中被使用的瞬间。每个项目从线稿、模型、图纸和现场材料同时推进。",
+      "studioName": "栖衡｜SOVEN",
+      "studioSeal": "造",
+      "taglineCN": "天有时，地有气，材有美，工有巧，合此四者，然后可以为良。",
+      "taglineEN": "Heaven grants the season,
+earth breathes its spirit,
+materials hold their beauty,
+and craftsmanship brings ingenuity.
+Only when all four align
+can true excellence take form.",
+      "intro": "栖于简素，衡以尺度。",
+      "philosophy": "在空间、时间与人的关系中，
+寻找克制而持久的秩序。",
       "email": "hello@northern-atelier.example",
       "portfolioPdf": "assets/portfolio/northern-atelier-portfolio.pdf",
       "accentColor": "#536A63",

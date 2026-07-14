@@ -8807,7 +8807,7 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 #home .hero-content.hero-manifesto-content {
   position: absolute;
   top: 52%;
-  right: clamp(42px, 6.5vw, 118px);
+  right: clamp(72px, 9.2vw, 156px);
   left: auto;
   z-index: 12;
   width: min(52vw, 820px);
@@ -8883,7 +8883,7 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 
 @media (max-width: 1100px) and (min-width: 841px) {
   #home .hero-content.hero-manifesto-content {
-    right: clamp(30px, 4vw, 54px);
+    right: clamp(46px, 6.4vw, 82px);
     width: min(55vw, 700px);
   }
 
@@ -8957,9 +8957,8 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 }
 /* V60_HOMEPAGE_MANIFESTO_END */
 
-
-/* V61_CONTACT_TEXT_CURTAIN_START */
-/* Contact is rebuilt as an interactive text installation. */
+/* V62_CONTACT_CURTAIN_PHYSICS_START */
+/* Contact is a curtain-only text installation. No isolated large words or fake eave diagram. */
 #contact.contact-section {
   padding-top: clamp(68px, 8vw, 118px);
   padding-bottom: clamp(46px, 6vw, 88px);
@@ -8968,20 +8967,20 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 
 #contact .contact-panel.contact-text-stage {
   position: relative;
-  isolation: isolate;
   width: 100%;
   min-height: clamp(620px, 82vh, 900px);
   padding: 0;
   overflow: hidden;
-  border: 1px solid rgba(227, 231, 222, 0.085);
+  isolation: isolate;
+  border: 1px solid rgba(227, 231, 222, 0.075);
   border-radius: clamp(16px, 2vw, 28px);
   color: #eeeadd;
   background:
-    radial-gradient(circle at 72% 48%, rgba(75, 105, 94, 0.17), transparent 34%),
-    radial-gradient(circle at 20% 22%, rgba(193, 126, 69, 0.09), transparent 28%),
-    linear-gradient(145deg, #090c0d 0%, #0c1212 52%, #050607 100%);
+    radial-gradient(circle at 51% 42%, rgba(75, 105, 94, 0.13), transparent 36%),
+    radial-gradient(circle at 20% 20%, rgba(193, 126, 69, 0.055), transparent 25%),
+    linear-gradient(145deg, #090c0d 0%, #0b1111 54%, #050607 100%);
   box-shadow: 0 42px 110px rgba(0, 0, 0, 0.38);
-  cursor: crosshair;
+  cursor: none;
   touch-action: pan-y;
 }
 
@@ -8995,19 +8994,19 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 
 #contact .contact-panel.contact-text-stage::before {
   z-index: 0;
-  opacity: 0.13;
+  opacity: 0.10;
   background-image:
-    linear-gradient(rgba(239, 236, 224, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(239, 236, 224, 0.035) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: linear-gradient(115deg, transparent 3%, #000 26%, #000 78%, transparent 100%);
+    linear-gradient(rgba(239, 236, 224, 0.042) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(239, 236, 224, 0.027) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(115deg, transparent 2%, #000 22%, #000 80%, transparent 100%);
 }
 
 #contact .contact-panel.contact-text-stage::after {
   z-index: 4;
   background:
-    linear-gradient(90deg, rgba(5, 7, 8, 0.52), transparent 18%, transparent 78%, rgba(5, 7, 8, 0.34)),
-    linear-gradient(180deg, rgba(5, 7, 8, 0.50), transparent 18%, transparent 78%, rgba(5, 7, 8, 0.68));
+    linear-gradient(90deg, rgba(5, 7, 8, 0.38), transparent 14%, transparent 86%, rgba(5, 7, 8, 0.32)),
+    linear-gradient(180deg, rgba(5, 7, 8, 0.34), transparent 15%, transparent 82%, rgba(5, 7, 8, 0.65));
 }
 
 .contact-scene-index {
@@ -9015,7 +9014,7 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   top: clamp(18px, 2.2vw, 30px);
   left: clamp(18px, 2.4vw, 34px);
   z-index: 6;
-  color: rgba(230, 225, 211, 0.28);
+  color: rgba(230, 225, 211, 0.24);
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.18em;
@@ -9027,81 +9026,8 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   width: 30px;
   height: 30px;
   place-items: center;
-  border: 1px solid rgba(230, 225, 211, 0.10);
+  border: 1px solid rgba(230, 225, 211, 0.09);
   border-radius: 50%;
-}
-
-.contact-architecture {
-  position: absolute;
-  left: clamp(-100px, -4vw, -34px);
-  top: 50%;
-  z-index: 1;
-  width: min(82%, 1040px);
-  height: 92%;
-  transform: translateY(-47%);
-  overflow: visible;
-  pointer-events: none;
-  filter: drop-shadow(0 22px 50px rgba(0, 0, 0, 0.28));
-}
-
-.contact-architecture-lines {
-  fill: none;
-  stroke: rgba(177, 195, 185, 0.16);
-  stroke-width: 1.1;
-  vector-effect: non-scaling-stroke;
-}
-
-.contact-architecture-type text {
-  fill: rgba(226, 229, 217, 0.49);
-  font-family: var(--font-heritage), "Noto Serif SC", "Songti SC", "SimSun", serif;
-  letter-spacing: 0.035em;
-}
-
-.contact-architecture-type .arch-roof-main {
-  fill: rgba(236, 231, 215, 0.74);
-  font-size: 54px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.contact-architecture-type .arch-roof-secondary {
-  fill: rgba(132, 164, 148, 0.56);
-  font-size: 30px;
-  font-weight: 600;
-}
-
-.contact-architecture-type .arch-eave {
-  fill: rgba(231, 226, 211, 0.42);
-  font-size: 23px;
-}
-
-.contact-architecture-type .arch-beam {
-  fill: rgba(235, 230, 216, 0.52);
-  font-size: 38px;
-  font-weight: 700;
-}
-
-.contact-architecture-type .arch-column {
-  fill: rgba(231, 226, 212, 0.46);
-  font-size: 26px;
-  font-weight: 650;
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  letter-spacing: 0.16em;
-}
-
-.contact-architecture-type .arch-column-faint {
-  fill: rgba(132, 164, 148, 0.31);
-  font-size: 18px;
-}
-
-.contact-architecture-type .arch-bracket {
-  fill: rgba(223, 218, 202, 0.36);
-  font-size: 13px;
-}
-
-.contact-architecture-type .arch-bracket-two {
-  fill: rgba(132, 164, 148, 0.34);
 }
 
 .contact-curtain-canvas {
@@ -9121,26 +9047,26 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 5px;
 }
 
 #contact .contact-copy-key {
   position: relative;
-  min-height: 0;
   min-width: 0;
-  height: auto;
-  padding: 7px 10px 6px;
+  min-height: 0;
+  height: 25px;
+  padding: 0 9px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  border: 1px solid rgba(232, 228, 214, 0.09);
+  gap: 6px;
+  border: 1px solid rgba(232, 228, 214, 0.075);
   border-radius: 999px;
-  color: rgba(232, 228, 214, 0.38);
-  background: rgba(7, 10, 10, 0.28);
+  color: rgba(232, 228, 214, 0.30);
+  background: rgba(7, 10, 10, 0.20);
   box-shadow: none;
-  backdrop-filter: blur(9px);
-  opacity: 0.72;
+  backdrop-filter: blur(10px);
+  opacity: 0.62;
   cursor: pointer;
   transform: none;
   transition: color 180ms ease, border-color 180ms ease, background 180ms ease, opacity 180ms ease, transform 180ms ease;
@@ -9148,53 +9074,50 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 
 #contact .contact-copy-key:hover:not(:disabled),
 #contact .contact-copy-key:focus-visible:not(:disabled) {
-  color: rgba(245, 239, 224, 0.92);
-  border-color: rgba(213, 183, 134, 0.32);
-  background: rgba(20, 27, 25, 0.64);
+  color: rgba(245, 239, 224, 0.86);
+  border-color: rgba(213, 183, 134, 0.25);
+  background: rgba(20, 27, 25, 0.56);
   opacity: 1;
   transform: translateY(-1px);
-  box-shadow: none;
 }
 
 #contact .contact-copy-key.is-copied {
-  color: rgba(240, 232, 211, 0.94);
-  border-color: rgba(132, 175, 152, 0.46);
-  background: rgba(35, 58, 48, 0.58);
+  color: rgba(240, 232, 211, 0.92);
+  border-color: rgba(132, 175, 152, 0.40);
+  background: rgba(35, 58, 48, 0.48);
 }
 
 #contact .contact-key-label {
-  grid-column: auto;
-  grid-row: auto;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 560;
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
 
 .contact-key-pulse {
-  width: 4px;
-  height: 4px;
-  flex: 0 0 4px;
+  width: 3px;
+  height: 3px;
+  flex: 0 0 3px;
   border-radius: 50%;
   background: currentColor;
-  opacity: 0.22;
+  opacity: 0.18;
   transition: transform 180ms ease, opacity 180ms ease, box-shadow 180ms ease;
 }
 
 #contact .contact-copy-key:hover .contact-key-pulse,
 #contact .contact-copy-key:focus-visible .contact-key-pulse {
-  opacity: 0.66;
+  opacity: 0.58;
 }
 
 #contact .contact-copy-key.is-copied .contact-key-pulse {
   opacity: 1;
-  transform: scale(1.8);
-  box-shadow: 0 0 12px rgba(142, 187, 163, 0.62);
+  transform: scale(2);
+  box-shadow: 0 0 12px rgba(142, 187, 163, 0.58);
 }
 
 #contact .contact-copy-key:disabled {
-  opacity: 0.20;
+  opacity: 0.16;
   cursor: default;
 }
 
@@ -9210,18 +9133,6 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   border: 0;
 }
 
-@media (max-width: 900px) {
-  #contact .contact-panel.contact-text-stage {
-    min-height: clamp(590px, 76vh, 760px);
-  }
-
-  .contact-architecture {
-    left: -150px;
-    width: 112%;
-    opacity: 0.88;
-  }
-}
-
 @media (max-width: 720px) {
   #contact.contact-section {
     padding-inline: 14px;
@@ -9233,18 +9144,6 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
     cursor: default;
   }
 
-  .contact-architecture {
-    left: -215px;
-    top: 51%;
-    width: 155%;
-    height: 86%;
-    opacity: 0.69;
-  }
-
-  .contact-architecture-type .arch-roof-main {
-    font-size: 46px;
-  }
-
   .contact-copy-dock {
     right: 12px;
     bottom: max(12px, env(safe-area-inset-bottom));
@@ -9254,7 +9153,8 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   #contact .contact-copy-key {
     min-width: 44px;
     min-height: 38px;
-    padding: 6px 8px;
+    height: 38px;
+    padding: 0 8px;
   }
 
   #contact .contact-key-label {
@@ -9288,4 +9188,4 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
     transition: none;
   }
 }
-/* V61_CONTACT_TEXT_CURTAIN_END */
+/* V62_CONTACT_CURTAIN_PHYSICS_END */

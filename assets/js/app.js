@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260714163356
+// CACHE_BUST_VERSION: 20260714172001
 (function () {
   "use strict";
 
@@ -2771,11 +2771,22 @@
     var height = 0;
     var dpr = 1;
     var strands = [];
-    var pointer = { x: -9999, y: -9999, vx: 0, vy: 0, active: false, lastX: 0, lastY: 0, lastT: 0 };
+    var pointer = {
+      x: -9999,
+      y: -9999,
+      vx: 0,
+      vy: 0,
+      speed: 0,
+      active: false,
+      lastX: 0,
+      lastY: 0,
+      lastT: 0,
+      glow: 0
+    };
     var reducedMotion = Boolean(reduceMotionQuery && reduceMotionQuery.matches);
-    var cleanText = String(rawText || "").replace(/\\s+/g, "").trim();
+    var cleanText = String(rawText || "").replace(/\s+/g, "").trim();
     if (!cleanText) {
-      cleanText = createDefaultContactContent().curtainText.replace(/\\s+/g, "");
+      cleanText = createDefaultContactContent().curtainText.replace(/\s+/g, "");
     }
 
     function seeded(index) {
@@ -2800,20 +2811,23 @@
     function buildStrands() {
       strands = [];
       var mobile = width < 720;
-      var count = mobile ? Math.max(12, Math.floor(width / 28)) : Math.max(24, Math.min(46, Math.floor(width / 34)));
-      var margin = mobile ? 14 : Math.max(26, width * 0.025);
+      var count = mobile
+        ? Math.max(15, Math.min(24, Math.floor(width / 23)))
+        : Math.max(30, Math.min(58, Math.floor(width / 25)));
+      var margin = mobile ? 12 : Math.max(22, width * 0.02);
       var available = width - margin * 2;
       var spacingX = available / Math.max(1, count - 1);
-      var charSpacing = mobile ? 16.5 : 15.5;
-      var topBase = mobile ? 20 : 28;
+      var charSpacing = mobile ? 17 : 16;
+      var topBase = mobile ? 18 : 24;
       var textIndex = 0;
 
       for (var i = 0; i < count; i += 1) {
         var seed = seeded(i + 3);
+        var centerFactor = 1 - Math.abs((i / Math.max(1, count - 1)) * 2 - 1);
         var baseX = margin + i * spacingX;
-        var startOffset = (i % 5) * 5 + seed * 12;
-        var lengthFactor = 0.68 + seeded(i + 20) * 0.25;
-        var maxNodes = Math.max(16, Math.floor((height * lengthFactor) / charSpacing));
+        var startOffset = (i % 4) * 4 + seed * 10;
+        var lengthFactor = 0.60 + seeded(i + 20) * 0.22 + centerFactor * 0.10;
+        var maxNodes = Math.max(18, Math.floor((height * lengthFactor) / charSpacing));
         var nodes = [];
         var chars = [];
         for (var j = 0; j < maxNodes; j += 1) {
@@ -2827,22 +2841,47 @@
             vy: 0
           });
           chars.push(cleanText.charAt(textIndex % cleanText.length));
-          textIndex += 1 + ((i + j) % 17 === 0 ? 1 : 0);
+          textIndex += 1 + ((i + j) % 19 === 0 ? 1 : 0);
         }
         strands.push({
           index: i,
           nodes: nodes,
           chars: chars,
-          alpha: 0.27 + seeded(i + 90) * 0.34,
-          accent: i % 7 === 0 || i % 11 === 0,
-          fontSize: mobile ? 9.5 + seeded(i + 70) * 1.4 : 10 + seeded(i + 70) * 1.8
+          alpha: 0.28 + seeded(i + 90) * 0.30 + centerFactor * 0.08,
+          accent: i % 8 === 0 || i % 13 === 0,
+          fontSize: mobile ? 10 + seeded(i + 70) * 1.2 : 10.6 + seeded(i + 70) * 1.8,
+          phase: seeded(i + 42) * Math.PI * 2
         });
       }
     }
 
+    function applyPointerForce(node, radius, speedBoost) {
+      if (!pointer.active) {
+        return;
+      }
+      var dx = node.x - pointer.x;
+      var dy = node.y - pointer.y;
+      var distance = Math.sqrt(dx * dx + dy * dy) || 1;
+      if (distance >= radius) {
+        return;
+      }
+
+      var influence = Math.pow(1 - distance / radius, 2.25);
+      var side = dx === 0 ? (pointer.vx >= 0 ? 1 : -1) : (dx > 0 ? 1 : -1);
+      var sweep = Math.max(-18, Math.min(18, pointer.vx * 0.58));
+      var lift = 8.5 + speedBoost * 0.34;
+      var open = 9.2 + speedBoost * 0.42;
+
+      node.vx += side * open * influence + sweep * influence;
+      node.vy -= lift * influence;
+      node.vy += Math.max(-7, Math.min(7, pointer.vy * 0.16)) * influence;
+    }
+
     function update() {
-      var radius = width < 720 ? 78 : 118;
-      var strengthBase = width < 720 ? 1.4 : 2.15;
+      var mobile = width < 720;
+      var radius = mobile ? 104 : 168;
+      var speedBoost = Math.min(34, pointer.speed);
+      var time = performance.now() * 0.001;
 
       strands.forEach(function (strand) {
         var nodes = strand.nodes;
@@ -2856,34 +2895,26 @@
             continue;
           }
 
-          node.vx += (node.restX - node.x) * 0.022;
-          node.vy += (node.restY - node.y) * 0.035;
+          var idle = pointer.active ? 0 : Math.sin(time * 0.7 + strand.phase) * 0.008 * Math.min(i, 12);
+          node.vx += (node.restX + idle - node.x) * 0.018;
+          node.vy += (node.restY - node.y) * 0.026;
 
           var previous = nodes[i - 1];
           var next = nodes[i + 1];
-          node.vx += (previous.x - node.x) * 0.045;
+          node.vx += (previous.x - node.x) * 0.055;
           if (next) {
-            node.vx += (next.x - node.x) * 0.025;
+            node.vx += (next.x - node.x) * 0.028;
           }
 
-          if (pointer.active) {
-            var dx = node.x - pointer.x;
-            var dy = node.y - pointer.y;
-            var distance = Math.sqrt(dx * dx + dy * dy) || 1;
-            if (distance < radius) {
-              var influence = Math.pow(1 - distance / radius, 1.7);
-              node.vx += (dx / distance) * influence * strengthBase + pointer.vx * influence * 0.035;
-              node.vy += (dy / distance) * influence * strengthBase * 0.28 + pointer.vy * influence * 0.012;
-            }
-          }
+          applyPointerForce(node, radius, speedBoost);
 
-          node.vx *= 0.91;
+          node.vx *= 0.885;
           node.vy *= 0.88;
           node.x += node.vx;
           node.y += node.vy;
         }
 
-        for (var iteration = 0; iteration < 2; iteration += 1) {
+        for (var iteration = 0; iteration < 3; iteration += 1) {
           for (var j = 1; j < nodes.length; j += 1) {
             var a = nodes[j - 1];
             var b = nodes[j];
@@ -2891,20 +2922,39 @@
             var sx = b.x - a.x;
             var sy = b.y - a.y;
             var length = Math.sqrt(sx * sx + sy * sy) || 1;
-            var correction = (length - target) / length * 0.35;
+            var correction = (length - target) / length * 0.24;
             if (j > 1) {
-              a.x += sx * correction * 0.32;
-              a.y += sy * correction * 0.32;
+              a.x += sx * correction * 0.22;
+              a.y += sy * correction * 0.22;
             }
-            b.x -= sx * correction * 0.68;
-            b.y -= sy * correction * 0.68;
+            b.x -= sx * correction * 0.78;
+            b.y -= sy * correction * 0.78;
           }
         }
       });
+
+      pointer.vx *= 0.84;
+      pointer.vy *= 0.84;
+      pointer.speed *= 0.86;
+      pointer.glow *= 0.90;
+    }
+
+    function drawPointerGlow() {
+      if (pointer.glow < 0.02 || pointer.x < 0 || pointer.y < 0) {
+        return;
+      }
+      var radius = width < 720 ? 96 : 148;
+      var glow = context.createRadialGradient(pointer.x, pointer.y, 0, pointer.x, pointer.y, radius);
+      glow.addColorStop(0, "rgba(206,188,146," + (0.065 * pointer.glow).toFixed(4) + ")");
+      glow.addColorStop(0.55, "rgba(112,151,134," + (0.035 * pointer.glow).toFixed(4) + ")");
+      glow.addColorStop(1, "rgba(0,0,0,0)");
+      context.fillStyle = glow;
+      context.fillRect(pointer.x - radius, pointer.y - radius, radius * 2, radius * 2);
     }
 
     function draw() {
       context.clearRect(0, 0, width, height);
+      drawPointerGlow();
       context.textAlign = "center";
       context.textBaseline = "middle";
 
@@ -2918,8 +2968,8 @@
             context.lineTo(node.x, node.y);
           }
         });
-        context.strokeStyle = strand.accent ? "rgba(116,154,137,0.11)" : "rgba(231,234,226,0.055)";
-        context.lineWidth = 0.6;
+        context.strokeStyle = strand.accent ? "rgba(116,154,137,0.15)" : "rgba(231,234,226,0.075)";
+        context.lineWidth = strand.accent ? 0.72 : 0.52;
         context.stroke();
 
         context.font = strand.fontSize + 'px "Noto Serif SC", "Songti SC", "SimSun", serif';
@@ -2929,14 +2979,15 @@
             return;
           }
           var previous = nodes[Math.max(0, index - 1)];
-          var tilt = Math.max(-0.22, Math.min(0.22, (node.x - previous.x) / 22));
+          var tilt = Math.max(-0.42, Math.min(0.42, (node.x - previous.x) / 18));
+          var displacement = Math.min(1, Math.abs(node.x - node.restX) / 55 + Math.abs(node.y - node.restY) / 48);
           context.save();
           context.translate(node.x, node.y);
           context.rotate(tilt);
-          var alpha = strand.alpha * (0.72 + Math.sin(index * 0.47 + strand.index) * 0.10);
+          var alpha = strand.alpha * (0.76 + Math.sin(index * 0.47 + strand.index) * 0.08) + displacement * 0.18;
           context.fillStyle = strand.accent
-            ? "rgba(137,176,157," + Math.max(0.12, alpha * 0.85).toFixed(3) + ")"
-            : "rgba(238,236,226," + Math.max(0.12, alpha).toFixed(3) + ")";
+            ? "rgba(144,184,164," + Math.max(0.16, Math.min(0.82, alpha * 0.9)).toFixed(3) + ")"
+            : "rgba(241,238,226," + Math.max(0.15, Math.min(0.86, alpha)).toFixed(3) + ")";
           context.fillText(char, 0, 0);
           context.restore();
         });
@@ -2959,15 +3010,19 @@
       var now = performance.now();
       var x = event.clientX - rect.left;
       var y = event.clientY - rect.top;
-      var dt = Math.max(12, now - (pointer.lastT || now));
-      pointer.vx = (x - pointer.lastX) / dt * 16;
-      pointer.vy = (y - pointer.lastY) / dt * 16;
+      var dt = Math.max(8, now - (pointer.lastT || now));
+      var rawVx = (x - pointer.lastX) / dt * 16;
+      var rawVy = (y - pointer.lastY) / dt * 16;
+      pointer.vx = pointer.lastT ? rawVx : 0;
+      pointer.vy = pointer.lastT ? rawVy : 0;
+      pointer.speed = Math.min(48, Math.sqrt(pointer.vx * pointer.vx + pointer.vy * pointer.vy));
       pointer.x = x;
       pointer.y = y;
       pointer.lastX = x;
       pointer.lastY = y;
       pointer.lastT = now;
       pointer.active = true;
+      pointer.glow = 1;
       if (reducedMotion) {
         draw();
       }
@@ -2975,10 +3030,9 @@
 
     function clearPointer() {
       pointer.active = false;
-      pointer.x = -9999;
-      pointer.y = -9999;
-      pointer.vx = 0;
-      pointer.vy = 0;
+      pointer.lastT = 0;
+      pointer.vx *= 0.65;
+      pointer.vy *= 0.65;
     }
 
     function onTouchMove(event) {
@@ -2988,6 +3042,7 @@
       setPointer(event.touches[0]);
     }
 
+    stage.addEventListener("pointerenter", setPointer, { passive: true });
     stage.addEventListener("pointermove", setPointer, { passive: true });
     stage.addEventListener("pointerleave", clearPointer, { passive: true });
     stage.addEventListener("pointercancel", clearPointer, { passive: true });
@@ -3018,6 +3073,7 @@
       destroy: function () {
         destroyed = true;
         window.cancelAnimationFrame(raf);
+        stage.removeEventListener("pointerenter", setPointer);
         stage.removeEventListener("pointermove", setPointer);
         stage.removeEventListener("pointerleave", clearPointer);
         stage.removeEventListener("pointercancel", clearPointer);
@@ -3088,7 +3144,6 @@
       });
     });
 
-    renderContactArchitecture(content);
     destroyContactCurtain();
     contactCurtainController = createContactCurtain(canvas, stage, content.curtainText);
   }
@@ -6471,7 +6526,9 @@
     form.elements.contactOfficialAccount.value = contact.officialAccount;
     form.elements.contactVx.value = contact.vx;
     form.elements.contactCurtainText.value = contact.curtainText;
-    form.elements.contactArchitectureText.value = contact.architectureText.join("\n");
+    if (form.elements.contactArchitectureText) {
+      form.elements.contactArchitectureText.value = contact.architectureText.join("\n");
+    }
     var visualAssets = normalizeVisualAssets(state.settings.visualAssets);
     form.elements.heroDepthMountain.value = visualAssets.heroDepth.mountain;
     form.elements.heroDepthWindowFrame.value = visualAssets.heroDepth.windowFrame;
@@ -6497,7 +6554,9 @@
         officialAccount: form.elements.contactOfficialAccount.value.trim(),
         vx: form.elements.contactVx.value.trim(),
         curtainText: form.elements.contactCurtainText.value.trim(),
-        architectureText: form.elements.contactArchitectureText.value.split(/[\n|]+/).map(function (item) { return item.trim(); }).filter(Boolean)
+        architectureText: form.elements.contactArchitectureText
+          ? form.elements.contactArchitectureText.value.split(/[\n|]+/).map(function (item) { return item.trim(); }).filter(Boolean)
+          : normalizeContactContent(state.settings.contact, state.settings).architectureText
       },
       visualAssets: normalizeVisualAssets({
         heroDepth: {

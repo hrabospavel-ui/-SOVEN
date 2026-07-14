@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-lady-2560.webp" fetchpriority="high">
   <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-vignette-2560.webp" fetchpriority="high">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@600;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260713135300">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260714021917">
 </head>
 <body>
   <a class="skip-link" href="#works">跳至作品</a>
@@ -357,7 +357,7 @@
               <div class="asset-uploader article-editor-tools">
                 <span class="seal-stamp">ARTICLE</span>
                 <h3>项目文章 / Article</h3>
-                <p>为完整项目页维护图文文章。仅使用标题、段落、图片、图集、引用和分割线；图集请一行一个图片路径。</p>
+                <p>按公众号文章方式维护内容。可先填写上方内容后直接点击“保存文章”，系统会自动将当前填写内容加入文章；也可点击“新增块”逐段添加。</p>
                 <label>编辑项目<select id="articleProjectSelect"></select></label>
                 <label>块类型
                   <select id="articleBlockType">
@@ -365,11 +365,8 @@
                     <option value="paragraph">段落 paragraph</option>
                     <option value="image">图片 / GIF image</option>
                     <option value="gallery">图集 gallery</option>
-                    <option value="video">视频 video</option>
                     <option value="quote">引用 quote</option>
                     <option value="divider">分割线 divider</option>
-                    <option value="model3d">模型台 model3d</option>
-                    <option value="panorama">入此空间 panorama</option>
                   </select>
                 </label>
                 <label>正文 / 标题 / 引用<textarea id="articleBlockText" rows="4" placeholder="输入文章文字"></textarea></label>
@@ -382,7 +379,7 @@
                   <button class="button button-dark" type="button" id="addArticleBlockButton"><span>新增块</span><em>Add Block</em></button>
                   <button class="button button-outline" type="button" id="previewArticleAssetButton"><span>预览路径</span><em>Preview</em></button>
                   <button class="button button-outline" type="button" id="uploadArticleAssetButton"><span>本地预览插入</span><em>Local</em></button>
-                  <button class="button button-primary" type="button" id="saveArticleBlocksButton"><span>保存文章</span><em>Save Article</em></button>
+                  <button class="button button-primary" type="button" id="saveArticleBlocksButton"><span>保存文章</span><em>Save All</em></button>
                 </div>
               </div>
               <div class="path-preview-grid" id="articlePathPreview"></div>
@@ -425,6 +422,6 @@
   </div>
 
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-  <script src="assets/js/app.js?v=20260713135300" defer></script>
+  <script src="assets/js/app.js?v=20260714021917" defer></script>
 </body>
 </html>

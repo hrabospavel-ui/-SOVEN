@@ -13,7 +13,7 @@
   <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-vignette-2560.webp" fetchpriority="high">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@600;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.css">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260714031659">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260714035302">
 </head>
 <body>
   <a class="skip-link" href="#works">跳至作品</a>
@@ -216,6 +216,16 @@
             <button type="button" data-admin-tab="pathCheck">路径检查</button>
           </div>
           <div class="admin-panels">
+            <div class="admin-section-save-strip" id="adminSectionSaveStrip">
+              <div>
+                <strong id="adminCurrentSectionLabel">当前板块：项目案卷</strong>
+                <span id="adminDraftSummary">已保存的板块会暂存到本机草稿，并在导出完整 JSON 时一并导出。</span>
+              </div>
+              <button class="button button-primary" type="button" id="saveCurrentAdminPanelButton">
+                <span>保存当前板块</span><em>Save Section</em>
+              </button>
+            </div>
+
             <div class="admin-panel is-active" data-admin-panel="projects">
               <div class="admin-list" id="adminProjectList"></div>
               <form class="admin-form" id="projectForm">
@@ -272,7 +282,7 @@
               <label>瓦当 PNG 备用路径<input name="watangPngFallback" placeholder="assets/watang/watang.png"></label>
               <p class="admin-note full">后台保存仅用于本机预览；正式发布请导出完整站点数据 site-data.json，覆盖 assets/data/site-data.json，并提交到 GitHub。</p>
               <div class="form-actions full">
-                <button class="button button-primary" type="submit"><span>更新首页文案</span><em>Update Settings</em></button>
+                <button class="button button-primary" type="submit"><span>保存首页与联系</span><em>Save Section</em></button>
                 <button class="button button-outline" type="button" id="exportSettingsButton"><span>导出设置</span><em>JSON</em></button>
                 <button class="button button-primary" type="button" id="exportFullDataButton"><span>导出完整站点数据</span><em>site-data.json</em></button>
                 <label class="import-button"><input type="file" id="importSettingsInput" accept="application/json">导入设置</label>
@@ -358,7 +368,7 @@
               <div class="asset-uploader article-editor-tools">
                 <span class="seal-stamp">ARTICLE</span>
                 <h3>项目文章 / Article</h3>
-                <p>按公众号文章方式维护内容。可先填写上方内容后直接点击“保存文章”，系统会自动将当前填写内容加入文章；也可点击“新增块”逐段添加。</p>
+                <p>按公众号文章方式维护内容。只有点击“新增块”才会生成内容块；完成排序和编辑后，再点击“保存文章”暂存到本机草稿。</p>
                 <label>编辑项目<select id="articleProjectSelect"></select></label>
                 <label>块类型
                   <select id="articleBlockType">
@@ -424,6 +434,6 @@
 
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js" defer></script>
-  <script src="assets/js/app.js?v=20260714031659" defer></script>
+  <script src="assets/js/app.js?v=20260714035302" defer></script>
 </body>
 </html>

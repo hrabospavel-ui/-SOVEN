@@ -1,6 +1,6 @@
 {
   "schema": "northern-atelier-site-data-v1",
-  "exportedAt": "2026-07-14T09:06:21.210Z",
+  "exportedAt": "2026-07-14T09:24:07.217Z",
   "siteSettings": {
     "studioName": "栖衡｜SOVEN",
     "studioSeal": "〇",
@@ -268,7 +268,7 @@
       "status": "已建成",
       "material": "石材、玻璃、不锈钢、预制混凝土板、石板、镀锡铜、染黑木饰面、回收木材、现浇混凝土",
       "scale": "8500平方米",
-      "role": "案例研究、建筑分析、空间策略梳理",
+      "role": "Alain Tousignant、Annie Lebel、Marie-Chantal Croft、Jacques Plante",
       "concept": "以斜向中庭切入历史建筑，连接城市广场、旧 YMCA 大楼与新剧场。",
       "description": "Le Diamant 剧场更新将建于1879年的前 YMCA 大楼改造为集戏剧创作、表演与公共活动于一体的文化中心。项目通过一道斜向中庭通道，将德尤维尔广场的城市流线引入建筑内部，并以玻璃体量、修复立面、混凝土剧场与木质公共楼梯构成新旧共生的空间叙事。",
       "coverImage": "assets/projects/p001-northern-wind-court/fengmian.webp",
@@ -405,7 +405,7 @@
       "pdf": "assets/projects/p002-vessel-mountain-index/case.pdf",
       "attachments": [],
       "tags": [
-        "榕树花园；艺术中心；社区食堂；文化建筑；社区公共空间；岭南气候；风雨连廊；玻璃砖；树下空间；分散式美术馆"
+        "榕树花园、艺术中心、社区食堂、文化建筑、社区公共空间、岭南气候、风雨连廊、玻璃砖、树下空间、分散式美术馆"
       ],
       "articleBlocks": [
         {
@@ -500,7 +500,7 @@
       "pdf": "",
       "attachments": [],
       "tags": [
-        "集合住宅；青年研究者公寓；紧凑体量；架空建筑；半地下入口；H形平面；玻璃幕墙；高隔声立面；可变居住单元"
+        "集合住宅、青年研究者公寓、紧凑体量、架空建筑、半地下入口、H形平面、玻璃幕墙、高隔声立面、可变居住单元"
       ],
       "articleBlocks": [
         {
@@ -534,7 +534,7 @@
           "label": ""
         }
       ],
-      "featured": true,
+      "featured": false,
       "published": true
     },
     {
@@ -547,7 +547,7 @@
       "status": "已建成",
       "material": "木结构、木材、玻璃、屋顶露台、滑梯、游乐设施、遮棚、基础结构",
       "scale": "建筑面积 1540 平方米 / 五层 / 可容纳 60 名儿童",
-      "role": "renovation strategy, facade, interior",
+      "role": "Diébédo Francis Kéré",
       "concept": "在极其受限的城市场地中，以儿童体验为核心，将日托中心组织为一座可奔跑、攀爬、滑行和眺望城市的垂直游乐场。",
       "description": "慕尼黑 Kinderoase 幼儿园位于慕尼黑工业大学校园内，场地夹在主校区与食堂之间，原为停车场，面临用地紧张、交通噪音和高密度环境等限制。Kéré Architecture 将建筑设计为一座五层的垂直幼儿园，以木结构为主体，通过跨层滑梯、垂直游乐场和屋顶“天空草甸”，将日托中心转化为面向儿童身体体验、想象力和社交活动的立体空间。",
       "coverImage": "assets/projects/p004-frontier-courtyard-renewal/640.gif",
@@ -645,7 +645,7 @@
           "label": ""
         }
       ],
-      "featured": false,
+      "featured": true,
       "published": true
     },
     {

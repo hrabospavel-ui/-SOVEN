@@ -280,7 +280,7 @@
       ],
       "model3d": "assets/projects/p001-northern-wind-court/moxing1-model-web.glb",
       "modelThumbnail": "",
-      "panorama": "assets/projects/p001-northern-wind-court/vp_sky_v1_066_github.webp",
+      "panorama": "assets/projects/p001-northern-wind-court/quanjingp001.png",
       "panoramaThumbnail": "",
       "video": "",
       "videoPoster": "",
@@ -372,6 +372,26 @@
           "thumbnail": "",
           "caption": "",
           "label": "下载完整项目 PDF"
+        },
+        {
+          "type": "heading",
+          "text": "外部改造在历史修复与现代建筑之间建立起一场对话。YMCA 大楼原有的石材外立面得到了精心修复，历史悠久的孟莎式屋顶也采用石板和镀锡铜进行了重建。在玻璃体量上方，不锈钢包覆的创作工作室低调地融入天空。在格拉西斯街（Rue des Glacis）一侧，舞台塔的无窗实墙铺设了预制混凝土板，其上印有建筑师约瑟夫-费迪南德·皮奇（Joseph-Ferdinand Peachy）于 1878 年设计但从未建成的体育翼楼的等比例照相凹版图像。随着光影的变化，这一“幻影立面”时隐时现，将这座历史建筑的建筑存在感延伸至了现实建造之外。",
+          "asset": "assets/projects/p001-northern-wind-court/panorama.png",
+          "assets": [],
+          "poster": "",
+          "thumbnail": "",
+          "caption": "125632",
+          "label": "125632"
+        },
+        {
+          "type": "quote",
+          "text": "ArchDaily",
+          "asset": "",
+          "assets": [],
+          "poster": "",
+          "thumbnail": "",
+          "caption": "",
+          "label": ""
         }
       ],
       "featured": true,

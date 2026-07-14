@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260714021917
+// CACHE_BUST_VERSION: 20260714031659
 (function () {
   "use strict";
 
@@ -114,6 +114,7 @@
   ];
 
   var projects = [];
+  var activePanoramaViewer = null;
 
   var state = {
     settings: null,
@@ -1164,17 +1165,138 @@
   }
 
   function currentSiteData() {
-    return {
+    return clone({
       schema: "northern-atelier-site-data-v1",
       exportedAt: new Date().toISOString(),
       siteSettings: siteSettings,
       navigation: navigation,
       methods: methods,
       projects: projects
+    });
+  }
+
+  function splitArticleTextForBlocks(value) {
+    var text = String(value || "").replace(/\r\n?/g, "\n").trim();
+    if (!text) {
+      return [];
+    }
+    var parts = text.split(/\n\s*\n+/).map(function (part) { return part.trim(); }).filter(Boolean);
+    if (parts.length === 1 && text.indexOf("\n") !== -1) {
+      parts = text.split(/\n+/).map(function (part) { return part.trim(); }).filter(Boolean);
+    }
+    return parts;
+  }
+
+  function expandArticleBlockForSave(block) {
+    var current = normalizeArticleBlocks([block])[0];
+    if (!current) {
+      return [];
+    }
+    if (current.type === "paragraph" || current.type === "heading" || current.type === "quote") {
+      var parts = splitArticleTextForBlocks(current.text);
+      return parts.map(function (text) {
+        var copy = clone(current);
+        copy.text = text;
+        return copy;
+      });
+    }
+    return [current];
+  }
+
+  function readProjectFormSnapshot() {
+    var form = qs("#projectForm");
+    if (!form || !form.elements || !form.elements.id || !form.elements.id.value) {
+      return null;
+    }
+    return {
+      id: form.elements.id.value,
+      data: {
+        titleCN: form.elements.titleCN.value.trim(),
+        titleEN: form.elements.titleEN.value.trim(),
+        category: form.elements.category.value,
+        year: form.elements.year.value.trim(),
+        location: form.elements.location.value.trim(),
+        status: form.elements.status.value.trim() || (form.elements.published.checked ? "Published" : "Draft"),
+        material: form.elements.material.value.trim(),
+        scale: form.elements.scale.value.trim(),
+        role: form.elements.role.value.trim(),
+        coverImage: form.elements.coverImage.value.trim(),
+        detailImage: form.elements.detailImage.value.trim(),
+        articleCoverImage: form.elements.articleCoverImage.value.trim(),
+        gallery: parseList(form.elements.gallery.value),
+        drawings: parseList(form.elements.drawings.value),
+        model3d: form.elements.model3d.value.trim(),
+        modelThumbnail: form.elements.modelThumbnail.value.trim(),
+        panorama: form.elements.panorama.value.trim(),
+        panoramaThumbnail: form.elements.panoramaThumbnail.value.trim(),
+        video: form.elements.video.value.trim(),
+        videoPoster: form.elements.videoPoster.value.trim(),
+        pdf: form.elements.pdf.value.trim(),
+        attachments: normalizeAttachments(form.elements.attachments.value),
+        tags: parseTags(form.elements.tags.value),
+        description: form.elements.description.value.trim(),
+        concept: form.elements.concept.value.trim() || form.elements.description.value.trim().slice(0, 48),
+        featured: form.elements.featured.checked,
+        published: form.elements.published.checked
+      }
+    };
+  }
+
+  function flushVisibleAdminEditorsToMemory() {
+    var changed = false;
+
+    var projectSnapshot = readProjectFormSnapshot();
+    if (projectSnapshot) {
+      var projectIndex = projects.findIndex(function (item) { return item.id === projectSnapshot.id; });
+      if (projectIndex !== -1) {
+        var preservedArticleBlocks = clone(projects[projectIndex].articleBlocks || []);
+        projects[projectIndex] = normalizeProject(Object.assign({}, projects[projectIndex], projectSnapshot.data, {
+          articleBlocks: preservedArticleBlocks
+        }));
+        var renderedIndex = state.projects.findIndex(function (item) { return item.id === projectSnapshot.id; });
+        if (renderedIndex !== -1) {
+          state.projects[renderedIndex] = clone(projects[projectIndex]);
+        }
+        changed = true;
+      }
+    }
+
+    var articleProjectId = state.activeArticleProjectId;
+    var articleProject = projects.find(function (item) { return item.id === articleProjectId; });
+    if (articleProject) {
+      var list = qs("#articleBlockList");
+      var editorNodes = list ? qsa("[data-article-block]", list) : [];
+      var blocks = collectArticleBlocksFromEditor();
+      var pending = readPendingArticleBlock();
+      var pendingBlocks = articleBlockHasContent(pending) ? expandArticleBlockForSave(pending) : [];
+      if (editorNodes.length || pendingBlocks.length) {
+        blocks = blocks.concat(pendingBlocks);
+        syncArticleBlocksToProject(articleProjectId, blocks);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      writeStorage();
+    }
+    return changed;
+  }
+
+  function buildExactExportData() {
+    var snapshot = currentSiteData();
+    var normalized = normalizeSiteData(snapshot);
+    return {
+      schema: snapshot.schema,
+      exportedAt: snapshot.exportedAt,
+      siteSettings: normalized.siteSettings,
+      navigation: normalized.navigation,
+      methods: normalized.methods,
+      projects: normalized.projects
     };
   }
 
   function exportFullSiteData() {
+    flushVisibleAdminEditorsToMemory();
     if (state.dataSource === "fallback") {
       var message = "当前页面正在使用诊断占位数据，不是正式 site-data.json，也不是你明确选择的本机草稿。\n\n已阻止导出，避免把占位内容误当正式数据。\n\n请先确认 assets/data/site-data.json 可读取，或点击“使用本机草稿”后再导出。";
       if (typeof window !== "undefined" && window.alert) {
@@ -1184,7 +1306,7 @@
       return;
     }
 
-    var data = normalizeSiteData(currentSiteData());
+    var data = buildExactExportData();
     var title = data.siteSettings && data.siteSettings.taglineCN ? String(data.siteSettings.taglineCN).trim() : "";
     var projectCount = Array.isArray(data.projects) ? data.projects.length : 0;
 
@@ -2763,6 +2885,7 @@
     if (!modal || !content) {
       return;
     }
+    destroyPanoramaViewer();
     state.lastFocusedElement = document.activeElement;
     content.innerHTML = modalHTML(project);
     modal.classList.add("is-open");
@@ -2781,6 +2904,7 @@
     if (!modal) {
       return;
     }
+    destroyPanoramaViewer();
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
     document.body.classList.remove("modal-open");
@@ -3046,13 +3170,19 @@
   function articleBlockHTML(block) {
     var type = block.type;
     if (type === "heading") {
-      return '<h2 class="article-block-heading wechat-heading">' + escapeHTML(block.text) + '</h2>';
+      return splitArticleTextForBlocks(block.text).map(function (text) {
+        return '<h2 class="article-block-heading wechat-heading">' + escapeHTML(text) + '</h2>';
+      }).join("");
     }
     if (type === "paragraph") {
-      return '<p class="article-paragraph wechat-paragraph">' + escapeHTML(block.text) + '</p>';
+      return splitArticleTextForBlocks(block.text).map(function (text) {
+        return '<p class="article-paragraph wechat-paragraph">' + escapeHTML(text) + '</p>';
+      }).join("");
     }
     if (type === "quote") {
-      return '<blockquote class="article-quote wechat-quote">' + escapeHTML(block.text) + '</blockquote>';
+      return splitArticleTextForBlocks(block.text).map(function (text) {
+        return '<blockquote class="article-quote wechat-quote">' + escapeHTML(text) + '</blockquote>';
+      }).join("");
     }
     if (type === "divider") {
       return '<hr class="article-divider wechat-divider">';
@@ -3142,9 +3272,17 @@
         '<div class="viewer-caption"><p>可水平旋转；垂直视角已限制在模型上方，避免转到模型底部。</p></div>' +
       '</section>';
     }
+
     if (project.panorama) {
-      var panoramaThumb = project.panoramaThumbnail ? '<img class="viewer-thumb" src="' + escapeHTML(resolveAssetURL(project.panoramaThumbnail) || project.panoramaThumbnail) + '" alt="" loading="lazy" decoding="async">' : "";
-      html += '<section class="media-panel" id="panoramaPanel"><div class="viewer-stage">' + panoramaThumb + '<div class="panorama-strip" data-panorama-strip></div><div class="panorama-placeholder"><div><p class="eyebrow">360 READY</p><h3>入此空间 / Enter Scene</h3><p>拖动滑块模拟全景视角。</p></div></div></div><div class="viewer-caption"><input type="range" min="0" max="100" value="45" data-panorama-range aria-label="全景视角"></div></section>';
+      var panoramaURL = resolveAssetURL(project.panorama) || project.panorama;
+      var panoramaPoster = project.panoramaThumbnail ? (resolveAssetURL(project.panoramaThumbnail) || project.panoramaThumbnail) : "";
+      html += '<section class="media-panel" id="panoramaPanel">' +
+        '<div class="panorama-viewer-shell">' +
+          '<div class="panorama-real-viewer" data-panorama-viewer data-panorama-src="' + escapeHTML(panoramaURL) + '" data-panorama-poster="' + escapeHTML(panoramaPoster) + '" aria-label="' + escapeHTML(project.titleCN + " 360° 全景") + '"></div>' +
+          '<div class="panorama-loading" data-panorama-status><span></span><p>点击“入此空间”后加载 360° 全景。</p></div>' +
+        '</div>' +
+        '<div class="viewer-caption panorama-caption"><p>拖动旋转，滚轮或双指缩放。建议使用严格 2:1 的等距柱状全景图。</p><button class="button button-outline panorama-reload-button" type="button" data-reload-panorama><span>重新载入</span><em>Reload</em></button></div>' +
+      '</section>';
     }
     return html;
   }
@@ -3152,11 +3290,19 @@
   function bindModalMedia(project) {
     qsa("[data-panel-target]").forEach(function (button) {
       button.addEventListener("click", function () {
-        var target = qs("#" + button.getAttribute("data-panel-target"));
-        if (target) {
-          qsa(".media-panel").forEach(function (panel) { panel.classList.remove("is-visible"); });
-          target.classList.add("is-visible");
-          target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        var targetId = button.getAttribute("data-panel-target");
+        var target = qs("#" + targetId);
+        if (!target) {
+          return;
+        }
+        qsa(".media-panel").forEach(function (panel) {
+          panel.classList.remove("is-visible");
+        });
+        target.classList.add("is-visible");
+        target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+        if (targetId === "panoramaPanel" && project.panorama) {
+          loadPanoramaViewer(project.panorama, project.panoramaThumbnail);
         }
       });
     });
@@ -3172,17 +3318,11 @@
       });
     }
 
-    var range = qs("[data-panorama-range]");
-    var strip = qs("[data-panorama-strip]");
-    if (range && strip) {
-      var updatePanorama = function () {
-        strip.style.backgroundPosition = range.value + "% 50%";
-      };
-      range.addEventListener("input", updatePanorama);
-      updatePanorama();
-      range.addEventListener("change", function () {
-        loadPanoramaViewer(project.panorama);
-      }, { once: true });
+    var reloadPanoramaButton = qs("[data-reload-panorama]");
+    if (reloadPanoramaButton) {
+      reloadPanoramaButton.addEventListener("click", function () {
+        loadPanoramaViewer(project.panorama, project.panoramaThumbnail, true);
+      });
     }
   }
 
@@ -3211,13 +3351,134 @@
     }
   }
 
-  function loadPanoramaViewer(panoramaPath) {
-    var strip = qs("[data-panorama-strip]");
-    if (!strip) {
+  function destroyPanoramaViewer() {
+    if (activePanoramaViewer && typeof activePanoramaViewer.destroy === "function") {
+      try {
+        activePanoramaViewer.destroy();
+      } catch (error) {
+        console.warn("Panorama destroy error:", error);
+      }
+    }
+    activePanoramaViewer = null;
+    var container = qs("[data-panorama-viewer]");
+    if (container) {
+      container.innerHTML = "";
+    }
+  }
+
+  function loadPanoramaViewer(panoramaPath, posterPath, forceReload) {
+    var container = qs("[data-panorama-viewer]");
+    var status = qs("[data-panorama-status]");
+    if (!container) {
       return;
     }
-    // 后期可将这里替换为 Pannellum 或 Photo Sphere Viewer，并使用 panoramaPath 加载真实 360 全景图。
-    strip.dataset.loadedPanorama = panoramaPath || "";
+
+    var resolved = resolveAssetURL(panoramaPath) || panoramaPath || container.getAttribute("data-panorama-src") || "";
+    var poster = resolveAssetURL(posterPath) || posterPath || container.getAttribute("data-panorama-poster") || "";
+
+    function setStatus(message, tone) {
+      if (!status) {
+        return;
+      }
+      status.classList.remove("is-loading", "is-error", "is-warning", "is-hidden");
+      if (tone) {
+        status.classList.add(tone);
+      }
+      status.querySelector("p").textContent = message;
+    }
+
+    if (!resolved) {
+      setStatus("未填写全景图路径。", "is-error");
+      return;
+    }
+
+    if (window.location && window.location.protocol === "file:") {
+      setStatus("当前是 file:/// 本地直接打开模式，浏览器会阻止真实全景加载。请使用 GitHub Pages 或 Live Server 预览。", "is-error");
+      return;
+    }
+
+    if (!window.pannellum || typeof window.pannellum.viewer !== "function") {
+      setStatus("全景查看器组件未加载，请检查网络或 Pannellum CDN。", "is-error");
+      return;
+    }
+
+    if (activePanoramaViewer && !forceReload) {
+      try {
+        activePanoramaViewer.resize();
+      } catch (error) {
+        /* noop */
+      }
+      return;
+    }
+
+    destroyPanoramaViewer();
+    setStatus("正在读取并校验全景图片…", "is-loading");
+
+    var probe = new Image();
+    probe.decoding = "async";
+    probe.onload = function () {
+      var ratio = probe.naturalHeight ? probe.naturalWidth / probe.naturalHeight : 0;
+      var ratioOK = ratio >= 1.95 && ratio <= 2.05;
+
+      if (!ratioOK) {
+        setStatus("图片可以尝试加载，但比例为 " + ratio.toFixed(2) + ":1；标准 360° 全景应接近 2:1，显示可能变形。", "is-warning");
+      } else {
+        setStatus("正在初始化 360° 场景…", "is-loading");
+      }
+
+      try {
+        activePanoramaViewer = window.pannellum.viewer(container, {
+          type: "equirectangular",
+          panorama: resolved,
+          preview: poster || undefined,
+          autoLoad: true,
+          showControls: true,
+          showFullscreenCtrl: true,
+          compass: false,
+          keyboardZoom: true,
+          mouseZoom: true,
+          draggable: true,
+          hfov: 100,
+          minHfov: 45,
+          maxHfov: 120,
+          pitch: 0,
+          yaw: 0,
+          autoRotate: 0,
+          crossOrigin: "anonymous"
+        });
+
+        if (activePanoramaViewer && typeof activePanoramaViewer.on === "function") {
+          activePanoramaViewer.on("load", function () {
+            if (status) {
+              status.classList.add("is-hidden");
+            }
+            window.setTimeout(function () {
+              if (activePanoramaViewer && typeof activePanoramaViewer.resize === "function") {
+                activePanoramaViewer.resize();
+              }
+            }, 80);
+          });
+          activePanoramaViewer.on("error", function (error) {
+            setStatus("全景加载失败。请检查路径、文件名大小写、图片格式与 GitHub 路径。", "is-error");
+            console.warn("Panorama load error:", error);
+          });
+        }
+      } catch (error) {
+        setStatus("全景查看器初始化失败：" + (error && error.message ? error.message : "未知错误"), "is-error");
+        console.warn("Panorama init error:", error);
+      }
+    };
+
+    probe.onerror = function () {
+      setStatus("全景图片路径无法读取。请检查路径、文件名大小写，以及文件是否已上传到 GitHub。", "is-error");
+    };
+
+    try {
+      probe.crossOrigin = "anonymous";
+      probe.src = resolved;
+    } catch (error) {
+      setStatus("全景图片路径无效。", "is-error");
+    }
   }
 
   function drawMockModel(canvas, modelPath) {
@@ -3839,14 +4100,15 @@
     if (!list) {
       return [];
     }
-    return qsa("[data-article-block]", list).map(function (node) {
+    var result = [];
+    qsa("[data-article-block]", list).forEach(function (node) {
       var typeField = qs('[data-article-field="type"]', node);
       var textField = qs('[data-article-field="text"]', node);
       var assetField = qs('[data-article-field="asset"]', node);
       var captionField = qs('[data-article-field="caption"]', node);
       var type = typeField && allowedArticleBlockType(typeField.value) ? typeField.value : "paragraph";
       var assetText = assetField ? assetField.value.trim() : "";
-      return {
+      var block = {
         type: type,
         text: textField ? textField.value : "",
         asset: type === "gallery" ? "" : assetText,
@@ -3856,9 +4118,11 @@
         caption: captionField ? captionField.value : "",
         label: captionField ? captionField.value : ""
       };
-    }).map(function (block) {
-      return normalizeArticleBlocks([block])[0];
+      expandArticleBlockForSave(block).forEach(function (expanded) {
+        result.push(expanded);
+      });
     });
+    return normalizeArticleBlocks(result);
   }
 
   function syncArticleBlocksToProject(projectId, blocks) {
@@ -4007,14 +4271,15 @@
       showAdminStamp("请先填写文章内容");
       return;
     }
-    var nextBlocks = normalizeArticleBlocks(project.articleBlocks).concat(block);
+    var additions = block.type === "divider" ? [block] : expandArticleBlockForSave(block);
+    var nextBlocks = normalizeArticleBlocks(project.articleBlocks).concat(additions);
     syncArticleBlocksToProject(projectId, nextBlocks);
     writeStorage();
     await refreshData();
     clearArticleComposerInputs();
     renderArticleBlockList();
     renderDataSourceStatus();
-    showAdminStamp("文章块已添加");
+    showAdminStamp("已添加 " + additions.length + " 个文章内容块");
   }
 
   async function saveArticleBlocksFromEditor() {
@@ -4028,20 +4293,13 @@
     var editorNodes = qsa("[data-article-block]", qs("#articleBlockList"));
     var blocks = collectArticleBlocksFromEditor();
     var pending = readPendingArticleBlock();
-    var pendingAdded = articleBlockHasContent(pending);
+    var pendingBlocks = articleBlockHasContent(pending) ? expandArticleBlockForSave(pending) : [];
 
-    /*
-      The old implementation called renderAll() immediately after saving.
-      renderAll() rebuilt the article editor and cleared the top input area,
-      which looked like the entered content had disappeared.
-      V48 saves the pending input as a real article block first, synchronizes
-      both data arrays, and only refreshes the article list.
-    */
-    if (pendingAdded) {
-      blocks.push(pending);
+    if (pendingBlocks.length) {
+      blocks = blocks.concat(pendingBlocks);
     }
 
-    if (!editorNodes.length && !pendingAdded && normalizeArticleBlocks(project.articleBlocks).length) {
+    if (!editorNodes.length && !pendingBlocks.length && normalizeArticleBlocks(project.articleBlocks).length) {
       showAdminStamp("未检测到可保存的改动");
       return;
     }
@@ -4050,7 +4308,7 @@
     writeStorage();
     await refreshData();
 
-    if (pendingAdded) {
+    if (pendingBlocks.length) {
       clearArticleComposerInputs();
     }
     renderArticleBlockList();

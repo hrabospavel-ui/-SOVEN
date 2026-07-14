@@ -6478,3 +6478,144 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   }
 }
 /* V48_ARTICLE_SAVE_WECHAT_END */
+
+/* V49_EXACT_ARTICLE_EXPORT_START */
+.article-block-editor textarea[data-article-field="text"],
+#articleBlockText {
+  white-space: pre-wrap;
+}
+
+.wechat-paragraph {
+  white-space: normal;
+}
+/* V49_EXACT_ARTICLE_EXPORT_END */
+
+/* V50_REAL_PANORAMA_VIEWER_START */
+.panorama-viewer-shell {
+  position: relative;
+  min-height: clamp(360px, 56vw, 620px);
+  overflow: hidden;
+  border-radius: 14px 14px 0 0;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(142, 167, 160, 0.18), transparent 42%),
+    linear-gradient(180deg, #101916, #050708);
+}
+
+.panorama-real-viewer {
+  width: 100%;
+  height: clamp(360px, 56vw, 620px);
+  min-height: 360px;
+  background: transparent;
+}
+
+.panorama-real-viewer .pnlm-container {
+  width: 100%;
+  height: 100%;
+  background: #050708;
+}
+
+.panorama-real-viewer .pnlm-load-box {
+  background: rgba(7, 10, 10, 0.74);
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+.panorama-real-viewer .pnlm-controls-container {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.panorama-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-content: center;
+  gap: 12px;
+  padding: 28px;
+  text-align: center;
+  color: rgba(244, 238, 225, 0.86);
+  background: linear-gradient(180deg, rgba(5, 7, 8, 0.66), rgba(5, 7, 8, 0.82));
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.panorama-loading > span {
+  width: 38px;
+  height: 38px;
+  margin: 0 auto;
+  border: 1px solid rgba(255, 224, 170, 0.24);
+  border-top-color: rgba(255, 224, 170, 0.88);
+  border-radius: 50%;
+  animation: panorama-spin 0.9s linear infinite;
+}
+
+.panorama-loading p {
+  margin: 0;
+  max-width: 560px;
+  line-height: 1.7;
+}
+
+.panorama-loading.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.panorama-loading.is-error,
+.panorama-loading.is-warning {
+  pointer-events: auto;
+}
+
+.panorama-loading.is-error > span,
+.panorama-loading.is-warning > span {
+  display: none;
+}
+
+.panorama-loading.is-error {
+  color: rgba(255, 215, 202, 0.94);
+  background: rgba(74, 20, 18, 0.88);
+}
+
+.panorama-loading.is-warning {
+  color: rgba(255, 232, 182, 0.94);
+  background: rgba(66, 45, 12, 0.82);
+}
+
+.panorama-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.panorama-caption p {
+  margin: 0;
+}
+
+.panorama-reload-button {
+  flex: 0 0 auto;
+}
+
+@keyframes panorama-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 720px) {
+  .panorama-viewer-shell,
+  .panorama-real-viewer {
+    min-height: 320px;
+    height: 62vh;
+    max-height: 520px;
+  }
+
+  .panorama-caption {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .panorama-reload-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+/* V50_REAL_PANORAMA_VIEWER_END */

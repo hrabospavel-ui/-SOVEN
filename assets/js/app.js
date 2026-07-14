@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260714103453
+// CACHE_BUST_VERSION: 20260714115428
 (function () {
   "use strict";
 
@@ -17,6 +17,12 @@
   var ASSET_STORE = "assets";
   var ASSET_ID_PREFIX = "asset_";
   var SITE_DATA_URL = "assets/data/site-data.json";
+  var SECTION_PAGE_LIMITS = {
+    works: 8,
+    architecture: 6,
+    objects: 6,
+    research: 6
+  };
 
   function withCacheBust(url) {
     var separator = url.indexOf("?") === -1 ? "?" : "&";
@@ -148,7 +154,13 @@
     activeResearchEditorId: "",
     activeResearchId: "",
     researchReturnHash: "",
-    researchEditorDrafts: {}
+    researchEditorDrafts: {},
+    pages: {
+      works: 1,
+      architecture: 1,
+      objects: 1,
+      research: 1
+    }
   };
 
   var ASSET_FIELD_CONFIG = {
@@ -2732,17 +2744,22 @@
       { key: "vx", label: "VX", value: content.vx }
     ];
 
-    grid.innerHTML = channels.map(function (channel) {
+    grid.innerHTML = channels.map(function (channel, index) {
       var disabled = !channel.value;
       return '<button class="contact-copy-key" type="button" data-contact-copy="' + escapeHTML(channel.key) + '"' +
         (disabled ? ' disabled aria-disabled="true"' : '') +
-        ' aria-label="复制' + escapeHTML(channel.label) + '"><span>' + escapeHTML(channel.label) + '</span></button>';
+        ' aria-label="复制' + escapeHTML(channel.label) + '">' +
+          '<span class="contact-key-index">' + String(index + 1).padStart(2, "0") + '</span>' +
+          '<span class="contact-key-label">' + escapeHTML(channel.label) + '</span>' +
+          '<span class="contact-key-action">' + (disabled ? 'NOT SET' : 'COPY ↗') + '</span>' +
+        '</button>';
     }).join("");
 
     qsa("[data-contact-copy]", grid).forEach(function (button) {
       button.addEventListener("click", function () {
         var key = button.getAttribute("data-contact-copy");
         var channel = channels.find(function (item) { return item.key === key; });
+        var action = button.querySelector(".contact-key-action");
         if (!channel || !channel.value) {
           if (status) {
             status.textContent = channel ? channel.label + "尚未设置。" : "联系方式尚未设置。";
@@ -2750,14 +2767,26 @@
           return;
         }
         copyContactText(channel.value).then(function () {
-          qsa(".contact-copy-key", grid).forEach(function (item) { item.classList.remove("is-copied"); });
+          qsa(".contact-copy-key", grid).forEach(function (item) {
+            item.classList.remove("is-copied");
+            var itemAction = item.querySelector(".contact-key-action");
+            if (itemAction && !item.disabled) {
+              itemAction.textContent = "COPY ↗";
+            }
+          });
           button.classList.add("is-copied");
+          if (action) {
+            action.textContent = "COPIED ✓";
+          }
           if (status) {
-            status.textContent = channel.label + "已复制。";
+            status.textContent = channel.label + "已复制到剪贴板。";
           }
           window.setTimeout(function () {
             button.classList.remove("is-copied");
-          }, 1400);
+            if (action) {
+              action.textContent = "COPY ↗";
+            }
+          }, 1600);
         }).catch(function () {
           if (status) {
             status.textContent = channel.label + "复制失败，请检查浏览器权限。";
@@ -3073,6 +3102,87 @@
       '</article>';
   }
 
+  function clampPage(value, totalPages) {
+    var parsed = Math.max(1, parseInt(value, 10) || 1);
+    return Math.min(parsed, Math.max(1, totalPages || 1));
+  }
+
+  function paginationTokens(current, total) {
+    if (total <= 7) {
+      return Array.from({ length: total }, function (_, index) { return index + 1; });
+    }
+    var values = [1, total, current - 1, current, current + 1].filter(function (value) {
+      return value >= 1 && value <= total;
+    }).sort(function (a, b) { return a - b; });
+    var unique = values.filter(function (value, index) { return index === 0 || value !== values[index - 1]; });
+    var tokens = [];
+    unique.forEach(function (value, index) {
+      if (index && value - unique[index - 1] > 1) {
+        tokens.push("ellipsis-" + index);
+      }
+      tokens.push(value);
+    });
+    return tokens;
+  }
+
+  function renderSectionPagination(sectionKey, totalItems, containerId) {
+    var container = qs("#" + containerId);
+    if (!container) {
+      return;
+    }
+    var limit = SECTION_PAGE_LIMITS[sectionKey] || 6;
+    var totalPages = Math.max(1, Math.ceil(totalItems / limit));
+    var current = clampPage(state.pages[sectionKey], totalPages);
+    state.pages[sectionKey] = current;
+
+    if (totalItems <= limit) {
+      container.innerHTML = "";
+      container.hidden = true;
+      return;
+    }
+
+    container.hidden = false;
+    var tokens = paginationTokens(current, totalPages);
+    var pageButtons = tokens.map(function (token) {
+      if (typeof token === "string") {
+        return '<span class="pagination-ellipsis" aria-hidden="true">···</span>';
+      }
+      var active = token === current;
+      return '<button class="pagination-number' + (active ? ' is-active' : '') + '" type="button" data-page-section="' + escapeHTML(sectionKey) + '" data-page-index="' + token + '"' + (active ? ' aria-current="page"' : '') + ' aria-label="第 ' + token + ' 页">' + String(token).padStart(2, "0") + '</button>';
+    }).join("");
+
+    container.innerHTML = '<button class="pagination-arrow" type="button" data-page-section="' + escapeHTML(sectionKey) + '" data-page-index="' + Math.max(1, current - 1) + '"' + (current === 1 ? ' disabled' : '') + ' aria-label="上一页">←</button>' +
+      '<div class="pagination-pages">' + pageButtons + '</div>' +
+      '<span class="pagination-count">' + String(current).padStart(2, "0") + ' / ' + String(totalPages).padStart(2, "0") + '</span>' +
+      '<button class="pagination-arrow" type="button" data-page-section="' + escapeHTML(sectionKey) + '" data-page-index="' + Math.min(totalPages, current + 1) + '"' + (current === totalPages ? ' disabled' : '') + ' aria-label="下一页">→</button>';
+  }
+
+  function pageSlice(items, sectionKey) {
+    var limit = SECTION_PAGE_LIMITS[sectionKey] || 6;
+    var totalPages = Math.max(1, Math.ceil(items.length / limit));
+    var current = clampPage(state.pages[sectionKey], totalPages);
+    state.pages[sectionKey] = current;
+    var start = (current - 1) * limit;
+    return {
+      items: items.slice(start, start + limit),
+      start: start,
+      page: current,
+      totalPages: totalPages
+    };
+  }
+
+  function scrollToPaginatedSection(sectionKey) {
+    var section = qs("#" + sectionKey);
+    if (!section) {
+      return;
+    }
+    var heading = section.querySelector(".section-heading") || section;
+    var header = qs("#topNav");
+    var offset = header ? header.getBoundingClientRect().height + 18 : 18;
+    var top = window.scrollY + heading.getBoundingClientRect().top - offset;
+    window.scrollTo({ top: Math.max(0, top), behavior: reduceMotionQuery.matches ? "auto" : "smooth" });
+  }
+
   function renderFeatured() {
     var container = qs("#featuredGrid");
     if (!container) {
@@ -3119,11 +3229,14 @@
           ? "请检查 assets/data/site-data.json 是否能读取，或在后台导入完整 site-data.json。"
           : "当前筛选条件下，没有项目选择显示在“全部作品”板块。"
       );
+      renderSectionPagination("works", 0, "worksPagination");
       return;
     }
-    container.innerHTML = visible.map(function (project, index) {
-      return projectCardHTML(project, index, "work");
+    var page = pageSlice(visible, "works");
+    container.innerHTML = page.items.map(function (project, index) {
+      return projectCardHTML(project, page.start + index, "work");
     }).join("");
+    renderSectionPagination("works", visible.length, "worksPagination");
   }
 
   function renderCategoryRail(category, id) {
@@ -3134,10 +3247,17 @@
     var sectionKey = category === "Architecture" ? "architecture" : category === "Objects" ? "objects" : String(category || "").toLowerCase();
     var visible = state.projects.filter(function (project) {
       return projectAppearsIn(project, sectionKey);
-    }).slice(0, 4);
-    container.innerHTML = visible.length
-      ? visible.map(function (project, index) { return projectCardHTML(project, index, "category"); }).join("")
-      : emptyStateHTML("暂无 " + category + " 项目", state.dataSource === "fallback" ? "正式 JSON 未读取成功；不会显示旧版项目。" : "没有项目选择显示在该板块。");
+    });
+    if (!visible.length) {
+      container.innerHTML = emptyStateHTML("暂无 " + category + " 项目", state.dataSource === "fallback" ? "正式 JSON 未读取成功；不会显示旧版项目。" : "没有项目选择显示在该板块。");
+      renderSectionPagination(sectionKey, 0, sectionKey + "Pagination");
+      return;
+    }
+    var page = pageSlice(visible, sectionKey);
+    container.innerHTML = page.items.map(function (project, index) {
+      return projectCardHTML(project, page.start + index, "category");
+    }).join("");
+    renderSectionPagination(sectionKey, visible.length, sectionKey + "Pagination");
   }
 
   function researchCoverHTML(article, className) {
@@ -3160,11 +3280,16 @@
     var published = (state.researchArticles || []).filter(isResearchArticleVisible);
     if (!published.length) {
       container.innerHTML = '<div class="research-empty-archive"><span>R—000</span><div><strong>研究档案尚未公开</strong><p>研究文章将在 researchArticles 中独立维护，不会再重复展示项目卡片。</p></div></div>';
+      renderSectionPagination("research", 0, "researchPagination");
       return;
     }
 
-    var lead = published.find(function (article) { return article.featured; }) || published[0];
-    var remaining = published.filter(function (article) { return article.id !== lead.id; });
+    var page = pageSlice(published, "research");
+    var pageArticles = page.items.slice();
+    var lead = page.page === 1
+      ? (pageArticles.find(function (article) { return article.featured; }) || pageArticles[0])
+      : pageArticles[0];
+    var remaining = pageArticles.filter(function (article) { return article.id !== lead.id; });
     var leadCover = researchCoverHTML(lead, "research-lead-visual");
     var leadTags = lead.tags.slice(0, 4).map(function (tag) {
       return '<span>' + escapeHTML(tag) + '</span>';
@@ -3179,7 +3304,9 @@
       '<div class="research-lead-footer"><div class="research-tag-line">' + leadTags + '</div><span class="research-read-link">READ NOTE <i>↗</i></span></div></div>' +
       '</article>';
 
-    var indexHTML = '<div class="research-index-panel"><div class="research-index-head"><span>INDEX / 研究索引</span><strong>' + String(published.length).padStart(2, "0") + '</strong></div>' +
+    var rangeStart = page.start + 1;
+    var rangeEnd = page.start + pageArticles.length;
+    var indexHTML = '<div class="research-index-panel"><div class="research-index-head"><span>INDEX / 研究索引</span><strong>' + String(rangeStart).padStart(2, "0") + '–' + String(rangeEnd).padStart(2, "0") + ' / ' + String(published.length).padStart(2, "0") + '</strong></div>' +
       '<div class="research-index-list">' + remaining.map(function (article) {
         return '<article class="research-index-card research-card" data-research-id="' + escapeHTML(article.id) + '" tabindex="0" role="button">' +
           '<div class="research-index-number">' + escapeHTML(article.number) + '</div>' +
@@ -3189,6 +3316,7 @@
       }).join("") + '</div></div>';
 
     container.innerHTML = leadHTML + indexHTML;
+    renderSectionPagination("research", published.length, "researchPagination");
   }
 
   function renderMethods() {
@@ -3204,8 +3332,9 @@
   }
 
   function projectCardHTML(project, index, mode) {
-    var textOnly = !project.coverImage;
-    var classes = "project-card" + (textOnly ? " text-only-card" : "") + (mode === "featured" ? " featured-card" : "");
+    var hasVisual = Boolean(project.coverImage);
+    var textOnly = !hasVisual;
+    var classes = "project-card" + (textOnly ? " text-only-card" : " has-visual-card") + (mode === "featured" ? " featured-card" : "");
     var number = padNumber(index);
     var tags = project.tags.slice(0, 3).map(function (tag) {
       return '<span class="tag">' + escapeHTML(tag) + '</span>';
@@ -3263,9 +3392,28 @@
 
   function bindGlobalEvents() {
     document.addEventListener("click", async function (event) {
+      var pageButton = event.target.closest("[data-page-section]");
+      if (pageButton && !pageButton.disabled) {
+        var pageSection = pageButton.getAttribute("data-page-section");
+        var nextPage = parseInt(pageButton.getAttribute("data-page-index"), 10) || 1;
+        state.pages[pageSection] = nextPage;
+        if (pageSection === "works") {
+          renderWorks();
+        } else if (pageSection === "architecture") {
+          renderCategoryRail("Architecture", "architectureRail");
+        } else if (pageSection === "objects") {
+          renderCategoryRail("Objects", "objectsRail");
+        } else if (pageSection === "research") {
+          renderResearch();
+        }
+        scrollToPaginatedSection(pageSection);
+        return;
+      }
+
       var filterButton = event.target.closest("[data-filter]");
       if (filterButton) {
         state.filter = filterButton.getAttribute("data-filter") || "All";
+        state.pages.works = 1;
         renderFilters();
         renderWorks();
         return;

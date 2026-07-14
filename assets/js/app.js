@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260713135300
+// CACHE_BUST_VERSION: 20260714021917
 (function () {
   "use strict";
 
@@ -2905,6 +2905,10 @@
     document.body.classList.add("article-open");
     closeProjectModal();
     bindArticleView(project);
+    var articleView = qs(".project-article-view");
+    if (articleView) {
+      articleView.scrollTop = 0;
+    }
     if (!fromHash) {
       history.replaceState(null, "", "#project/" + id);
     }
@@ -2928,22 +2932,63 @@
     }
   }
 
+  function articleCoverHTML(project) {
+    var source = normalizeAssetReference(project.detailImage || project.articleCoverImage || project.coverImage || "");
+    if (!source || isMockReference(source) || String(source).indexOf("abstract:") === 0) {
+      return "";
+    }
+    var kind = assetKind(source);
+    if (kind !== "image" && kind !== "gif") {
+      return "";
+    }
+    var url = resolveAssetURL(source) || source;
+    return '<figure class="wechat-article-cover"><img loading="eager" decoding="async" src="' + escapeHTML(url) + '" alt="' + escapeHTML(project.titleCN) + '" onerror="this.closest(\'figure\').remove()"></figure>';
+  }
+
+  function articleInlineMeta(project) {
+    var values = [
+      project.category,
+      project.year,
+      project.location,
+      project.status
+    ].filter(Boolean);
+    return values.map(function (value) {
+      return '<span>' + escapeHTML(value) + '</span>';
+    }).join("");
+  }
+
   function projectArticleHTML(project) {
     var number = projectNumber(project);
     var blocks = getArticleBlocks(project);
-    var index = state.projects.findIndex(function (item) { return item.id === project.id; });
-    var prev = state.projects[(index - 1 + state.projects.length) % state.projects.length];
-    var next = state.projects[(index + 1) % state.projects.length];
-    return '<header class="article-hero">' +
-      '<div class="article-hero-visual">' + visualHTML(project, "article") + '</div>' +
-      '<div class="article-hero-copy"><span class="modal-archive-code">BY-' + number + ' / ' + escapeHTML(project.category) + '</span>' +
-      '<h1 id="projectArticleTitle">' + escapeHTML(project.titleCN) + '</h1><p>' + escapeHTML(project.titleEN) + '</p>' +
-      '<div class="article-meta-grid">' + metaItem("Year", project.year) + metaItem("Status", project.status) + metaItem("Location", project.location) + metaItem("Material", project.material) + metaItem("Scale", project.scale) + metaItem("Role", project.role) + '</div></div></header>' +
-      '<main class="article-body">' +
-      '<section class="article-summary"><strong>DESIGN PROPOSITION</strong><p>' + escapeHTML(project.concept || project.description) + '</p></section>' +
-      blocks.map(articleBlockHTML).join("") +
-      '<nav class="article-nav"><button class="button button-outline" type="button" data-open-article="' + escapeHTML(prev.id) + '"><span>上一个项目</span><em>' + escapeHTML(prev.titleCN) + '</em></button><button class="button button-dark" type="button" data-open-article="' + escapeHTML(next.id) + '"><span>下一个项目</span><em>' + escapeHTML(next.titleCN) + '</em></button></nav>' +
-      '</main>';
+    var publishedProjects = state.projects.filter(function (item) { return item.published; });
+    if (!publishedProjects.length) {
+      publishedProjects = state.projects.slice();
+    }
+    var index = publishedProjects.findIndex(function (item) { return item.id === project.id; });
+    if (index < 0) {
+      index = 0;
+    }
+    var prev = publishedProjects[(index - 1 + publishedProjects.length) % publishedProjects.length] || project;
+    var next = publishedProjects[(index + 1) % publishedProjects.length] || project;
+    var deck = project.concept || project.description || "";
+    var navigation = publishedProjects.length > 1
+      ? '<nav class="article-nav wechat-article-nav"><button class="button button-outline" type="button" data-open-article="' + escapeHTML(prev.id) + '"><span>上一篇</span><em>' + escapeHTML(prev.titleCN) + '</em></button><button class="button button-dark" type="button" data-open-article="' + escapeHTML(next.id) + '"><span>下一篇</span><em>' + escapeHTML(next.titleCN) + '</em></button></nav>'
+      : "";
+
+    return '<article class="wechat-article">' +
+      '<header class="wechat-article-header">' +
+        '<p class="wechat-article-kicker">BY-' + number + ' · PROJECT ARTICLE</p>' +
+        '<h1 id="projectArticleTitle">' + escapeHTML(project.titleCN) + '</h1>' +
+        (project.titleEN ? '<p class="wechat-article-subtitle">' + escapeHTML(project.titleEN) + '</p>' : '') +
+        '<div class="wechat-article-meta">' + articleInlineMeta(project) + '</div>' +
+        (deck ? '<p class="wechat-article-deck">' + escapeHTML(deck) + '</p>' : '') +
+        articleCoverHTML(project) +
+      '</header>' +
+      '<div class="wechat-article-content">' +
+        blocks.map(articleBlockHTML).join("") +
+      '</div>' +
+      navigation +
+    '</article>';
   }
 
   function getArticleBlocks(project) {
@@ -2981,11 +3026,17 @@
     }
 
     var generated = [];
-    if (project.description || project.concept) {
-      generated.push({ type: "heading", text: "项目概述" });
-      generated.push({ type: "paragraph", text: project.description || project.concept || "" });
+    var lead = String(project.concept || "").trim();
+    var description = String(project.description || "").trim();
+    if (description && description !== lead) {
+      generated.push({ type: "heading", text: "项目内容" });
+      generated.push({ type: "paragraph", text: description });
     }
-    var images = collectDisplayImages(project);
+
+    var cover = normalizeAssetReference(project.detailImage || project.articleCoverImage || project.coverImage || "");
+    var images = collectDisplayImages(project).filter(function (image) {
+      return image !== cover;
+    });
     if (images.length) {
       generated.push({ type: "gallery", assets: images, caption: "" });
     }
@@ -2995,16 +3046,16 @@
   function articleBlockHTML(block) {
     var type = block.type;
     if (type === "heading") {
-      return '<h2 class="article-block-heading">' + escapeHTML(block.text) + '</h2>';
+      return '<h2 class="article-block-heading wechat-heading">' + escapeHTML(block.text) + '</h2>';
     }
     if (type === "paragraph") {
-      return '<p class="article-paragraph">' + escapeHTML(block.text) + '</p>';
+      return '<p class="article-paragraph wechat-paragraph">' + escapeHTML(block.text) + '</p>';
     }
     if (type === "quote") {
-      return '<blockquote class="article-quote">' + escapeHTML(block.text) + '</blockquote>';
+      return '<blockquote class="article-quote wechat-quote">' + escapeHTML(block.text) + '</blockquote>';
     }
     if (type === "divider") {
-      return '<hr class="article-divider">';
+      return '<hr class="article-divider wechat-divider">';
     }
     if (type === "gallery") {
       var assets = parseList(block.assets).filter(function (asset) {
@@ -3014,9 +3065,10 @@
       if (!assets.length) {
         return "";
       }
-      return '<section class="article-gallery-section"><div class="article-gallery">' + assets.map(function (asset, index) {
-        return galleryFigureHTML(asset, index, "article-gallery");
-      }).join("") + '</div>' + captionHTML(block.caption) + '</section>';
+      return '<section class="wechat-gallery">' + assets.map(function (asset, index) {
+        var url = resolveAssetURL(asset) || asset;
+        return '<figure><img loading="lazy" decoding="async" src="' + escapeHTML(url) + '" alt="文章图片 ' + String(index + 1) + '" onerror="this.closest(\'figure\').remove()"></figure>';
+      }).join("") + captionHTML(block.caption) + '</section>';
     }
     if (type === "image") {
       var kind = assetKind(block.asset);
@@ -3024,7 +3076,7 @@
         return "";
       }
       var url = resolveAssetURL(block.asset) || block.asset;
-      return '<figure class="article-media article-image-only"><img loading="lazy" decoding="async" src="' + escapeHTML(url) + '" alt="' + escapeHTML(block.caption || "") + '" onerror="this.closest(\'figure\').remove()">' + captionHTML(block.caption) + '</figure>';
+      return '<figure class="wechat-article-image"><img loading="lazy" decoding="async" src="' + escapeHTML(url) + '" alt="' + escapeHTML(block.caption || "") + '" onerror="this.closest(\'figure\').remove()">' + captionHTML(block.caption) + '</figure>';
     }
     return "";
   }
@@ -3723,6 +3775,105 @@
     });
   }
 
+  function allowedArticleBlockType(type) {
+    return ["heading", "paragraph", "image", "gallery", "quote", "divider"].indexOf(type) !== -1;
+  }
+
+  function articleBlockHasContent(block) {
+    if (!block || !allowedArticleBlockType(block.type)) {
+      return false;
+    }
+    if (block.type === "divider") {
+      return false;
+    }
+    if (block.type === "heading" || block.type === "paragraph" || block.type === "quote") {
+      return Boolean(String(block.text || "").trim());
+    }
+    if (block.type === "image") {
+      var kind = assetKind(block.asset);
+      return Boolean(block.asset) && (kind === "image" || kind === "gif");
+    }
+    if (block.type === "gallery") {
+      return parseList(block.assets).some(function (asset) {
+        var kind = assetKind(asset);
+        return kind === "image" || kind === "gif";
+      });
+    }
+    return false;
+  }
+
+  function readPendingArticleBlock() {
+    var type = qs("#articleBlockType") ? qs("#articleBlockType").value : "paragraph";
+    if (!allowedArticleBlockType(type)) {
+      type = "paragraph";
+    }
+    var text = qs("#articleBlockText") ? qs("#articleBlockText").value : "";
+    var assetText = qs("#articleBlockAsset") ? qs("#articleBlockAsset").value.trim() : "";
+    var caption = qs("#articleBlockCaption") ? qs("#articleBlockCaption").value : "";
+    var block = {
+      type: type,
+      text: text,
+      asset: type === "gallery" ? "" : assetText,
+      assets: type === "gallery" ? parseList(assetText) : [],
+      poster: "",
+      thumbnail: "",
+      caption: caption,
+      label: caption
+    };
+    return normalizeArticleBlocks([block])[0];
+  }
+
+  function clearArticleComposerInputs() {
+    var text = qs("#articleBlockText");
+    var asset = qs("#articleBlockAsset");
+    var caption = qs("#articleBlockCaption");
+    var preview = qs("#articlePathPreview");
+    if (text) { text.value = ""; }
+    if (asset) { asset.value = ""; }
+    if (caption) { caption.value = ""; }
+    if (preview) { preview.innerHTML = ""; }
+  }
+
+  function collectArticleBlocksFromEditor() {
+    var list = qs("#articleBlockList");
+    if (!list) {
+      return [];
+    }
+    return qsa("[data-article-block]", list).map(function (node) {
+      var typeField = qs('[data-article-field="type"]', node);
+      var textField = qs('[data-article-field="text"]', node);
+      var assetField = qs('[data-article-field="asset"]', node);
+      var captionField = qs('[data-article-field="caption"]', node);
+      var type = typeField && allowedArticleBlockType(typeField.value) ? typeField.value : "paragraph";
+      var assetText = assetField ? assetField.value.trim() : "";
+      return {
+        type: type,
+        text: textField ? textField.value : "",
+        asset: type === "gallery" ? "" : assetText,
+        assets: type === "gallery" ? parseList(assetText) : [],
+        poster: "",
+        thumbnail: "",
+        caption: captionField ? captionField.value : "",
+        label: captionField ? captionField.value : ""
+      };
+    }).map(function (block) {
+      return normalizeArticleBlocks([block])[0];
+    });
+  }
+
+  function syncArticleBlocksToProject(projectId, blocks) {
+    var normalized = normalizeArticleBlocks(blocks);
+    var sourceProject = projects.find(function (item) { return item.id === projectId; });
+    if (sourceProject) {
+      sourceProject.articleBlocks = clone(normalized);
+    }
+    var renderedProject = state.projects.find(function (item) { return item.id === projectId; });
+    if (renderedProject) {
+      renderedProject.articleBlocks = clone(normalized);
+    }
+    return normalized;
+  }
+
   function bindArticleEditorEvents() {
     var projectSelect = qs("#articleProjectSelect");
     var addButton = qs("#addArticleBlockButton");
@@ -3732,6 +3883,7 @@
     if (projectSelect) {
       projectSelect.addEventListener("change", function () {
         state.activeArticleProjectId = projectSelect.value;
+        clearArticleComposerInputs();
         renderArticleEditorControls();
       });
     }
@@ -3752,7 +3904,6 @@
   function renderArticleEditorControls() {
     var select = qs("#articleProjectSelect");
     var list = qs("#articleBlockList");
-    var assetInput = qs("#articleBlockAsset");
     if (!select || !list) {
       return;
     }
@@ -3760,11 +3911,10 @@
     select.innerHTML = state.projects.map(function (project) {
       return '<option value="' + escapeHTML(project.id) + '">' + escapeHTML(project.titleCN) + ' / ' + escapeHTML(project.year) + '</option>';
     }).join("");
-    state.activeArticleProjectId = state.projects.some(function (project) { return project.id === current; }) ? current : (state.projects[0] && state.projects[0].id) || "";
+    state.activeArticleProjectId = state.projects.some(function (project) {
+      return project.id === current;
+    }) ? current : (state.projects[0] && state.projects[0].id) || "";
     select.value = state.activeArticleProjectId;
-    if (assetInput) {
-      assetInput.value = "";
-    }
     renderArticleBlockList();
   }
 
@@ -3846,63 +3996,76 @@
   }
 
   async function addArticleBlockFromControls() {
-    var allowed = ["heading", "paragraph", "image", "gallery", "quote", "divider"];
-    var type = qs("#articleBlockType") ? qs("#articleBlockType").value : "paragraph";
-    if (allowed.indexOf(type) === -1) {
-      type = "paragraph";
+    var projectId = state.activeArticleProjectId;
+    var project = projects.find(function (item) { return item.id === projectId; });
+    if (!project) {
+      showAdminStamp("请选择项目");
+      return;
     }
-    var text = qs("#articleBlockText") ? qs("#articleBlockText").value.trim() : "";
-    var asset = qs("#articleBlockAsset") ? qs("#articleBlockAsset").value.trim() : "";
-    var caption = qs("#articleBlockCaption") ? qs("#articleBlockCaption").value.trim() : "";
-    var block = { type: type, text: text, asset: asset, assets: [], poster: "", thumbnail: "", caption: caption, label: caption };
-    if (type === "gallery") {
-      block.assets = parseList(asset).filter(function (item) {
-        var kind = assetKind(item);
-        return kind === "image" || kind === "gif";
-      });
-      block.asset = "";
+    var block = readPendingArticleBlock();
+    if (!articleBlockHasContent(block) && block.type !== "divider") {
+      showAdminStamp("请先填写文章内容");
+      return;
     }
-    if (type === "divider") {
-      block.text = "";
-      block.asset = "";
-    }
-    await appendArticleBlock(state.activeArticleProjectId, block);
+    var nextBlocks = normalizeArticleBlocks(project.articleBlocks).concat(block);
+    syncArticleBlocksToProject(projectId, nextBlocks);
+    writeStorage();
     await refreshData();
-    renderAll();
+    clearArticleComposerInputs();
+    renderArticleBlockList();
+    renderDataSourceStatus();
     showAdminStamp("文章块已添加");
   }
 
   async function saveArticleBlocksFromEditor() {
-    var project = projects.find(function (item) { return item.id === state.activeArticleProjectId; });
-    var list = qs("#articleBlockList");
-    if (!project || !list) {
+    var projectId = state.activeArticleProjectId;
+    var project = projects.find(function (item) { return item.id === projectId; });
+    if (!project) {
+      showAdminStamp("请选择项目");
       return;
     }
-    var blocks = qsa("[data-article-block]", list).map(function (node) {
-      var type = qs('[data-article-field="type"]', node).value;
-      var text = qs('[data-article-field="text"]', node).value;
-      var asset = qs('[data-article-field="asset"]', node).value.trim();
-      var poster = qs('[data-article-field="poster"]', node).value.trim();
-      var caption = qs('[data-article-field="caption"]', node).value;
-      return {
-        type: type,
-        text: text,
-        asset: type === "gallery" ? "" : asset,
-        assets: type === "gallery" ? parseList(asset) : [],
-        poster: type === "video" ? poster : "",
-        thumbnail: type === "model3d" || type === "panorama" ? poster : "",
-        caption: caption,
-        label: caption
-      };
-    });
-    project.articleBlocks = normalizeArticleBlocks(blocks);
+
+    var editorNodes = qsa("[data-article-block]", qs("#articleBlockList"));
+    var blocks = collectArticleBlocksFromEditor();
+    var pending = readPendingArticleBlock();
+    var pendingAdded = articleBlockHasContent(pending);
+
+    /*
+      The old implementation called renderAll() immediately after saving.
+      renderAll() rebuilt the article editor and cleared the top input area,
+      which looked like the entered content had disappeared.
+      V48 saves the pending input as a real article block first, synchronizes
+      both data arrays, and only refreshes the article list.
+    */
+    if (pendingAdded) {
+      blocks.push(pending);
+    }
+
+    if (!editorNodes.length && !pendingAdded && normalizeArticleBlocks(project.articleBlocks).length) {
+      showAdminStamp("未检测到可保存的改动");
+      return;
+    }
+
+    var normalized = syncArticleBlocksToProject(projectId, blocks);
     writeStorage();
     await refreshData();
-    renderAll();
-    if (state.activeArticleId === project.id) {
-      await openProjectArticle(project.id, true);
+
+    if (pendingAdded) {
+      clearArticleComposerInputs();
     }
-    showAdminStamp("文章已保存");
+    renderArticleBlockList();
+    renderDataSourceStatus();
+
+    if (state.activeArticleId === projectId) {
+      var active = await fetchProjectById(projectId);
+      var content = qs("#projectArticleContent");
+      if (active && content) {
+        content.innerHTML = projectArticleHTML(active);
+        bindArticleView(active);
+      }
+    }
+
+    showAdminStamp("文章已保存 · " + normalized.length + " 个内容块");
   }
 
   function previewArticleAssetFromControls() {
@@ -3964,22 +4127,25 @@
   }
 
   function removeArticleBlock(index) {
-    var project = projects.find(function (item) { return item.id === state.activeArticleProjectId; });
+    var projectId = state.activeArticleProjectId;
+    var project = projects.find(function (item) { return item.id === projectId; });
     if (!project) {
       return;
     }
     var blocks = normalizeArticleBlocks(project.articleBlocks);
     blocks.splice(index, 1);
-    project.articleBlocks = blocks;
+    syncArticleBlocksToProject(projectId, blocks);
     writeStorage();
     refreshData().then(function () {
-      renderAll();
+      renderArticleBlockList();
+      renderDataSourceStatus();
       showAdminStamp("文章块已删除");
     });
   }
 
   function moveArticleBlock(index, direction) {
-    var project = projects.find(function (item) { return item.id === state.activeArticleProjectId; });
+    var projectId = state.activeArticleProjectId;
+    var project = projects.find(function (item) { return item.id === projectId; });
     if (!project) {
       return;
     }
@@ -3991,10 +4157,11 @@
     var item = blocks[index];
     blocks.splice(index, 1);
     blocks.splice(nextIndex, 0, item);
-    project.articleBlocks = blocks;
+    syncArticleBlocksToProject(projectId, blocks);
     writeStorage();
     refreshData().then(function () {
-      renderAll();
+      renderArticleBlockList();
+      renderDataSourceStatus();
       showAdminStamp("顺序已调整");
     });
   }

@@ -6270,3 +6270,211 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   }
 }
 /* V47_GALLERY_ARTICLE_MODEL_LOCK_END */
+
+/* V48_ARTICLE_SAVE_WECHAT_START */
+/*
+  V48:
+  - Article save no longer rebuilds the entire admin screen.
+  - Reading view is a centered editorial page, similar to a public-account article.
+*/
+
+.wechat-article {
+  width: min(100% - 32px, 820px);
+  margin: 0 auto;
+  padding: clamp(42px, 7vw, 88px) 0 72px;
+}
+
+.wechat-article-header {
+  display: block;
+  margin-bottom: clamp(34px, 6vw, 60px);
+}
+
+.wechat-article-kicker {
+  margin: 0 0 18px;
+  color: var(--cinnabar);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.wechat-article-header h1 {
+  margin: 0;
+  color: #151817;
+  font-family: var(--font-display);
+  font-size: clamp(38px, 6vw, 64px);
+  font-weight: 500;
+  line-height: 1.14;
+  letter-spacing: -0.035em;
+}
+
+.wechat-article-subtitle {
+  margin: 14px 0 0;
+  color: rgba(21, 24, 23, 0.52);
+  font-family: var(--font-display);
+  font-size: clamp(17px, 2.2vw, 23px);
+  line-height: 1.45;
+}
+
+.wechat-article-meta {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 16px;
+  color: rgba(21, 24, 23, 0.45);
+  font-size: 12px;
+}
+
+.wechat-article-meta span {
+  position: relative;
+}
+
+.wechat-article-meta span:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: -9px;
+  top: 50%;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.wechat-article-deck {
+  margin: 28px 0 0;
+  padding: 18px 20px;
+  border-left: 3px solid var(--cinnabar);
+  background: rgba(163, 58, 46, 0.055);
+  color: rgba(21, 24, 23, 0.73);
+  font-size: 17px;
+  line-height: 1.95;
+  white-space: pre-line;
+}
+
+.wechat-article-cover {
+  margin: 32px 0 0;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgba(14, 17, 16, 0.05);
+}
+
+.wechat-article-cover img {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  display: block;
+  object-fit: contain;
+}
+
+.wechat-article-content {
+  display: block;
+}
+
+.wechat-heading {
+  margin: 2.4em 0 0.8em;
+  color: #171918;
+  font-size: clamp(26px, 4vw, 36px);
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.wechat-paragraph {
+  margin: 0 0 1.35em;
+  color: rgba(21, 24, 23, 0.84);
+  font-size: clamp(16px, 1.8vw, 18px);
+  line-height: 2;
+  text-align: justify;
+  text-justify: inter-ideograph;
+  white-space: pre-line;
+}
+
+.wechat-quote {
+  margin: 2em 0;
+  padding: 18px 20px;
+  border-left: 3px solid var(--cinnabar);
+  background: rgba(163, 58, 46, 0.055);
+  color: rgba(21, 24, 23, 0.72);
+  font-size: 16px;
+  line-height: 1.9;
+  white-space: pre-line;
+}
+
+.wechat-divider {
+  margin: 42px 0;
+}
+
+.wechat-article-image,
+.wechat-gallery {
+  margin: 30px 0;
+}
+
+.wechat-article-image {
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.wechat-article-image img,
+.wechat-gallery img {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  display: block;
+  object-fit: contain;
+  background: transparent;
+}
+
+.wechat-article-image figcaption,
+.wechat-gallery figcaption {
+  padding: 10px 0 0;
+  color: rgba(21, 24, 23, 0.48);
+  font-size: 12px;
+  line-height: 1.65;
+  text-align: center;
+}
+
+.wechat-gallery {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.wechat-gallery figure {
+  margin: 0;
+}
+
+.wechat-article-nav {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(14, 17, 16, 0.12);
+}
+
+.article-block-list .article-block-editor {
+  scroll-margin-top: 96px;
+}
+
+@media (max-width: 680px) {
+  .wechat-article {
+    width: min(100% - 28px, 820px);
+    padding-top: 34px;
+  }
+
+  .wechat-article-header h1 {
+    font-size: clamp(34px, 11vw, 50px);
+  }
+
+  .wechat-article-deck {
+    padding: 15px 16px;
+    font-size: 16px;
+  }
+
+  .wechat-paragraph {
+    text-align: left;
+  }
+
+  .wechat-article-nav {
+    grid-template-columns: 1fr;
+  }
+}
+/* V48_ARTICLE_SAVE_WECHAT_END */

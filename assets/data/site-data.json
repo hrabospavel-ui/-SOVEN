@@ -269,18 +269,18 @@
       "role": "案例研究、建筑分析、空间策略梳理",
       "concept": "以斜向中庭切入历史建筑，连接城市广场、旧 YMCA 大楼与新剧场。",
       "description": "Le Diamant 剧场更新将建于1879年的前 YMCA 大楼改造为集戏剧创作、表演与公共活动于一体的文化中心。项目通过一道斜向中庭通道，将德尤维尔广场的城市流线引入建筑内部，并以玻璃体量、修复立面、混凝土剧场与木质公共楼梯构成新旧共生的空间叙事。",
-      "coverImage": "abstract:ridge",
+      "coverImage": "assets/projects/p001-northern-wind-court/fengmian.webp",
       "detailImage": "assets/projects/p001-northern-wind-court/11111.webp",
       "articleCoverImage": "assets/projects/p001-northern-wind-court/fengmian.webp",
       "gallery": [
-        "assets/projects/p001-northern-wind-court/article-01.png"
+        "assets/projects/p001-northern-wind-court/11111.webp"
       ],
       "drawings": [
         "assets/projects/p001-northern-wind-court/drawings.pdf"
       ],
       "model3d": "assets/projects/p001-northern-wind-court/moxing1-model-web.glb",
       "modelThumbnail": "",
-      "panorama": "assets/projects/p001-northern-wind-court/vp_sky_v1_066.png",
+      "panorama": "assets/projects/p001-northern-wind-court/vp_sky_v1_066_github.webp",
       "panoramaThumbnail": "",
       "video": "",
       "videoPoster": "",

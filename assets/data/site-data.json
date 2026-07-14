@@ -1,15 +1,12 @@
 {
-  "schema": "northern-atelier-site-data-v1",
-  "exportedAt": "2026-07-14T09:24:07.217Z",
+  "schema": "northern-atelier-site-data-v2",
+  "exportedAt": "2026-07-14T10:34:53.049923Z",
   "siteSettings": {
     "studioName": "栖衡｜SOVEN",
     "studioSeal": "〇",
     "taglineCN": "天有时，地有气，材有美，工有巧，合此四者，然后可以为良。",
     "taglineEN": "Space in balance.",
-    "intro": "在空间、时间与人的关系中，\n寻找克制而持久的秩序。",
-    "philosophy": "我们关注北方建筑的尺度、风、影、材料和秩序，也关注产品在手中被使用的瞬间。每个项目从线稿、模型、图纸和现场材料同时推进。",
-    "email": "406269590@qq.com",
-    "portfolioPdf": "assets/portfolio/northern-atelier-portfolio.pdf",
+    "intro": "在空间、时间与人的关系中，寻找克制而持久的秩序。",
     "accentColor": "#536A63",
     "hero": {
       "sealSuffix": "NORTHERN TECTONIC INDEX",
@@ -19,9 +16,9 @@
         "href": "#works"
       },
       "secondaryAction": {
-        "labelCN": "营造探析",
-        "labelEN": "Studio Method",
-        "href": "#studio"
+        "labelCN": "研究文章",
+        "labelEN": "Research Notes",
+        "href": "#research"
       },
       "indexLinks": [
         {
@@ -50,61 +47,40 @@
     "sections": {
       "featured": {
         "eyebrow": "FEATURED WORKS / 精选作品",
-        "title": "沿通道斜切，异形玻璃体连通老建筑与新剧场。",
-        "description": "一座街区，如何同时装下菜场、市政、图书馆。"
+        "title": "精选案例，不止于观看建筑",
+        "description": "每一个项目都被视为一份可分析的空间档案：从场地条件、功能组织、结构逻辑到材料表达，重新理解建筑生成的过程。"
       },
       "works": {
         "eyebrow": "WORKS / 作品总览",
-        "title": "项目索引不是目录，而是一套可维护的设计案卷。",
-        "description": "项目通过统一数据层渲染，支持分类筛选、发布状态、媒体能力和后期内容更新。"
+        "title": "000",
+        "description": "以统一的数据结构保存图像、图纸、模型、全景与文字，使每个项目都可以被观看、拆解和继续更新。"
       },
       "architecture": {
-        "eyebrow": "ARCHITECTURE / 建筑",
-        "title": "从中轴线、台基和屋脊线开始，重排空间秩序。",
+        "eyebrow": "ARCHITECTURE / 分项 · 建筑",
+        "title": "持续生长的空间",
         "description": "建筑与空间设计入口，覆盖展陈、公共空间、更新改造和沉浸式场景。"
       },
       "objects": {
-        "eyebrow": "OBJECTS / 器物",
-        "title": "器物不是小建筑，而是材料、尺度与手感的独立系统。",
-        "description": "产品设计、家具、装置与器物实验，保持克制的东方平面和年轻的结构敏感度。"
+        "eyebrow": "OBJECTS / 分项 · 造物",
+        "title": "材料、尺度与质感的可触摸体验",
+        "description": "产品设计、家具、装置与器物实验，保持克制的东方审美和年轻的结构敏感度。"
       },
       "research": {
-        "eyebrow": "RESEARCH / 研究",
-        "title": "把构造、材料、形态生成、3D 模型和全景场景放在同一张工作台上。",
-        "description": ""
-      },
-      "studio": {
-        "eyebrow": "STUDIO METHOD / 营造",
-        "title": "年轻团队，使用现代系统重新组织传统营造精神。",
-        "description": "我们关注北方建筑的尺度、风、影、材料和秩序，也关注产品在手中被使用的瞬间。每个项目从线稿、模型、图纸和现场材料同时推进。"
+        "eyebrow": "RESEARCH NOTES / 分项 · 研究",
+        "title": "持续更新的知识档案。",
+        "description": "。"
       },
       "contact": {
         "eyebrow": "CONTACT / 联系",
-        "title": "让新的空间、器物或研究案卷从一封邮件开始。",
+        "title": "让新的联系从一封邮件开始。",
         "description": ""
       }
     },
     "contact": {
-      "emailLabel": "邮件联系",
-      "portfolioLabel": "作品集 PDF",
-      "portfolioCaption": "Portfolio",
-      "socialLinks": [
-        {
-          "label": "Instagram",
-          "text": "IG",
-          "href": "#"
-        },
-        {
-          "label": "Behance",
-          "text": "BE",
-          "href": "#"
-        },
-        {
-          "label": "Xiaohongshu",
-          "text": "RED",
-          "href": "#"
-        }
-      ]
+      "email": "406269590@qq.com",
+      "xiaohongshu": "",
+      "officialAccount": "",
+      "vx": ""
     },
     "footer": {
       "copyright": "© Northern Atelier",
@@ -178,15 +154,6 @@
         "position": "center",
         "blendMode": "screen"
       },
-      "studio": {
-        "image": "",
-        "video": "",
-        "videoPoster": "",
-        "imageOpacity": 0,
-        "designOpacity": 1,
-        "position": "center",
-        "blendMode": "screen"
-      },
       "contact": {
         "image": "",
         "video": "",
@@ -225,38 +192,12 @@
       "href": "#research"
     },
     {
-      "labelCN": "营造",
-      "labelEN": "Studio",
-      "href": "#studio"
-    },
-    {
       "labelCN": "联系",
       "labelEN": "Contact",
       "href": "#contact"
     }
   ],
-  "methods": [
-    {
-      "no": "01",
-      "title": "秩序提取",
-      "text": "从中轴线、台基、屋脊和院落尺度中提取组织方法，而不是复刻传统符号。"
-    },
-    {
-      "no": "02",
-      "title": "材料转译",
-      "text": "把瓦灰、木褐、冷青、朱砂和砖石触感转成当代材料、色彩与界面系统。"
-    },
-    {
-      "no": "03",
-      "title": "数字预演",
-      "text": "通过图纸、模型台和全景场景提前测试空间氛围、观看路径和维护方式。"
-    },
-    {
-      "no": "04",
-      "title": "轻量交付",
-      "text": "官网内容以后可由数据层维护，项目、素材和发布状态都预留接口位置。"
-    }
-  ],
+  "methods": [],
   "projects": [
     {
       "id": "p001",
@@ -357,7 +298,12 @@
         }
       ],
       "featured": true,
-      "published": true
+      "displaySections": [
+        "featured",
+        "works",
+        "architecture"
+      ],
+      "visible": true
     },
     {
       "id": "p002",
@@ -450,7 +396,12 @@
         }
       ],
       "featured": true,
-      "published": true
+      "displaySections": [
+        "featured",
+        "works",
+        "architecture"
+      ],
+      "visible": true
     },
     {
       "id": "p003",
@@ -535,7 +486,11 @@
         }
       ],
       "featured": false,
-      "published": true
+      "displaySections": [
+        "works",
+        "architecture"
+      ],
+      "visible": true
     },
     {
       "id": "p004",
@@ -646,7 +601,12 @@
         }
       ],
       "featured": true,
-      "published": true
+      "displaySections": [
+        "featured",
+        "works",
+        "architecture"
+      ],
+      "visible": true
     },
     {
       "id": "p005",
@@ -715,7 +675,11 @@
         }
       ],
       "featured": false,
-      "published": true
+      "displaySections": [
+        "works",
+        "objects"
+      ],
+      "visible": true
     },
     {
       "id": "p006",
@@ -794,7 +758,10 @@
         }
       ],
       "featured": false,
-      "published": true
+      "displaySections": [
+        "works"
+      ],
+      "visible": true
     },
     {
       "id": "p007",
@@ -863,7 +830,10 @@
         }
       ],
       "featured": false,
-      "published": true
+      "displaySections": [
+        "works"
+      ],
+      "visible": true
     },
     {
       "id": "p008",
@@ -932,7 +902,10 @@
         }
       ],
       "featured": false,
-      "published": true
+      "displaySections": [
+        "works"
+      ],
+      "visible": true
     },
     {
       "id": "p009",
@@ -998,7 +971,12 @@
         }
       ],
       "featured": false,
-      "published": false
+      "displaySections": [
+        "works",
+        "objects"
+      ],
+      "visible": false
     }
-  ]
+  ],
+  "researchArticles": []
 }

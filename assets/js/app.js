@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260714035302
+// CACHE_BUST_VERSION: 20260714103453
 (function () {
   "use strict";
 
@@ -9,7 +9,6 @@
     { id: "architecture", labelCN: "建筑", labelEN: "Architecture" },
     { id: "objects", labelCN: "器物", labelEN: "Objects" },
     { id: "research", labelCN: "研究", labelEN: "Research" },
-    { id: "studio", labelCN: "营造", labelEN: "Studio" },
     { id: "contact", labelCN: "联系", labelEN: "Contact" }
   ];
 
@@ -67,9 +66,6 @@
       taglineCN: "site-data.json 未读取成功。",
       taglineEN: "Site data was not loaded.",
       intro: "当前显示的是诊断占位内容，不是正式网站内容。请检查 assets/data/site-data.json，或在后台导入完整 site-data.json。",
-      philosophy: "正式内容只应来自 assets/data/site-data.json，或来自你在后台明确选择的本机草稿。",
-      email: "",
-      portfolioPdf: "",
       accentColor: "#536A63",
       hero: createDefaultHeroContent(),
       sections: createDefaultSectionContent(),
@@ -82,7 +78,8 @@
       { labelCN: "数据检查", labelEN: "Data Check", href: "#atelier-console" }
     ],
     methods: [],
-    projects: []
+    projects: [],
+    researchArticles: []
   }
 
   var siteSettings = {
@@ -91,9 +88,6 @@
     taglineCN: "内容正在从正式数据文件加载。",
     taglineEN: "Loading official site data.",
     intro: "请维护 assets/data/site-data.json 作为线上正式内容来源。",
-    philosophy: "正式案例、路径和详情文字集中维护在 assets/data/site-data.json。",
-    email: "hello@northern-atelier.example",
-    portfolioPdf: "assets/portfolio/northern-atelier-portfolio.pdf",
     accentColor: "#536A63",
     hero: createDefaultHeroContent(),
     sections: createDefaultSectionContent(),
@@ -109,17 +103,21 @@
     { labelCN: "建筑", labelEN: "Architecture", href: "#architecture" },
     { labelCN: "器物", labelEN: "Objects", href: "#objects" },
     { labelCN: "研究", labelEN: "Research", href: "#research" },
-    { labelCN: "营造", labelEN: "Studio", href: "#studio" },
     { labelCN: "联系", labelEN: "Contact", href: "#contact" }
   ];
 
   var projects = [];
+  var researchArticles = [];
   var activePanoramaViewer = null;
+  var mobilePageLocks = {};
+  var mobilePageScrollY = 0;
+  var mobileViewportTimer = 0;
 
   var state = {
     settings: null,
     navigation: [],
     projects: [],
+    researchArticles: [],
     filter: "All",
     activeProjectId: null,
     lastFocusedElement: null,
@@ -146,7 +144,11 @@
     adminAuthPending: false,
     adminDirtyPanels: {},
     adminSavedSections: {},
-    articleEditorDrafts: {}
+    articleEditorDrafts: {},
+    activeResearchEditorId: "",
+    activeResearchId: "",
+    researchReturnHash: "",
+    researchEditorDrafts: {}
   };
 
   var ASSET_FIELD_CONFIG = {
@@ -239,10 +241,12 @@
     navigation: "northernAtelier.navigation.v1",
     methods: "northernAtelier.methods.v1",
     draftSavedAt: "northernAtelier.localDraftSavedAt.v1",
-    sectionStatus: "northernAtelier.adminSectionStatus.v1"
+    sectionStatus: "northernAtelier.adminSectionStatus.v1",
+    research: "northernAtelier.researchArticles.v1"
   };
   var defaultSiteSettings = clone(siteSettings);
   var defaultProjects = clone(projects);
+  var defaultResearchArticles = clone(researchArticles);
   var reduceMotionQuery = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 
   function qs(selector, root) {
@@ -311,32 +315,23 @@
       },
       research: {
         eyebrow: "RESEARCH / 研究数据",
-        title: "研究内容等待正式项目数据。",
-        description: "模型、全景、视频和文章内容均应来自正式 JSON。"
-      },
-      studio: {
-        eyebrow: "STUDIO / 工作室信息",
-        title: "工作室信息等待正式数据。",
-        description: "请在 siteSettings 中维护工作室名称、介绍、哲学和联系信息。"
+        title: "研究内容等待正式数据。",
+        description: "研究板块后续使用独立文章数据，不再依赖营造板块。"
       },
       contact: {
         eyebrow: "CONTACT / 联系信息",
-        title: "联系信息等待正式数据。",
-        description: "请在 siteSettings.contact 中维护联系方式。"
+        title: "点击键位，复制对应的联系方式。",
+        description: "邮箱、小红书、公众号与 VX 的具体内容不会直接显示在页面上。"
       }
     };
   }
 
   function createDefaultContactContent() {
     return {
-      emailLabel: "邮件联系",
-      portfolioLabel: "作品集 PDF",
-      portfolioCaption: "Portfolio",
-      socialLinks: [
-        { label: "Instagram", text: "IG", href: "#" },
-        { label: "Behance", text: "BE", href: "#" },
-        { label: "Xiaohongshu", text: "RED", href: "#" }
-      ]
+      email: "",
+      xiaohongshu: "",
+      officialAccount: "",
+      vx: ""
     };
   }
 
@@ -420,10 +415,14 @@
     var source = input || {};
     var defaultIndexLinks = defaults.indexLinks;
     var indexLinks = Array.isArray(source.indexLinks) ? source.indexLinks : defaultIndexLinks;
+    var secondary = normalizeAction(source.secondaryAction, defaults.secondaryAction);
+    if (secondary.href === "#studio" || secondary.href === "studio") {
+      secondary = { labelCN: "", labelEN: "", href: "" };
+    }
     return {
       sealSuffix: String(source.sealSuffix || defaults.sealSuffix),
       primaryAction: normalizeAction(source.primaryAction, defaults.primaryAction),
-      secondaryAction: normalizeAction(source.secondaryAction, defaults.secondaryAction),
+      secondaryAction: secondary,
       indexLinks: indexLinks.map(function (item, index) {
         var fallback = defaultIndexLinks[index] || {};
         return {
@@ -431,6 +430,8 @@
           label: String(item.label || fallback.label || ""),
           href: String(item.href || fallback.href || "#")
         };
+      }).filter(function (item) {
+        return item.href !== "#studio" && item.href !== "studio";
       }),
       bottomStrip: parseList(source.bottomStrip && source.bottomStrip.length ? source.bottomStrip : defaults.bottomStrip)
     };
@@ -448,35 +449,32 @@
         description: String(current.description || "")
       };
     });
-    Object.keys(source).forEach(function (id) {
-      if (normalized[id]) {
-        return;
-      }
-      var current = source[id] || {};
-      normalized[id] = {
-        eyebrow: String(current.eyebrow || ""),
-        title: String(current.title || ""),
-        description: String(current.description || "")
-      };
-    });
     return normalized;
   }
 
-  function normalizeContactContent(input) {
+  function normalizeContactContent(input, legacySettings) {
     var defaults = createDefaultContactContent();
     var source = input || {};
-    var links = Array.isArray(source.socialLinks) ? source.socialLinks : defaults.socialLinks;
+    var legacy = legacySettings || {};
+    var legacyLinks = Array.isArray(source.socialLinks) ? source.socialLinks : [];
+
+    function legacySocialValue(pattern) {
+      var match = legacyLinks.find(function (link) {
+        var haystack = [link && link.label, link && link.text].join(" ").toLowerCase();
+        return pattern.test(haystack);
+      });
+      if (!match) {
+        return "";
+      }
+      var value = String(match.value || match.account || match.href || "").trim();
+      return value === "#" ? "" : value;
+    }
+
     return {
-      emailLabel: String(source.emailLabel || defaults.emailLabel),
-      portfolioLabel: String(source.portfolioLabel || defaults.portfolioLabel),
-      portfolioCaption: String(source.portfolioCaption || defaults.portfolioCaption),
-      socialLinks: links.map(function (link) {
-        return {
-          label: String(link.label || link.text || ""),
-          text: String(link.text || link.label || ""),
-          href: String(link.href || "#")
-        };
-      })
+      email: String(source.email || legacy.email || defaults.email || "").trim(),
+      xiaohongshu: String(source.xiaohongshu || source.red || legacy.xiaohongshu || legacy.red || legacySocialValue(/xiaohongshu|小红书|\bred\b/) || defaults.xiaohongshu || "").trim(),
+      officialAccount: String(source.officialAccount || source.wechatOfficial || source.official || legacy.officialAccount || legacy.wechatOfficial || defaults.officialAccount || "").trim(),
+      vx: String(source.vx || source.wechat || legacy.vx || legacy.wechat || defaults.vx || "").trim()
     };
   }
 
@@ -514,10 +512,20 @@
     var merged = Object.assign({}, defaultSiteSettings || siteSettings, incoming);
     merged.hero = normalizeHeroContent(incoming.hero || merged.hero);
     merged.sections = normalizeSectionContent(incoming.sections || merged.sections);
-    merged.contact = normalizeContactContent(incoming.contact || merged.contact);
+    merged.contact = normalizeContactContent(incoming.contact || merged.contact, Object.assign({}, merged, incoming));
     merged.footer = normalizeFooterContent(incoming.footer || merged.footer);
     merged.visualAssets = normalizeVisualAssets(incoming.visualAssets || merged.visualAssets);
     merged.sectionBackgrounds = normalizeSectionBackgrounds(incoming.sectionBackgrounds || merged.sectionBackgrounds);
+
+    delete merged.email;
+    delete merged.portfolioPdf;
+    delete merged.xiaohongshu;
+    delete merged.red;
+    delete merged.officialAccount;
+    delete merged.wechatOfficial;
+    delete merged.vx;
+    delete merged.wechat;
+    delete merged.philosophy;
     return merged;
   }
 
@@ -735,7 +743,90 @@
     }).join("\n");
   }
 
+  var PROJECT_DISPLAY_SECTIONS = ["featured", "works", "architecture", "objects"];
+  var PROJECT_DISPLAY_SECTION_LABELS = {
+    featured: "精选作品",
+    works: "全部作品",
+    architecture: "建筑",
+    objects: "物件"
+  };
+
+  function normalizeProjectDisplaySections(value) {
+    var source = Array.isArray(value) ? value : parseList(value);
+    var normalized = PROJECT_DISPLAY_SECTIONS.filter(function (section) {
+      return source.indexOf(section) !== -1;
+    });
+    if (source.indexOf("research") !== -1 && normalized.indexOf("works") === -1) {
+      normalized.push("works");
+    }
+    return normalized;
+  }
+
+  function deriveLegacyProjectDisplaySections(project) {
+    var current = project || {};
+    var sections = [];
+    if (current.featured) {
+      sections.push("featured");
+    }
+    sections.push("works");
+    if (current.category === "Architecture") {
+      sections.push("architecture");
+    }
+    if (current.category === "Objects") {
+      sections.push("objects");
+    }
+    return normalizeProjectDisplaySections(sections);
+  }
+
+  function isProjectVisible(project) {
+    if (!project) {
+      return false;
+    }
+    if (Object.prototype.hasOwnProperty.call(project, "visible")) {
+      return project.visible !== false;
+    }
+    return project.published !== false;
+  }
+
+  function isResearchArticleVisible(article) {
+    if (!article) {
+      return false;
+    }
+    if (Object.prototype.hasOwnProperty.call(article, "visible")) {
+      return article.visible !== false;
+    }
+    return article.published !== false;
+  }
+
+  function projectAppearsIn(project, section) {
+    if (!isProjectVisible(project)) {
+      return false;
+    }
+    return normalizeProjectDisplaySections(project.displaySections).indexOf(section) !== -1;
+  }
+
+  function readProjectDisplaySections(form) {
+    if (!form) {
+      return [];
+    }
+    return qsa('input[name="displaySections"]:checked', form).map(function (input) {
+      return input.value;
+    }).filter(function (section) {
+      return PROJECT_DISPLAY_SECTIONS.indexOf(section) !== -1;
+    });
+  }
+
+  function formatProjectDisplaySections(project) {
+    return normalizeProjectDisplaySections(project && project.displaySections).map(function (section) {
+      return PROJECT_DISPLAY_SECTION_LABELS[section] || section;
+    });
+  }
+
   function normalizeProject(project) {
+    var source = project || {};
+    var hasExplicitDisplaySections = Object.prototype.hasOwnProperty.call(source, "displaySections");
+    var hasExplicitVisible = Object.prototype.hasOwnProperty.call(source, "visible");
+    var hasLegacyPublished = Object.prototype.hasOwnProperty.call(source, "published");
     var base = {
       id: "p" + Date.now(),
       titleCN: "未命名案卷",
@@ -764,18 +855,80 @@
       attachments: [],
       tags: [],
       articleBlocks: [],
+      displaySections: ["works"],
       featured: false,
-      published: false
+      visible: true
     };
-    var next = Object.assign({}, base, project || {});
+    var next = Object.assign({}, base, source);
     next.tags = parseTags(next.tags);
     next.gallery = parseList(next.gallery);
     next.drawings = parseList(next.drawings);
     next.attachments = normalizeAttachments(next.attachments);
     next.articleBlocks = sanitizeArticleBlocks(next.articleBlocks);
-    next.featured = Boolean(next.featured);
-    next.published = Boolean(next.published);
+    next.displaySections = hasExplicitDisplaySections
+      ? normalizeProjectDisplaySections(source.displaySections)
+      : deriveLegacyProjectDisplaySections(next);
+    next.featured = next.displaySections.indexOf("featured") !== -1;
+    next.visible = hasExplicitVisible ? Boolean(source.visible) : (hasLegacyPublished ? Boolean(source.published) : true);
+    delete next.published;
     return next;
+  }
+
+
+  function normalizeResearchNumber(value, index) {
+    var text = String(value || "").trim().toUpperCase();
+    if (/^R-?\d+$/.test(text)) {
+      var digits = text.replace(/\D/g, "");
+      return "R-" + String(parseInt(digits, 10) || index + 1).padStart(3, "0");
+    }
+    return text || ("R-" + String(index + 1).padStart(3, "0"));
+  }
+
+  function normalizeResearchArticle(article, index) {
+    var source = article || {};
+    var fallbackIndex = Number.isFinite(index) ? index : 0;
+    var hasExplicitVisible = Object.prototype.hasOwnProperty.call(source, "visible");
+    var hasLegacyPublished = Object.prototype.hasOwnProperty.call(source, "published");
+    return {
+      id: String(source.id || ("r" + Date.now() + Math.random().toString(36).slice(2, 6))),
+      number: normalizeResearchNumber(source.number || source.no, fallbackIndex),
+      titleCN: String(source.titleCN || "未命名研究").trim(),
+      titleEN: String(source.titleEN || "").trim(),
+      topic: String(source.topic || source.category || "Research Note").trim(),
+      date: String(source.date || source.year || "").trim(),
+      author: String(source.author || "SOVEN Research").trim(),
+      readTime: String(source.readTime || "").trim(),
+      summary: String(source.summary || source.description || "").trim(),
+      coverImage: normalizeAssetReference(source.coverImage || ""),
+      tags: parseTags(source.tags),
+      articleBlocks: sanitizeArticleBlocks(source.articleBlocks),
+      featured: Boolean(source.featured),
+      visible: hasExplicitVisible ? Boolean(source.visible) : (hasLegacyPublished ? Boolean(source.published) : true),
+      order: Number.isFinite(Number(source.order)) ? Number(source.order) : fallbackIndex
+    };
+  }
+
+  function normalizeResearchArticles(items) {
+    var list = Array.isArray(items) ? items : [];
+    return list.map(function (item, index) {
+      return normalizeResearchArticle(item, index);
+    }).sort(function (a, b) {
+      if (a.featured !== b.featured) {
+        return a.featured ? -1 : 1;
+      }
+      if (a.order !== b.order) {
+        return a.order - b.order;
+      }
+      return String(a.number).localeCompare(String(b.number));
+    });
+  }
+
+  function nextResearchNumber() {
+    var max = researchArticles.reduce(function (value, item) {
+      var digits = parseInt(String(item.number || "").replace(/\D/g, ""), 10);
+      return Number.isFinite(digits) ? Math.max(value, digits) : value;
+    }, 0);
+    return "R-" + String(max + 1).padStart(3, "0");
   }
 
   function delay(data) {
@@ -799,7 +952,12 @@
       if (typeof localStorage === "undefined") {
         return false;
       }
-      return Boolean(localStorage.getItem(STORAGE_KEYS.settings) || localStorage.getItem(STORAGE_KEYS.projects) || localStorage.getItem(STORAGE_KEYS.navigation) || localStorage.getItem(STORAGE_KEYS.methods));
+      return Boolean(
+        localStorage.getItem(STORAGE_KEYS.settings) ||
+        localStorage.getItem(STORAGE_KEYS.projects) ||
+        localStorage.getItem(STORAGE_KEYS.navigation) ||
+        localStorage.getItem(STORAGE_KEYS.research)
+      );
     } catch (error) {
       return false;
     }
@@ -815,6 +973,7 @@
     assets: "素材路径",
     backgrounds: "板块背景",
     article: "项目文章",
+    research: "研究文章",
     pathCheck: "路径检查"
   };
 
@@ -901,51 +1060,26 @@
 
   async function saveCurrentAdminPanel() {
     var panelName = activeAdminPanelName();
-
     if (panelName === "projects") {
-      var saveCurrentAdminPanelButton = qs("#saveCurrentAdminPanelButton");
-    if (saveCurrentAdminPanelButton) {
-      saveCurrentAdminPanelButton.addEventListener("click", saveCurrentAdminPanel);
-    }
-
-    var projectForm = qs("#projectForm");
+      var projectForm = qs("#projectForm");
       if (projectForm) {
-        if (typeof projectForm.requestSubmit === "function") {
-          projectForm.requestSubmit();
-        } else {
-          projectForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-        }
+        if (typeof projectForm.requestSubmit === "function") { projectForm.requestSubmit(); }
+        else { projectForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); }
       }
       return;
     }
-
     if (panelName === "settings") {
       var settingsForm = qs("#settingsForm");
       if (settingsForm) {
-        if (typeof settingsForm.requestSubmit === "function") {
-          settingsForm.requestSubmit();
-        } else {
-          settingsForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-        }
+        if (typeof settingsForm.requestSubmit === "function") { settingsForm.requestSubmit(); }
+        else { settingsForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); }
       }
       return;
     }
-
-    if (panelName === "assets") {
-      await saveAssetPathsFromManager();
-      return;
-    }
-
-    if (panelName === "backgrounds") {
-      await saveSectionBackgroundFromForm();
-      return;
-    }
-
-    if (panelName === "article") {
-      await saveArticleBlocksFromEditor();
-      return;
-    }
-
+    if (panelName === "assets") { await saveAssetPathsFromManager(); return; }
+    if (panelName === "backgrounds") { await saveSectionBackgroundFromForm(); return; }
+    if (panelName === "article") { await saveArticleBlocksFromEditor(); return; }
+    if (panelName === "research") { await saveResearchArticle(); return; }
     showAdminStamp("当前板块无需保存");
   }
 
@@ -955,7 +1089,12 @@
       return;
     }
     consolePanel.dataset.dirtyTrackingBound = "true";
-
+    var navigationOnlyControls = {
+      researchArticleSelect: true,
+      articleProjectSelect: true,
+      assetProject: true,
+      sectionBgTarget: true
+    };
     ["input", "change"].forEach(function (eventName) {
       consolePanel.addEventListener(eventName, function (event) {
         var control = event.target;
@@ -963,7 +1102,7 @@
           return;
         }
         var panel = control.closest("[data-admin-panel]");
-        if (!panel || control.type === "file") {
+        if (!panel || control.type === "file" || navigationOnlyControls[control.id]) {
           return;
         }
         markAdminPanelDirty(panel.getAttribute("data-admin-panel"));
@@ -979,12 +1118,13 @@
       localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(siteSettings));
       localStorage.setItem(STORAGE_KEYS.projects, JSON.stringify(projects));
       localStorage.setItem(STORAGE_KEYS.navigation, JSON.stringify(navigation));
-      localStorage.setItem(STORAGE_KEYS.methods, JSON.stringify(methods));
+      localStorage.setItem(STORAGE_KEYS.research, JSON.stringify(researchArticles));
+      localStorage.removeItem(STORAGE_KEYS.methods);
       localStorage.setItem(STORAGE_KEYS.draftSavedAt, new Date().toISOString());
       state.dataSource = "local";
       updateLocalDraftState();
     } catch (error) {
-      console.warn("Mock data could not be persisted.", error);
+      console.warn("Draft data could not be persisted.", error);
     }
   }
 
@@ -996,20 +1136,13 @@
         labelEN: String(item.labelEN || ""),
         href: String(item.href || "#")
       };
+    }).filter(function (item) {
+      return item.href !== "#studio" && item.href !== "studio";
     });
   }
 
   function normalizeMethods(items) {
-    if (!Array.isArray(items)) {
-      return methods;
-    }
-    return items.map(function (item) {
-      return {
-        no: String(item.no || ""),
-        title: String(item.title || ""),
-        text: String(item.text || "")
-      };
-    });
+    return [];
   }
 
 
@@ -1041,8 +1174,9 @@
     return {
       siteSettings: normalizeSiteSettings(settingsSource),
       navigation: Array.isArray(incoming.navigation) ? normalizeNavigation(incoming.navigation) : normalizeNavigation([]),
-      methods: Array.isArray(incoming.methods) ? normalizeMethods(incoming.methods) : normalizeMethods([]),
-      projects: Array.isArray(incoming.projects) ? incoming.projects.map(normalizeProject) : []
+      methods: [],
+      projects: Array.isArray(incoming.projects) ? incoming.projects.map(normalizeProject) : [],
+      researchArticles: normalizeResearchArticles(incoming.researchArticles)
     };
   }
 
@@ -1051,13 +1185,15 @@
     var normalized = normalizeSiteData(data);
     siteSettings = normalized.siteSettings;
     navigation = normalized.navigation;
-    methods = normalized.methods;
+    methods = [];
     projects = normalized.projects;
+    researchArticles = normalized.researchArticles;
     state.dataSource = source || "official";
     updateLocalDraftState();
     if (state.dataSource === "official") {
       defaultSiteSettings = clone(siteSettings);
       defaultProjects = clone(projects);
+      defaultResearchArticles = clone(researchArticles);
     }
   }
 
@@ -1164,8 +1300,9 @@
     applySiteData({
       siteSettings: readStorage(STORAGE_KEYS.settings, defaultSiteSettings),
       navigation: readStorage(STORAGE_KEYS.navigation, navigation),
-      methods: readStorage(STORAGE_KEYS.methods, methods),
-      projects: readStorage(STORAGE_KEYS.projects, defaultProjects)
+      methods: [],
+      projects: readStorage(STORAGE_KEYS.projects, defaultProjects),
+      researchArticles: readStorage(STORAGE_KEYS.research, defaultResearchArticles)
     }, "local");
     return true;
   }
@@ -1190,7 +1327,9 @@
       localStorage.removeItem(STORAGE_KEYS.projects);
       localStorage.removeItem(STORAGE_KEYS.navigation);
       localStorage.removeItem(STORAGE_KEYS.methods);
+      localStorage.removeItem(STORAGE_KEYS.research);
       localStorage.removeItem(STORAGE_KEYS.draftSavedAt);
+      localStorage.removeItem(STORAGE_KEYS.sectionStatus);
     } catch (error) {
       console.warn("Local draft could not be cleared.", error);
     }
@@ -1356,12 +1495,13 @@
 
   function currentSiteData() {
     return clone({
-      schema: "northern-atelier-site-data-v1",
+      schema: "northern-atelier-site-data-v2",
       exportedAt: new Date().toISOString(),
       siteSettings: siteSettings,
       navigation: navigation,
-      methods: methods,
-      projects: projects
+      methods: [],
+      projects: projects,
+      researchArticles: researchArticles
     });
   }
 
@@ -1398,6 +1538,7 @@
     if (!form || !form.elements || !form.elements.id || !form.elements.id.value) {
       return null;
     }
+    var visible = Boolean(form.elements.visible && form.elements.visible.checked);
     return {
       id: form.elements.id.value,
       data: {
@@ -1406,7 +1547,7 @@
         category: form.elements.category.value,
         year: form.elements.year.value.trim(),
         location: form.elements.location.value.trim(),
-        status: form.elements.status.value.trim() || (form.elements.published.checked ? "Published" : "Draft"),
+        status: form.elements.status.value.trim() || (visible ? "Published" : "Hidden"),
         material: form.elements.material.value.trim(),
         scale: form.elements.scale.value.trim(),
         role: form.elements.role.value.trim(),
@@ -1426,8 +1567,9 @@
         tags: parseTags(form.elements.tags.value),
         description: form.elements.description.value.trim(),
         concept: form.elements.concept.value.trim() || form.elements.description.value.trim().slice(0, 48),
-        featured: form.elements.featured.checked,
-        published: form.elements.published.checked
+        displaySections: readProjectDisplaySections(form),
+        featured: readProjectDisplaySections(form).indexOf("featured") !== -1,
+        visible: visible
       }
     };
   }
@@ -1480,8 +1622,9 @@
       exportedAt: snapshot.exportedAt,
       siteSettings: normalized.siteSettings,
       navigation: normalized.navigation,
-      methods: normalized.methods,
-      projects: normalized.projects
+      methods: [],
+      projects: normalized.projects,
+      researchArticles: normalized.researchArticles
     };
   }
 
@@ -1510,6 +1653,7 @@
     var data = buildExactExportData();
     var title = data.siteSettings && data.siteSettings.taglineCN ? String(data.siteSettings.taglineCN).trim() : "";
     var projectCount = Array.isArray(data.projects) ? data.projects.length : 0;
+    var researchCount = Array.isArray(data.researchArticles) ? data.researchArticles.length : 0;
 
     if (!title || title.indexOf("site-data.json 未读取成功") !== -1) {
       if (typeof window !== "undefined" && window.alert) {
@@ -1544,7 +1688,7 @@
       }
     }
     if (typeof window !== "undefined" && window.confirm) {
-      var publishOk = window.confirm("即将导出完整站点数据 site-data.json。\n\n当前数据源：" + state.dataSource + "\n首页标题：" + title + "\n项目数量：" + projectCount + "\n\n发布步骤：\n1. 下载后保持文件名 site-data.json；\n2. 上传覆盖 assets/data/site-data.json；\n3. 提交 GitHub；\n4. 用 ?fresh=1 检查线上数据。\n\n继续导出？");
+      var publishOk = window.confirm("即将导出完整站点数据 site-data.json。\n\n当前数据源：" + state.dataSource + "\n首页标题：" + title + "\n项目数量：" + projectCount + "\n研究文章：" + researchCount + "\n\n发布步骤：\n1. 下载后保持文件名 site-data.json；\n2. 上传覆盖 assets/data/site-data.json；\n3. 提交 GitHub；\n4. 用 ?fresh=1 检查线上数据。\n\n继续导出？");
       if (!publishOk) {
         return;
       }
@@ -1556,7 +1700,6 @@
   function collectOfficialPathIssues(data) {
     var issues = [];
     var settings = data.siteSettings || {};
-    checkOfficialPath(settings.portfolioPdf, "siteSettings.portfolioPdf", issues, false);
     var visualAssets = normalizeVisualAssets(settings.visualAssets);
     checkOfficialPath(visualAssets.heroDepth.mountain, "siteSettings.visualAssets.heroDepth.mountain", issues, false);
     checkOfficialPath(visualAssets.heroDepth.windowFrame, "siteSettings.visualAssets.heroDepth.windowFrame", issues, false);
@@ -1565,33 +1708,29 @@
     checkOfficialPath(visualAssets.heroDepth.reference, "siteSettings.visualAssets.heroDepth.reference", issues, false);
     checkOfficialPath(visualAssets.watang.webp, "siteSettings.visualAssets.watang.webp", issues, false);
     checkOfficialPath(visualAssets.watang.pngFallback, "siteSettings.visualAssets.watang.pngFallback", issues, false);
-
     var backgrounds = normalizeSectionBackgrounds(settings.sectionBackgrounds);
     Object.keys(backgrounds).forEach(function (id) {
       checkOfficialPath(backgrounds[id].image, "siteSettings.sectionBackgrounds." + id + ".image", issues, false);
       checkOfficialPath(backgrounds[id].video, "siteSettings.sectionBackgrounds." + id + ".video", issues, false);
       checkOfficialPath(backgrounds[id].videoPoster, "siteSettings.sectionBackgrounds." + id + ".videoPoster", issues, false);
     });
-
     (data.projects || []).forEach(function (project, projectIndex) {
       var prefix = "projects[" + projectIndex + "]." + (project.id || "project");
       checkOfficialPath(project.coverImage, prefix + ".coverImage", issues, true);
       checkOfficialPath(project.detailImage, prefix + ".detailImage", issues, false);
-      parseList(project.gallery).forEach(function (path, pathIndex) {
-        checkOfficialPath(path, prefix + ".gallery[" + pathIndex + "]", issues, false);
+      parseList(project.gallery).forEach(function (path, pathIndex) { checkOfficialPath(path, prefix + ".gallery[" + pathIndex + "]", issues, false); });
+      ["model3d", "modelThumbnail", "panorama", "panoramaThumbnail", "video", "videoPoster"].forEach(function (field) { checkOfficialPath(project[field], prefix + "." + field, issues, false); });
+      sanitizeArticleBlocks(project.articleBlocks).forEach(function (block, blockIndex) {
+        if (block.type === "image") { checkOfficialPath(block.asset, prefix + ".articleBlocks[" + blockIndex + "].asset", issues, false); }
+        if (block.type === "gallery") { parseList(block.assets).forEach(function (path, pathIndex) { checkOfficialPath(path, prefix + ".articleBlocks[" + blockIndex + "].assets[" + pathIndex + "]", issues, false); }); }
       });
-      ["model3d", "modelThumbnail", "panorama", "panoramaThumbnail", "video", "videoPoster"].forEach(function (field) {
-        checkOfficialPath(project[field], prefix + "." + field, issues, false);
-      });
-      normalizeArticleBlocks(project.articleBlocks).forEach(function (block, blockIndex) {
-        if (block.type === "image") {
-          checkOfficialPath(block.asset, prefix + ".articleBlocks[" + blockIndex + "].asset", issues, false);
-        }
-        if (block.type === "gallery") {
-          parseList(block.assets).forEach(function (path, pathIndex) {
-            checkOfficialPath(path, prefix + ".articleBlocks[" + blockIndex + "].assets[" + pathIndex + "]", issues, false);
-          });
-        }
+    });
+    (data.researchArticles || []).forEach(function (article, articleIndex) {
+      var prefix = "researchArticles[" + articleIndex + "]." + (article.id || "research");
+      checkOfficialPath(article.coverImage, prefix + ".coverImage", issues, false);
+      sanitizeArticleBlocks(article.articleBlocks).forEach(function (block, blockIndex) {
+        if (block.type === "image") { checkOfficialPath(block.asset, prefix + ".articleBlocks[" + blockIndex + "].asset", issues, false); }
+        if (block.type === "gallery") { parseList(block.assets).forEach(function (path, pathIndex) { checkOfficialPath(path, prefix + ".articleBlocks[" + blockIndex + "].assets[" + pathIndex + "]", issues, false); }); }
       });
     });
     return issues;
@@ -1623,39 +1762,19 @@
   }
 
   function collectPathReport(data) {
-    var report = {
-      empty: [],
-      local: [],
-      suspicious: [],
-      referenced: []
-    };
+    var report = { empty: [], local: [], suspicious: [], referenced: [] };
     function add(label, value, options) {
       var opts = options || {};
       var path = String(value || "").trim();
-      if (!path) {
-        if (!opts.optional) {
-          report.empty.push(label);
-        }
-        return;
-      }
-      if (opts.allowAbstract && path.indexOf("abstract:") === 0) {
-        report.referenced.push({ label: label, path: path });
-        return;
-      }
+      if (!path) { if (!opts.optional) { report.empty.push(label); } return; }
+      if (opts.allowAbstract && path.indexOf("abstract:") === 0) { report.referenced.push({ label: label, path: path }); return; }
       report.referenced.push({ label: label, path: path });
-      if (isLocalFilePath(path) || isAssetReference(path) || isMockReference(path)) {
-        report.local.push({ label: label, path: path });
-        return;
-      }
-      if (isSuspiciousAssetPath(path) || isExternalPath(path) || path.charAt(0) === "/") {
-        report.suspicious.push({ label: label, path: path });
-      }
+      if (isLocalFilePath(path) || isAssetReference(path) || isMockReference(path)) { report.local.push({ label: label, path: path }); return; }
+      if (isSuspiciousAssetPath(path) || isExternalPath(path) || path.charAt(0) === "/") { report.suspicious.push({ label: label, path: path }); }
     }
-
     var normalized = normalizeSiteData(data);
     var settings = normalized.siteSettings;
     var visualAssets = normalizeVisualAssets(settings.visualAssets);
-    add("作品集 PDF", settings.portfolioPdf, { optional: true });
     add("首页分层素材：山体", visualAssets.heroDepth.mountain);
     add("首页分层素材：窗框", visualAssets.heroDepth.windowFrame);
     add("首页分层素材：人物", visualAssets.heroDepth.lady);
@@ -1663,7 +1782,6 @@
     add("首页分层素材：参考图", visualAssets.heroDepth.reference, { optional: true });
     add("瓦当 WebP", visualAssets.watang.webp);
     add("瓦当 PNG 备用", visualAssets.watang.pngFallback, { optional: true });
-
     var backgrounds = normalizeSectionBackgrounds(settings.sectionBackgrounds);
     PUBLIC_SECTIONS.forEach(function (section) {
       var bg = backgrounds[section.id];
@@ -1671,30 +1789,28 @@
       add("板块视频：" + section.labelCN, bg.video, { optional: true });
       add("板块视频 poster：" + section.labelCN, bg.videoPoster, { optional: true });
     });
-
     normalized.projects.forEach(function (project) {
       var prefix = project.titleCN || project.id;
       add(prefix + " / 案例封面图", project.coverImage, { allowAbstract: true });
       add(prefix + " / 案例详情主图", project.detailImage, { optional: true });
-      parseList(project.gallery).forEach(function (path, index) {
-        add(prefix + " / 图片集 " + String(index + 1), path);
-      });
+      parseList(project.gallery).forEach(function (path, index) { add(prefix + " / 图片集 " + String(index + 1), path); });
       add(prefix + " / 案例视频", project.video, { optional: true });
       add(prefix + " / 视频 poster", project.videoPoster, { optional: true });
       add(prefix + " / 模型文件", project.model3d, { optional: true });
       add(prefix + " / 模型缩略图", project.modelThumbnail, { optional: true });
       add(prefix + " / 全景图", project.panorama, { optional: true });
       add(prefix + " / 全景缩略图", project.panoramaThumbnail, { optional: true });
-
-      normalizeArticleBlocks(project.articleBlocks).forEach(function (block, blockIndex) {
-        if (block.type === "image") {
-          add(prefix + " / 图文文章图片 " + String(blockIndex + 1), block.asset);
-        }
-        if (block.type === "gallery") {
-          parseList(block.assets).forEach(function (path, pathIndex) {
-            add(prefix + " / 图文文章图集 " + String(blockIndex + 1) + "-" + String(pathIndex + 1), path);
-          });
-        }
+      sanitizeArticleBlocks(project.articleBlocks).forEach(function (block, blockIndex) {
+        if (block.type === "image") { add(prefix + " / 图文文章图片 " + String(blockIndex + 1), block.asset); }
+        if (block.type === "gallery") { parseList(block.assets).forEach(function (path, pathIndex) { add(prefix + " / 图文文章图集 " + String(blockIndex + 1) + "-" + String(pathIndex + 1), path); }); }
+      });
+    });
+    normalized.researchArticles.forEach(function (article) {
+      var prefix = (article.number || article.id) + " / " + article.titleCN;
+      add(prefix + " / 研究封面", article.coverImage, { optional: true });
+      sanitizeArticleBlocks(article.articleBlocks).forEach(function (block, blockIndex) {
+        if (block.type === "image") { add(prefix + " / 正文图片 " + String(blockIndex + 1), block.asset); }
+        if (block.type === "gallery") { parseList(block.assets).forEach(function (path, pathIndex) { add(prefix + " / 正文图集 " + String(blockIndex + 1) + "-" + String(pathIndex + 1), path); }); }
       });
     });
     return report;
@@ -1968,6 +2084,15 @@
     return delay(projects);
   }
 
+  function fetchResearchArticles() {
+    return delay(researchArticles);
+  }
+
+  function fetchResearchArticleById(id) {
+    var article = researchArticles.find(function (item) { return item.id === id; });
+    return delay(article || null);
+  }
+
   function fetchProjectById(id) {
     var project = projects.find(function (item) { return item.id === id; });
     return delay(project || null);
@@ -2001,8 +2126,8 @@
   function togglePublishStatus(id) {
     var project = projects.find(function (item) { return item.id === id; });
     if (project) {
-      project.published = !project.published;
-      project.status = project.published ? "Published" : "Draft";
+      project.visible = !isProjectVisible(project);
+      delete project.published;
       writeStorage();
     }
     return delay(project || null);
@@ -2194,9 +2319,153 @@
     rebuildAssetObjectURLs: rebuildAssetObjectURLs
   };
 
+  function isMobileExperience() {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      return false;
+    }
+    return window.matchMedia("(max-width: 840px), (hover: none) and (pointer: coarse) and (max-width: 1100px)").matches;
+  }
+
+  function updateMobileViewportMetrics() {
+    var viewport = window.visualViewport;
+    var height = viewport && viewport.height ? viewport.height : window.innerHeight;
+    var offsetTop = viewport && viewport.offsetTop ? viewport.offsetTop : 0;
+    document.documentElement.style.setProperty("--mobile-viewport-height", Math.max(320, Math.round(height)) + "px");
+    document.documentElement.style.setProperty("--mobile-viewport-offset-top", Math.max(0, Math.round(offsetTop)) + "px");
+    document.documentElement.classList.toggle("is-mobile-experience", isMobileExperience());
+  }
+
+  function lockMobilePageScroll(source) {
+    if (!isMobileExperience()) {
+      return;
+    }
+    var key = source || "overlay";
+    if (mobilePageLocks[key]) {
+      return;
+    }
+    mobilePageLocks[key] = true;
+    if (Object.keys(mobilePageLocks).length > 1) {
+      return;
+    }
+    mobilePageScrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.classList.add("mobile-scroll-locked");
+    document.body.style.top = "-" + mobilePageScrollY + "px";
+  }
+
+  function unlockMobilePageScroll(source) {
+    var key = source || "overlay";
+    delete mobilePageLocks[key];
+    if (Object.keys(mobilePageLocks).length) {
+      return;
+    }
+    if (!document.body.classList.contains("mobile-scroll-locked")) {
+      return;
+    }
+    document.body.classList.remove("mobile-scroll-locked");
+    document.body.style.top = "";
+    window.scrollTo(0, mobilePageScrollY || 0);
+  }
+
+  function resizeInteractiveMedia() {
+    window.clearTimeout(mobileViewportTimer);
+    mobileViewportTimer = window.setTimeout(function () {
+      if (activePanoramaViewer && typeof activePanoramaViewer.resize === "function") {
+        try {
+          activePanoramaViewer.resize();
+        } catch (error) {
+          /* viewer may be closing */
+        }
+      }
+      var modelViewer = qs("[data-model-viewer]");
+      if (modelViewer && typeof modelViewer.updateFraming === "function") {
+        try {
+          modelViewer.updateFraming();
+        } catch (error) {
+          /* model-viewer may still be loading */
+        }
+      }
+    }, 120);
+  }
+
+  function updateArticleReadingProgress() {
+    var view = qs(".project-article-view");
+    if (!view) {
+      return;
+    }
+    var range = Math.max(1, view.scrollHeight - view.clientHeight);
+    var progress = Math.max(0, Math.min(1, view.scrollTop / range));
+    view.style.setProperty("--article-reading-progress", progress.toFixed(4));
+  }
+
+  function initResponsiveAmbientEffects() {
+    if (isMobileExperience()) {
+      document.documentElement.classList.add("mobile-lite-fx");
+      return;
+    }
+    document.documentElement.classList.remove("mobile-lite-fx");
+    if (!qs(".ember-canvas")) {
+      initEmberCanvas();
+    }
+  }
+
+  function initMobileExperience() {
+    updateMobileViewportMetrics();
+
+    var viewport = window.visualViewport;
+    if (viewport) {
+      viewport.addEventListener("resize", function () {
+        updateMobileViewportMetrics();
+        resizeInteractiveMedia();
+      }, { passive: true });
+      viewport.addEventListener("scroll", updateMobileViewportMetrics, { passive: true });
+    }
+
+    window.addEventListener("resize", function () {
+      updateMobileViewportMetrics();
+      resizeInteractiveMedia();
+      if (!isMobileExperience()) {
+        closeMobileNav();
+      }
+    }, { passive: true });
+
+    window.addEventListener("orientationchange", function () {
+      window.setTimeout(function () {
+        updateMobileViewportMetrics();
+        resizeInteractiveMedia();
+      }, 180);
+    }, { passive: true });
+
+    var navBackdrop = qs("#mobileNavBackdrop");
+    if (navBackdrop) {
+      navBackdrop.addEventListener("click", closeMobileNav);
+    }
+
+    var articleView = qs(".project-article-view");
+    if (articleView) {
+      articleView.addEventListener("scroll", updateArticleReadingProgress, { passive: true });
+    }
+
+    document.addEventListener("focusin", function (event) {
+      if (!isMobileExperience() || !event.target || !event.target.closest) {
+        return;
+      }
+      if (!event.target.closest("#adminOverlay")) {
+        return;
+      }
+      window.setTimeout(function () {
+        try {
+          event.target.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+        } catch (error) {
+          /* older browsers */
+        }
+      }, 260);
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", init);
 
   async function init() {
+    initMobileExperience();
     try {
       await initAssetDB();
     } catch (error) {
@@ -2237,6 +2506,7 @@
       state.settings = siteSettings;
       state.navigation = navigation;
       state.projects = projects;
+      state.researchArticles = researchArticles;
       state.assets = [];
     }
 
@@ -2245,7 +2515,7 @@
     bindGlobalEvents();
     initWadangCursorStable();
     initHeroStageStable();
-    window.setTimeout(initEmberCanvas, 900);
+    window.setTimeout(initResponsiveAmbientEffects, 900);
     initSectionObserver();
     window.setTimeout(ensureProjectCardsVisible, 900);
   }
@@ -2254,9 +2524,13 @@
     state.settings = await fetchSiteSettings();
     state.navigation = await fetchNavigation();
     state.projects = await fetchProjects();
+    state.researchArticles = await fetchResearchArticles();
     state.assets = await listAssetsFromDB();
     await rebuildAssetObjectURLs();
     ensureProjectsNotEmpty();
+    if (!Array.isArray(state.researchArticles)) {
+      state.researchArticles = [];
+    }
   }
 
   function ensureProjectsNotEmpty() {
@@ -2292,9 +2566,7 @@
     }
 
     state.cardVisibilityFallbackTimer = window.setTimeout(function () {
-      var publishedExists = state.projects && state.projects.some(function (project) {
-        return project.published;
-      });
+      var publishedExists = state.projects && state.projects.some(isProjectVisible);
 
       var cards = qsa(".project-card, .research-card");
 
@@ -2331,17 +2603,10 @@
     renderCategoryRail("Architecture", "architectureRail");
     renderCategoryRail("Objects", "objectsRail");
     renderResearch();
-    renderMethods();
     applySectionBackgrounds();
     renderAdminList();
-    renderAssetProjectOptions();
-    fillAssetPathForm();
-    renderSectionBgControls();
-    renderArticleEditorControls();
-    fillSettingsForm();
-    renderDataSourceStatus();
-    renderPathReport();
-    ensureProjectCardsVisible();
+    renderResearchEditorControls();
+    renderAdminSectionSaveState();
   }
 
   function renderSettings() {
@@ -2353,19 +2618,9 @@
     setText("heroTitle", settings.taglineCN);
     setText("heroTitleEN", settings.taglineEN);
     setText("heroIntro", settings.intro);
-    setText("studioPhilosophy", settings.philosophy);
-    setText("contactEmail", settings.email);
-    var emailLink = qs("#emailLink");
-    var pdfLink = qs("#pdfLink");
-    if (emailLink) {
-      emailLink.href = "mailto:" + settings.email;
-    }
-    if (pdfLink) {
-      pdfLink.href = settings.portfolioPdf || "#";
-    }
     document.documentElement.style.setProperty("--cangqing", settings.accentColor || "#536A63");
     renderHeroContent(settings.hero);
-    renderSectionContent(settings.sections, settings.philosophy);
+    renderSectionContent(settings.sections);
     renderContactContent(settings.contact);
     applyVisualAssets(settings.visualAssets);
   }
@@ -2394,10 +2649,16 @@
 
   function renderHeroAction(selector, action) {
     var link = qs(selector);
-    if (!link || !action) {
+    if (!link) {
       return;
     }
-    link.href = action.href || "#";
+    var invalid = !action || !action.href || action.href === "#studio" || action.href === "studio" || (!action.labelCN && !action.labelEN);
+    link.hidden = invalid;
+    link.setAttribute("aria-hidden", invalid ? "true" : "false");
+    if (invalid) {
+      return;
+    }
+    link.href = action.href;
     link.innerHTML = '<span>' + escapeHTML(action.labelCN) + '</span><em>' + escapeHTML(action.labelEN) + '</em>';
   }
 
@@ -2427,26 +2688,83 @@
     });
   }
 
+  function copyContactText(value) {
+    var text = String(value || "").trim();
+    if (!text) {
+      return Promise.reject(new Error("empty"));
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "readonly");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      textarea.style.pointerEvents = "none";
+      document.body.appendChild(textarea);
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+      try {
+        var ok = document.execCommand("copy");
+        textarea.remove();
+        ok ? resolve() : reject(new Error("copy-failed"));
+      } catch (error) {
+        textarea.remove();
+        reject(error);
+      }
+    });
+  }
+
   function renderContactContent(contact) {
     var content = normalizeContactContent(contact);
-    var emailLabel = qs("#emailLink span");
-    var pdfLabel = qs("#pdfLink span");
-    var pdfCaption = qs("#pdfLink em");
-    var socialLinks = qs("#contact .social-links");
-    if (emailLabel) {
-      emailLabel.textContent = content.emailLabel;
+    var grid = qs("#contactCopyGrid");
+    var status = qs("#contactCopyStatus");
+    if (!grid) {
+      return;
     }
-    if (pdfLabel) {
-      pdfLabel.textContent = content.portfolioLabel;
-    }
-    if (pdfCaption) {
-      pdfCaption.textContent = content.portfolioCaption;
-    }
-    if (socialLinks) {
-      socialLinks.innerHTML = content.socialLinks.map(function (link) {
-        return '<a href="' + escapeHTML(link.href) + '" aria-label="' + escapeHTML(link.label) + '">' + escapeHTML(link.text) + '</a>';
-      }).join("");
-    }
+
+    var channels = [
+      { key: "email", label: "邮箱", value: content.email },
+      { key: "xiaohongshu", label: "小红书", value: content.xiaohongshu },
+      { key: "officialAccount", label: "公众号", value: content.officialAccount },
+      { key: "vx", label: "VX", value: content.vx }
+    ];
+
+    grid.innerHTML = channels.map(function (channel) {
+      var disabled = !channel.value;
+      return '<button class="contact-copy-key" type="button" data-contact-copy="' + escapeHTML(channel.key) + '"' +
+        (disabled ? ' disabled aria-disabled="true"' : '') +
+        ' aria-label="复制' + escapeHTML(channel.label) + '"><span>' + escapeHTML(channel.label) + '</span></button>';
+    }).join("");
+
+    qsa("[data-contact-copy]", grid).forEach(function (button) {
+      button.addEventListener("click", function () {
+        var key = button.getAttribute("data-contact-copy");
+        var channel = channels.find(function (item) { return item.key === key; });
+        if (!channel || !channel.value) {
+          if (status) {
+            status.textContent = channel ? channel.label + "尚未设置。" : "联系方式尚未设置。";
+          }
+          return;
+        }
+        copyContactText(channel.value).then(function () {
+          qsa(".contact-copy-key", grid).forEach(function (item) { item.classList.remove("is-copied"); });
+          button.classList.add("is-copied");
+          if (status) {
+            status.textContent = channel.label + "已复制。";
+          }
+          window.setTimeout(function () {
+            button.classList.remove("is-copied");
+          }, 1400);
+        }).catch(function () {
+          if (status) {
+            status.textContent = channel.label + "复制失败，请检查浏览器权限。";
+          }
+        });
+      });
+    });
   }
 
   function applyVisualAssets(visualAssets) {
@@ -2760,10 +3078,12 @@
     if (!container) {
       return;
     }
-    var featured = state.projects.filter(function (project) { return project.featured && project.published; }).slice(0, 3);
+    var featured = state.projects.filter(function (project) {
+      return projectAppearsIn(project, "featured");
+    }).slice(0, 3);
     container.innerHTML = featured.length
       ? featured.map(function (project, index) { return projectCardHTML(project, index, "featured"); }).join("")
-      : emptyStateHTML("暂无精选项目", state.dataSource === "fallback" ? "正式 JSON 未读取成功；当前不会显示旧版项目。" : "site-data.json 中没有标记为 featured 的已发布项目。");
+      : emptyStateHTML("暂无精选项目", state.dataSource === "fallback" ? "正式 JSON 未读取成功；当前不会显示旧版项目。" : "没有项目选择显示在“精选作品”板块。");
   }
 
   function renderFilters() {
@@ -2771,8 +3091,13 @@
     if (!container) {
       return;
     }
-    var published = state.projects.filter(function (item) { return item.published; });
+    var published = state.projects.filter(function (item) {
+      return projectAppearsIn(item, "works");
+    });
     var categories = ["All"].concat(Array.from(new Set(published.map(function (item) { return item.category; }))).filter(Boolean));
+    if (categories.indexOf(state.filter) === -1) {
+      state.filter = "All";
+    }
     container.innerHTML = categories.map(function (category) {
       var active = category === state.filter ? " is-active" : "";
       return '<button type="button" class="' + active + '" data-filter="' + escapeHTML(category) + '">' + escapeHTML(category) + '</button>';
@@ -2785,14 +3110,14 @@
       return;
     }
     var visible = state.projects.filter(function (project) {
-      return project.published && (state.filter === "All" || project.category === state.filter);
+      return projectAppearsIn(project, "works") && (state.filter === "All" || project.category === state.filter);
     });
     if (!visible.length) {
       container.innerHTML = emptyStateHTML(
         state.dataSource === "fallback" ? "正式项目数据未读取" : "暂无可显示项目",
         state.dataSource === "fallback"
           ? "请检查 assets/data/site-data.json 是否能读取，或在后台导入完整 site-data.json。"
-          : "当前筛选条件下没有已发布项目；请检查 projects 数组和 published/status 字段。"
+          : "当前筛选条件下，没有项目选择显示在“全部作品”板块。"
       );
       return;
     }
@@ -2806,37 +3131,64 @@
     if (!container) {
       return;
     }
+    var sectionKey = category === "Architecture" ? "architecture" : category === "Objects" ? "objects" : String(category || "").toLowerCase();
     var visible = state.projects.filter(function (project) {
-      return project.published && project.category === category;
+      return projectAppearsIn(project, sectionKey);
     }).slice(0, 4);
     container.innerHTML = visible.length
       ? visible.map(function (project, index) { return projectCardHTML(project, index, "category"); }).join("")
-      : emptyStateHTML("暂无 " + category + " 项目", state.dataSource === "fallback" ? "正式 JSON 未读取成功；不会显示旧版项目。" : "请在 projects 中维护该类别的已发布项目。");
+      : emptyStateHTML("暂无 " + category + " 项目", state.dataSource === "fallback" ? "正式 JSON 未读取成功；不会显示旧版项目。" : "没有项目选择显示在该板块。");
+  }
+
+  function researchCoverHTML(article, className) {
+    var source = normalizeAssetReference(article && article.coverImage);
+    if (source && !isMockReference(source) && String(source).indexOf("abstract:") !== 0) {
+      var kind = assetKind(source);
+      if (kind === "image" || kind === "gif") {
+        var url = resolveAssetURL(source) || source;
+        return '<figure class="' + escapeHTML(className || "research-cover") + '"><img loading="lazy" decoding="async" src="' + escapeHTML(url) + '" alt="' + escapeHTML(article.titleCN) + '" onerror="this.closest(\'figure\').classList.add(\'is-missing\');this.remove()"></figure>';
+      }
+    }
+    return '<figure class="' + escapeHTML(className || "research-cover") + ' is-abstract"><span></span><i></i><b>' + escapeHTML(article.number || "R—") + '</b></figure>';
   }
 
   function renderResearch() {
-    var container = qs("#researchGrid");
+    var container = qs("#researchLibrary");
     if (!container) {
       return;
     }
-    var research = state.projects.filter(function (project) {
-      return project.published && (project.category === "Research" || project.model3d || project.panorama);
-    }).slice(0, 4);
-    if (!research.length) {
-      container.innerHTML = emptyStateHTML(
-        "暂无研究 / 模型项目",
-        state.dataSource === "fallback" ? "正式 JSON 未读取成功；不会显示旧版研究内容。" : "请在 projects 中维护 Research、model3d 或 panorama 项目。"
-      );
+    var published = (state.researchArticles || []).filter(isResearchArticleVisible);
+    if (!published.length) {
+      container.innerHTML = '<div class="research-empty-archive"><span>R—000</span><div><strong>研究档案尚未公开</strong><p>研究文章将在 researchArticles 中独立维护，不会再重复展示项目卡片。</p></div></div>';
       return;
     }
-    container.innerHTML = research.map(function (project, index) {
-      var icon = ["轴", "模", "景", "材"][index % 4];
-      return '<article class="research-card" data-project-id="' + escapeHTML(project.id) + '" tabindex="0" role="button">' +
-        '<div class="research-icon">' + icon + '</div>' +
-        '<div><p class="eyebrow">' + escapeHTML(project.category) + ' / ' + escapeHTML(project.year) + '</p><h3>' + escapeHTML(project.titleCN) + '</h3><p>' + escapeHTML(project.concept || project.description) + '</p></div>' +
-        mediaTagsHTML(project) +
-      '</article>';
+
+    var lead = published.find(function (article) { return article.featured; }) || published[0];
+    var remaining = published.filter(function (article) { return article.id !== lead.id; });
+    var leadCover = researchCoverHTML(lead, "research-lead-visual");
+    var leadTags = lead.tags.slice(0, 4).map(function (tag) {
+      return '<span>' + escapeHTML(tag) + '</span>';
     }).join("");
+
+    var leadHTML = '<article class="research-lead-card research-card" data-research-id="' + escapeHTML(lead.id) + '" tabindex="0" role="button">' +
+      leadCover +
+      '<div class="research-lead-copy"><div class="research-ledger-line"><strong>' + escapeHTML(lead.number) + '</strong><span>' + escapeHTML([lead.topic, lead.date].filter(Boolean).join(" · ")) + '</span></div>' +
+      '<h3>' + escapeHTML(lead.titleCN) + '</h3>' +
+      (lead.titleEN ? '<p class="research-title-en">' + escapeHTML(lead.titleEN) + '</p>' : '') +
+      '<p class="research-summary">' + escapeHTML(lead.summary) + '</p>' +
+      '<div class="research-lead-footer"><div class="research-tag-line">' + leadTags + '</div><span class="research-read-link">READ NOTE <i>↗</i></span></div></div>' +
+      '</article>';
+
+    var indexHTML = '<div class="research-index-panel"><div class="research-index-head"><span>INDEX / 研究索引</span><strong>' + String(published.length).padStart(2, "0") + '</strong></div>' +
+      '<div class="research-index-list">' + remaining.map(function (article) {
+        return '<article class="research-index-card research-card" data-research-id="' + escapeHTML(article.id) + '" tabindex="0" role="button">' +
+          '<div class="research-index-number">' + escapeHTML(article.number) + '</div>' +
+          '<div class="research-index-copy"><span>' + escapeHTML([article.topic, article.date].filter(Boolean).join(" / ")) + '</span><h3>' + escapeHTML(article.titleCN) + '</h3><p>' + escapeHTML(article.summary) + '</p></div>' +
+          '<div class="research-index-arrow">↗</div>' +
+        '</article>';
+      }).join("") + '</div></div>';
+
+    container.innerHTML = leadHTML + indexHTML;
   }
 
   function renderMethods() {
@@ -2860,7 +3212,7 @@
     }).join("");
     var visual = textOnly ? '<div class="axis-rule"></div>' : visualHTML(project, "card");
     var archiveNumber = textOnly ? '<div class="archive-number">' + number + '</div>' : "";
-    var status = project.featured ? '<span class="status-pill">FEATURED</span>' : '<span>' + escapeHTML(project.status) + '</span>';
+    var status = projectAppearsIn(project, "featured") ? '<span class="status-pill">FEATURED</span>' : '<span>' + escapeHTML(project.status) + '</span>';
     return '<article class="' + classes + '" data-project-id="' + escapeHTML(project.id) + '" tabindex="0" role="button" aria-label="查看项目 ' + escapeHTML(project.titleCN) + '">' +
       visual +
       '<span class="ember-dot" aria-hidden="true"></span>' +
@@ -2919,6 +3271,12 @@
         return;
       }
 
+      var researchCard = event.target.closest("[data-research-id]");
+      if (researchCard) {
+        openResearchArticle(researchCard.getAttribute("data-research-id"));
+        return;
+      }
+
       var card = event.target.closest("[data-project-id]");
       if (card && !event.target.closest(".admin-list-item")) {
         openProjectModal(card.getAttribute("data-project-id"));
@@ -2948,6 +3306,11 @@
     });
 
     document.addEventListener("keydown", function (event) {
+      if ((event.key === "Enter" || event.key === " ") && event.target.matches("[data-research-id]")) {
+        event.preventDefault();
+        openResearchArticle(event.target.getAttribute("data-research-id"));
+        return;
+      }
       if ((event.key === "Enter" || event.key === " ") && event.target.matches("[data-project-id]")) {
         event.preventDefault();
         openProjectModal(event.target.getAttribute("data-project-id"));
@@ -3078,7 +3441,7 @@
 
   async function openProjectModal(id) {
     var project = await fetchProjectById(id);
-    if (!project) {
+    if (!project || !isProjectVisible(project)) {
       return;
     }
     var modal = qs("#projectModal");
@@ -3086,13 +3449,16 @@
     if (!modal || !content) {
       return;
     }
+    closeMobileNav();
     destroyPanoramaViewer();
     state.lastFocusedElement = document.activeElement;
     content.innerHTML = modalHTML(project);
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
     document.body.classList.add("modal-open");
+    lockMobilePageScroll("projectModal");
     bindModalMedia(project);
+    resizeInteractiveMedia();
     var closeButton = qs("#modalClose");
     if (closeButton) {
       closeButton.focus();
@@ -3109,6 +3475,7 @@
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
     document.body.classList.remove("modal-open");
+    unlockMobilePageScroll("projectModal");
     document.removeEventListener("keydown", trapModalFocus);
     if (state.lastFocusedElement && state.lastFocusedElement.focus) {
       state.lastFocusedElement.focus();
@@ -3168,12 +3535,46 @@
     return '<figure class="project-gallery-item"><img loading="lazy" decoding="async" src="' + escapeHTML(url) + '" alt="' + escapeHTML(label) + '" onerror="var f=this.closest(\'figure\');var s=this.closest(\'.' + scope + '\');if(f){f.remove();}if(s&&!s.querySelector(\'figure\')){var section=s.closest(\'section\');if(section){section.remove();}}"></figure>';
   }
 
+  function projectGalleryHTML(images) {
+    if (!images.length) {
+      return "";
+    }
+
+    var urls = images.map(function (asset) {
+      return resolveAssetURL(asset) || asset;
+    });
+    var firstURL = urls[0];
+    var total = urls.length;
+    var navigation = total > 1
+      ? '<button class="project-gallery-nav project-gallery-prev" type="button" data-gallery-prev aria-label="上一张图片">&#8592;</button>' +
+        '<button class="project-gallery-nav project-gallery-next" type="button" data-gallery-next aria-label="下一张图片">&#8594;</button>'
+      : "";
+    var thumbnails = total > 1
+      ? '<div class="project-gallery-thumbs" data-gallery-thumbs role="tablist" aria-label="图片缩略图">' + urls.map(function (url, index) {
+          return '<button class="project-gallery-thumb' + (index === 0 ? ' is-active' : '') + '" type="button" data-gallery-thumb data-gallery-index="' + index + '" data-gallery-src="' + escapeHTML(url) + '" role="tab" aria-selected="' + (index === 0 ? 'true' : 'false') + '" aria-label="查看第 ' + (index + 1) + ' 张图片"><img loading="lazy" decoding="async" src="' + escapeHTML(url) + '" alt=""></button>';
+        }).join("") + '</div>'
+      : "";
+    var expanded = '<div class="project-gallery-expanded-grid" data-gallery-expanded aria-hidden="true">' + urls.map(function (url, index) {
+      return '<button class="project-gallery-expanded-item" type="button" data-gallery-expanded-item data-gallery-index="' + index + '" aria-label="查看第 ' + (index + 1) + ' 张图片"><img loading="lazy" decoding="async" src="' + escapeHTML(url) + '" alt="项目图片 ' + String(index + 1).padStart(2, "0") + '"></button>';
+    }).join("") + '</div>';
+
+    return '<section class="project-gallery-section is-compact" data-project-gallery tabindex="0">' +
+      '<div class="project-section-title project-gallery-title"><div><p class="eyebrow">GALLERY / 图片集</p><span class="project-gallery-summary">默认折叠，单张翻阅</span></div><div class="project-gallery-title-actions"><span data-gallery-total>' + String(total).padStart(2, "0") + '</span><button class="project-gallery-toggle" type="button" data-gallery-toggle aria-expanded="false"><span>展开全部</span><em>Expand</em></button></div></div>' +
+      '<div class="project-gallery-browser">' +
+        '<div class="project-gallery-stage" data-gallery-stage>' +
+          '<figure class="project-gallery-main"><img data-gallery-main loading="eager" decoding="async" src="' + escapeHTML(firstURL) + '" alt="项目图片 01"></figure>' +
+          navigation +
+          '<div class="project-gallery-counter"><span data-gallery-current>01</span><i>/</i><span data-gallery-count>' + String(total).padStart(2, "0") + '</span></div>' +
+        '</div>' +
+        thumbnails +
+      '</div>' +
+      expanded +
+    '</section>';
+  }
+
   function projectMediaSectionsHTML(project) {
     var images = collectDisplayImages(project);
-    var galleryHTML = images.length
-      ? '<section class="project-gallery-section"><div class="project-section-title"><p class="eyebrow">GALLERY / 图片集</p><span>' + String(images.length).padStart(2, "0") + '</span></div><div class="project-image-gallery">' + images.map(function (asset, index) { return galleryFigureHTML(asset, index, "project-image-gallery"); }).join("") + '</div></section>'
-      : "";
-
+    var galleryHTML = projectGalleryHTML(images);
     var articleTitle = project.titleCN || "项目文章";
     var articleText = project.description || project.concept || "阅读项目的图文文章。";
     var articleHTML = '<section class="project-article-entry"><div><p class="eyebrow">ARTICLE / 图文文章</p><h3>' + escapeHTML(articleTitle) + '</h3><p>' + escapeHTML(articleText) + '</p></div><a class="button button-primary" href="#project/' + escapeHTML(project.id) + '"><span>阅读文章</span><em>Read Article</em></a></section>';
@@ -3205,16 +3606,21 @@
   }
 
   async function handleProjectArticleHashRoute() {
-    var match = String(window.location.hash || "").match(/^#project\/([^/]+)$/);
-    if (!match) {
+    var hash = String(window.location.hash || "");
+    var researchMatch = hash.match(/^#research\/([^/]+)$/);
+    if (researchMatch) {
+      await openResearchArticle(researchMatch[1], true);
       return;
     }
-    await openProjectArticle(match[1], true);
+    var projectMatch = hash.match(/^#project\/([^/]+)$/);
+    if (projectMatch) {
+      await openProjectArticle(projectMatch[1], true);
+    }
   }
 
   async function openProjectArticle(id, fromHash) {
     var project = await fetchProjectById(id);
-    if (!project) {
+    if (!project || !isProjectVisible(project)) {
       return;
     }
     var overlay = qs("#projectArticleOverlay");
@@ -3224,16 +3630,22 @@
     }
     state.articleReturnHash = fromHash ? "" : window.location.hash;
     state.activeArticleId = id;
+    state.activeResearchId = "";
+    overlay.classList.remove("research-article-mode");
     content.innerHTML = projectArticleHTML(project);
     overlay.classList.add("is-open");
     overlay.setAttribute("aria-hidden", "false");
     document.body.classList.add("article-open");
+    lockMobilePageScroll("projectArticle");
     closeProjectModal();
     bindArticleView(project);
+    window.setTimeout(updateArticleReadingProgress, 120);
     var articleView = qs(".project-article-view");
     if (articleView) {
       articleView.scrollTop = 0;
+      articleView.style.setProperty("--article-reading-progress", "0");
     }
+    updateArticleReadingProgress();
     if (!fromHash) {
       history.replaceState(null, "", "#project/" + id);
     }
@@ -3243,17 +3655,88 @@
     }
   }
 
+  async function openResearchArticle(id, fromHash) {
+    var article = await fetchResearchArticleById(id);
+    if (!article || !isResearchArticleVisible(article)) {
+      return;
+    }
+    var overlay = qs("#projectArticleOverlay");
+    var content = qs("#projectArticleContent");
+    if (!overlay || !content) {
+      return;
+    }
+    state.researchReturnHash = fromHash ? "" : window.location.hash;
+    state.activeResearchId = id;
+    state.activeArticleId = "";
+    content.innerHTML = researchArticleHTML(article);
+    overlay.classList.add("is-open", "research-article-mode");
+    overlay.setAttribute("aria-hidden", "false");
+    document.body.classList.add("article-open");
+    lockMobilePageScroll("projectArticle");
+    closeProjectModal();
+    bindResearchArticleView(article);
+    var articleView = qs(".project-article-view");
+    if (articleView) {
+      articleView.scrollTop = 0;
+      articleView.style.setProperty("--article-reading-progress", "0");
+    }
+    updateArticleReadingProgress();
+    if (!fromHash) {
+      history.replaceState(null, "", "#research/" + id);
+    }
+    var close = qs("#articleCloseButton");
+    if (close) { close.focus(); }
+  }
+
+  function researchArticleHTML(article) {
+    var published = (state.researchArticles || []).filter(isResearchArticleVisible);
+    var index = published.findIndex(function (item) { return item.id === article.id; });
+    if (index < 0) { index = 0; }
+    var prev = published[(index - 1 + published.length) % published.length] || article;
+    var next = published[(index + 1) % published.length] || article;
+    var tags = article.tags.map(function (tag) { return '<span>' + escapeHTML(tag) + '</span>'; }).join("");
+    var cover = researchCoverHTML(article, "research-reading-cover");
+    var navigation = published.length > 1
+      ? '<nav class="article-nav research-article-nav"><button class="button button-outline" type="button" data-open-research="' + escapeHTML(prev.id) + '"><span>上一篇研究</span><em>' + escapeHTML(prev.titleCN) + '</em></button><button class="button button-dark" type="button" data-open-research="' + escapeHTML(next.id) + '"><span>下一篇研究</span><em>' + escapeHTML(next.titleCN) + '</em></button></nav>'
+      : "";
+
+    return '<article class="research-reading">' +
+      '<aside class="research-reading-aside"><div class="research-reading-number">' + escapeHTML(article.number) + '</div><dl>' +
+        '<div><dt>TOPIC</dt><dd>' + escapeHTML(article.topic) + '</dd></div>' +
+        '<div><dt>DATE</dt><dd>' + escapeHTML(article.date) + '</dd></div>' +
+        '<div><dt>AUTHOR</dt><dd>' + escapeHTML(article.author) + '</dd></div>' +
+        (article.readTime ? '<div><dt>READ</dt><dd>' + escapeHTML(article.readTime) + '</dd></div>' : '') +
+      '</dl><div class="research-reading-tags">' + tags + '</div></aside>' +
+      '<div class="research-reading-main"><header class="research-reading-header"><p>RESEARCH NOTE / 独立研究档案</p><h1 id="researchArticleTitle">' + escapeHTML(article.titleCN) + '</h1>' +
+        (article.titleEN ? '<h2>' + escapeHTML(article.titleEN) + '</h2>' : '') +
+        (article.summary ? '<p class="research-reading-deck">' + escapeHTML(article.summary) + '</p>' : '') + cover +
+      '</header><div class="wechat-article-content research-reading-content">' + sanitizeArticleBlocks(article.articleBlocks).map(articleBlockHTML).join("") + '</div>' + navigation + '</div>' +
+    '</article>';
+  }
+
+  function bindResearchArticleView(article) {
+    qsa("[data-open-research]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        openResearchArticle(button.getAttribute("data-open-research"));
+      });
+    });
+  }
+
   function closeProjectArticle() {
     var overlay = qs("#projectArticleOverlay");
     if (!overlay || !overlay.classList.contains("is-open")) {
       return;
     }
-    overlay.classList.remove("is-open");
+    overlay.classList.remove("is-open", "research-article-mode");
     overlay.setAttribute("aria-hidden", "true");
     document.body.classList.remove("article-open");
+    unlockMobilePageScroll("projectArticle");
     state.activeArticleId = "";
-    if (/^#project\//.test(window.location.hash || "")) {
-      history.replaceState(null, "", window.location.pathname + window.location.search + (state.articleReturnHash && state.articleReturnHash !== window.location.hash ? state.articleReturnHash : ""));
+    state.activeResearchId = "";
+    var hash = window.location.hash || "";
+    if (/^#project\//.test(hash) || /^#research\//.test(hash)) {
+      var returnHash = /^#research\//.test(hash) ? state.researchReturnHash : state.articleReturnHash;
+      history.replaceState(null, "", window.location.pathname + window.location.search + (returnHash && returnHash !== hash ? returnHash : ""));
     }
   }
 
@@ -3285,7 +3768,7 @@
   function projectArticleHTML(project) {
     var number = projectNumber(project);
     var blocks = getArticleBlocks(project);
-    var publishedProjects = state.projects.filter(function (item) { return item.published; });
+    var publishedProjects = state.projects.filter(isProjectVisible);
     if (!publishedProjects.length) {
       publishedProjects = state.projects.slice();
     }
@@ -3488,7 +3971,204 @@
     return html;
   }
 
+  function bindProjectGallery() {
+    qsa("[data-project-gallery]").forEach(function (gallery) {
+      if (gallery.dataset.galleryBound === "true") {
+        return;
+      }
+      gallery.dataset.galleryBound = "true";
+
+      var mainImage = qs("[data-gallery-main]", gallery);
+      var currentLabel = qs("[data-gallery-current]", gallery);
+      var countLabel = qs("[data-gallery-count]", gallery);
+      var totalLabel = qs("[data-gallery-total]", gallery);
+      var toggle = qs("[data-gallery-toggle]", gallery);
+      var expanded = qs("[data-gallery-expanded]", gallery);
+      var previous = qs("[data-gallery-prev]", gallery);
+      var next = qs("[data-gallery-next]", gallery);
+      var stage = qs("[data-gallery-stage]", gallery);
+      var currentIndex = 0;
+      var swipeStart = null;
+
+      function thumbButtons() {
+        return qsa("[data-gallery-thumb]", gallery).filter(function (button) {
+          return button.isConnected;
+        });
+      }
+
+      function expandedButtons() {
+        return qsa("[data-gallery-expanded-item]", gallery).filter(function (button) {
+          return button.isConnected;
+        });
+      }
+
+      function sourceList() {
+        return thumbButtons().map(function (button) {
+          return button.getAttribute("data-gallery-src") || "";
+        }).filter(Boolean);
+      }
+
+      function updateCount(total) {
+        var value = String(total).padStart(2, "0");
+        if (countLabel) { countLabel.textContent = value; }
+        if (totalLabel) { totalLabel.textContent = value; }
+      }
+
+      function activate(index, options) {
+        var sources = sourceList();
+        if (!sources.length) {
+          gallery.remove();
+          return;
+        }
+        currentIndex = ((index % sources.length) + sources.length) % sources.length;
+        if (mainImage) {
+          mainImage.src = sources[currentIndex];
+          mainImage.alt = "项目图片 " + String(currentIndex + 1).padStart(2, "0");
+        }
+        if (currentLabel) {
+          currentLabel.textContent = String(currentIndex + 1).padStart(2, "0");
+        }
+        thumbButtons().forEach(function (button, buttonIndex) {
+          var active = buttonIndex === currentIndex;
+          button.classList.toggle("is-active", active);
+          button.setAttribute("aria-selected", active ? "true" : "false");
+          if (active && options && options.scrollThumb) {
+            button.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+          }
+        });
+        expandedButtons().forEach(function (button, buttonIndex) {
+          button.classList.toggle("is-active", buttonIndex === currentIndex);
+        });
+        updateCount(sources.length);
+      }
+
+      function removeFailedSource(url) {
+        thumbButtons().forEach(function (button) {
+          if (button.getAttribute("data-gallery-src") === url) {
+            button.remove();
+          }
+        });
+        expandedButtons().forEach(function (button) {
+          var image = qs("img", button);
+          if (image && image.src === url) {
+            button.remove();
+          }
+        });
+        activate(Math.min(currentIndex, Math.max(sourceList().length - 1, 0)));
+      }
+
+      thumbButtons().forEach(function (button) {
+        button.addEventListener("click", function () {
+          var buttons = thumbButtons();
+          activate(buttons.indexOf(button), { scrollThumb: true });
+        });
+        var image = qs("img", button);
+        if (image) {
+          image.addEventListener("error", function () {
+            removeFailedSource(button.getAttribute("data-gallery-src") || image.src);
+          }, { once: true });
+        }
+      });
+
+      expandedButtons().forEach(function (button) {
+        button.addEventListener("click", function () {
+          var buttons = expandedButtons();
+          activate(buttons.indexOf(button), { scrollThumb: true });
+          gallery.classList.remove("is-expanded");
+          if (toggle) {
+            toggle.setAttribute("aria-expanded", "false");
+            toggle.querySelector("span").textContent = "展开全部";
+            toggle.querySelector("em").textContent = "Expand";
+          }
+          if (expanded) {
+            expanded.setAttribute("aria-hidden", "true");
+          }
+          if (stage) {
+            stage.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        });
+        var image = qs("img", button);
+        if (image) {
+          image.addEventListener("error", function () {
+            button.remove();
+          }, { once: true });
+        }
+      });
+
+      if (mainImage) {
+        mainImage.addEventListener("error", function () {
+          removeFailedSource(mainImage.src);
+        });
+      }
+
+      if (previous) {
+        previous.addEventListener("click", function () {
+          activate(currentIndex - 1, { scrollThumb: true });
+        });
+      }
+      if (next) {
+        next.addEventListener("click", function () {
+          activate(currentIndex + 1, { scrollThumb: true });
+        });
+      }
+
+      if (stage && "PointerEvent" in window) {
+        stage.addEventListener("pointerdown", function (event) {
+          if (!event.isPrimary || event.button !== 0 || event.target.closest("button")) {
+            return;
+          }
+          swipeStart = { x: event.clientX, y: event.clientY, id: event.pointerId };
+          stage.classList.add("is-touching");
+        }, { passive: true });
+
+        stage.addEventListener("pointerup", function (event) {
+          if (!swipeStart || swipeStart.id !== event.pointerId) {
+            return;
+          }
+          var dx = event.clientX - swipeStart.x;
+          var dy = event.clientY - swipeStart.y;
+          stage.classList.remove("is-touching");
+          swipeStart = null;
+          if (Math.abs(dx) < 46 || Math.abs(dx) < Math.abs(dy) * 1.2) {
+            return;
+          }
+          activate(currentIndex + (dx < 0 ? 1 : -1), { scrollThumb: true });
+        }, { passive: true });
+
+        stage.addEventListener("pointercancel", function () {
+          swipeStart = null;
+          stage.classList.remove("is-touching");
+        }, { passive: true });
+      }
+
+      if (toggle && expanded) {
+        toggle.addEventListener("click", function () {
+          var open = !gallery.classList.contains("is-expanded");
+          gallery.classList.toggle("is-expanded", open);
+          toggle.setAttribute("aria-expanded", open ? "true" : "false");
+          toggle.querySelector("span").textContent = open ? "收起图集" : "展开全部";
+          toggle.querySelector("em").textContent = open ? "Collapse" : "Expand";
+          expanded.setAttribute("aria-hidden", open ? "false" : "true");
+        });
+      }
+
+      gallery.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          activate(currentIndex - 1, { scrollThumb: true });
+        }
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          activate(currentIndex + 1, { scrollThumb: true });
+        }
+      });
+
+      activate(0);
+    });
+  }
+
   function bindModalMedia(project) {
+    bindProjectGallery();
     qsa("[data-panel-target]").forEach(function (button) {
       button.addEventListener("click", function () {
         var targetId = button.getAttribute("data-panel-target");
@@ -3723,6 +4403,7 @@
   function toggleMobileNav() {
     var panel = qs("#mobileNavPanel");
     var button = qs("#mobileMenuButton");
+    var backdrop = qs("#mobileNavBackdrop");
     if (!panel || !button) {
       return;
     }
@@ -3730,23 +4411,49 @@
     panel.classList.toggle("is-open", open);
     panel.setAttribute("aria-hidden", open ? "false" : "true");
     button.setAttribute("aria-expanded", open ? "true" : "false");
+    button.setAttribute("aria-label", open ? "关闭导航" : "打开导航");
+    document.body.classList.toggle("mobile-nav-open", open);
+    if (backdrop) {
+      backdrop.tabIndex = open ? 0 : -1;
+    }
+    if (open) {
+      lockMobilePageScroll("mobileNav");
+      var firstLink = qs("a", panel);
+      if (firstLink) {
+        window.setTimeout(function () { firstLink.focus(); }, 80);
+      }
+    } else {
+      unlockMobilePageScroll("mobileNav");
+    }
   }
 
   function closeMobileNav() {
     var panel = qs("#mobileNavPanel");
     var button = qs("#mobileMenuButton");
+    var backdrop = qs("#mobileNavBackdrop");
     if (panel) {
       panel.classList.remove("is-open");
       panel.setAttribute("aria-hidden", "true");
     }
     if (button) {
       button.setAttribute("aria-expanded", "false");
+      button.setAttribute("aria-label", "打开导航");
     }
+    if (backdrop) {
+      backdrop.tabIndex = -1;
+    }
+    document.body.classList.remove("mobile-nav-open");
+    unlockMobilePageScroll("mobileNav");
   }
 
   function bindAdminEvents() {
     state.adminSavedSections = readAdminSectionStatus();
     bindAdminDirtyTracking();
+    var saveCurrentAdminPanelButton = qs("#saveCurrentAdminPanelButton");
+    if (saveCurrentAdminPanelButton && saveCurrentAdminPanelButton.dataset.bound !== "true") {
+      saveCurrentAdminPanelButton.dataset.bound = "true";
+      saveCurrentAdminPanelButton.addEventListener("click", saveCurrentAdminPanel);
+    }
     var loginButton = qs("#adminLoginButton");
     if (loginButton) {
       loginButton.addEventListener("click", async function () {
@@ -3871,7 +4578,7 @@
     if (exportSettingsButton) {
       exportSettingsButton.addEventListener("click", function () {
         if (typeof window !== "undefined" && window.confirm) {
-          var ok = window.confirm("这是“设置 JSON”，只包含首页文案、联系方式、视觉路径等设置，不包含项目、导航和方法数据。\n\n正式发布到 GitHub 时，请优先使用“导出完整站点数据 site-data.json”。\n\n仍然导出设置 JSON？");
+          var ok = window.confirm("这是“设置 JSON”，只包含首页文案、联系方式、视觉路径等设置，不包含项目与导航数据。\n\n正式发布到 GitHub 时，请优先使用“导出完整站点数据 site-data.json”。\n\n仍然导出设置 JSON？");
           if (!ok) {
             return;
           }
@@ -3935,6 +4642,7 @@
 
     bindSectionBackgroundEvents();
     bindArticleEditorEvents();
+    bindResearchEditorEvents();
   }
 
   function bindSectionBackgroundEvents() {
@@ -4371,6 +5079,266 @@
     delete state.articleEditorDrafts[projectId];
   }
 
+
+  function researchArticleById(id) {
+    return researchArticles.find(function (item) { return item.id === id; }) || null;
+  }
+
+  function getResearchEditorDraft(id) {
+    if (!id) { return []; }
+    if (!Object.prototype.hasOwnProperty.call(state.researchEditorDrafts, id)) {
+      var article = researchArticleById(id);
+      state.researchEditorDrafts[id] = article ? sanitizeArticleBlocks(article.articleBlocks) : [];
+    }
+    return clone(state.researchEditorDrafts[id]);
+  }
+
+  function setResearchEditorDraft(id, blocks) {
+    if (!id) { return []; }
+    var normalized = sanitizeArticleBlocks(blocks);
+    state.researchEditorDrafts[id] = clone(normalized);
+    markAdminPanelDirty("research");
+    return normalized;
+  }
+
+  function readResearchMetaForm() {
+    var id = (qs("#researchArticleId") && qs("#researchArticleId").value) || state.activeResearchEditorId || "";
+    return {
+      id: id || ("r" + Date.now()),
+      number: (qs("#researchArticleNumber") && qs("#researchArticleNumber").value.trim()) || nextResearchNumber(),
+      titleCN: (qs("#researchArticleTitleCN") && qs("#researchArticleTitleCN").value.trim()) || "未命名研究",
+      titleEN: (qs("#researchArticleTitleEN") && qs("#researchArticleTitleEN").value.trim()) || "",
+      topic: (qs("#researchArticleTopic") && qs("#researchArticleTopic").value.trim()) || "Research Note",
+      date: (qs("#researchArticleDate") && qs("#researchArticleDate").value.trim()) || "",
+      author: (qs("#researchArticleAuthor") && qs("#researchArticleAuthor").value.trim()) || "SOVEN Research",
+      readTime: (qs("#researchArticleReadTime") && qs("#researchArticleReadTime").value.trim()) || "",
+      summary: (qs("#researchArticleSummary") && qs("#researchArticleSummary").value.trim()) || "",
+      coverImage: (qs("#researchArticleCover") && qs("#researchArticleCover").value.trim()) || "",
+      tags: parseTags((qs("#researchArticleTags") && qs("#researchArticleTags").value) || ""),
+      featured: Boolean(qs("#researchArticleFeatured") && qs("#researchArticleFeatured").checked),
+      visible: Boolean(qs("#researchArticleVisible") && qs("#researchArticleVisible").checked)
+    };
+  }
+
+  function fillResearchMetaForm(article) {
+    var current = article || null;
+    var id = current ? current.id : ("r" + Date.now());
+    state.activeResearchEditorId = id;
+    var values = {
+      researchArticleId: id,
+      researchArticleNumber: current ? current.number : nextResearchNumber(),
+      researchArticleTopic: current ? current.topic : "",
+      researchArticleTitleCN: current ? current.titleCN : "",
+      researchArticleTitleEN: current ? current.titleEN : "",
+      researchArticleDate: current ? current.date : new Date().getFullYear().toString(),
+      researchArticleAuthor: current ? current.author : "SOVEN Research",
+      researchArticleReadTime: current ? current.readTime : "",
+      researchArticleCover: current ? current.coverImage : "",
+      researchArticleSummary: current ? current.summary : "",
+      researchArticleTags: current ? current.tags.join(", ") : ""
+    };
+    Object.keys(values).forEach(function (key) {
+      var input = qs("#" + key);
+      if (input) { input.value = values[key]; }
+    });
+    var featured = qs("#researchArticleFeatured");
+    var visible = qs("#researchArticleVisible");
+    if (featured) { featured.checked = current ? current.featured : false; }
+    if (visible) { visible.checked = current ? isResearchArticleVisible(current) : true; }
+    state.researchEditorDrafts[id] = current ? sanitizeArticleBlocks(current.articleBlocks) : [];
+    clearResearchComposer();
+    renderResearchBlockList();
+  }
+
+  function renderResearchEditorControls() {
+    var select = qs("#researchArticleSelect");
+    if (!select) { return; }
+    var currentId = state.activeResearchEditorId;
+    select.innerHTML = '<option value="">＋ 新建研究文章</option>' + (state.researchArticles || []).map(function (article) {
+      return '<option value="' + escapeHTML(article.id) + '">' + escapeHTML(article.number + " / " + article.titleCN) + (isResearchArticleVisible(article) ? "" : " / 已隐藏") + '</option>';
+    }).join("");
+    if (currentId && researchArticleById(currentId)) {
+      select.value = currentId;
+      fillResearchMetaForm(researchArticleById(currentId));
+    } else if (state.researchArticles && state.researchArticles.length) {
+      select.value = state.researchArticles[0].id;
+      fillResearchMetaForm(researchArticleById(state.researchArticles[0].id));
+    } else {
+      select.value = "";
+      fillResearchMetaForm(null);
+    }
+  }
+
+  function researchBlockEditorHTML(block, index) {
+    var types = ["heading", "paragraph", "image", "gallery", "quote", "divider"];
+    var options = types.map(function (type) {
+      return '<option value="' + type + '"' + (block.type === type ? " selected" : "") + '>' + type + '</option>';
+    }).join("");
+    var asset = block.type === "gallery" ? formatPathList(block.assets) : (block.asset || "");
+    return '<div class="article-block-editor research-block-editor" data-research-block="' + index + '">' +
+      '<div class="article-block-editor-head"><strong>' + String(index + 1).padStart(2, "0") + '</strong><div><button class="icon-button" type="button" data-research-up="' + index + '">↑</button><button class="icon-button" type="button" data-research-down="' + index + '">↓</button><button class="icon-button" type="button" data-research-delete="' + index + '">×</button></div></div>' +
+      '<label>类型<select data-research-field="type">' + options + '</select></label>' +
+      '<label>文字<textarea data-research-field="text" rows="4">' + escapeHTML(block.text || "") + '</textarea></label>' +
+      '<label>图片路径<textarea data-research-field="asset" rows="3">' + escapeHTML(asset) + '</textarea></label>' +
+      '<label>图片说明<input data-research-field="caption" value="' + escapeHTML(block.caption || "") + '"></label>' +
+    '</div>';
+  }
+
+  function collectResearchBlocksFromEditor() {
+    var list = qs("#researchBlockList");
+    if (!list) { return []; }
+    var result = [];
+    qsa("[data-research-block]", list).forEach(function (node) {
+      var type = (qs('[data-research-field="type"]', node) || {}).value || "paragraph";
+      var text = (qs('[data-research-field="text"]', node) || {}).value || "";
+      var assetText = ((qs('[data-research-field="asset"]', node) || {}).value || "").trim();
+      var caption = (qs('[data-research-field="caption"]', node) || {}).value || "";
+      var block = { type: type, text: text, asset: type === "gallery" ? "" : assetText, assets: type === "gallery" ? parseList(assetText) : [], caption: caption, label: caption, poster: "", thumbnail: "" };
+      expandArticleBlockForSave(block).forEach(function (item) { result.push(item); });
+    });
+    return sanitizeArticleBlocks(result);
+  }
+
+  function renderResearchBlockList() {
+    var list = qs("#researchBlockList");
+    if (!list) { return; }
+    var blocks = getResearchEditorDraft(state.activeResearchEditorId);
+    list.innerHTML = blocks.length ? blocks.map(researchBlockEditorHTML).join("") : '<div class="article-empty-editor"><strong>当前没有研究正文块</strong><p>填写上方内容并点击“新增块”后，才会生成正文结构。</p></div>';
+    qsa("[data-research-delete]", list).forEach(function (button) {
+      button.addEventListener("click", function () { removeResearchBlock(Number(button.getAttribute("data-research-delete"))); });
+    });
+    qsa("[data-research-up]", list).forEach(function (button) {
+      button.addEventListener("click", function () { moveResearchBlock(Number(button.getAttribute("data-research-up")), -1); });
+    });
+    qsa("[data-research-down]", list).forEach(function (button) {
+      button.addEventListener("click", function () { moveResearchBlock(Number(button.getAttribute("data-research-down")), 1); });
+    });
+  }
+
+  function readPendingResearchBlock() {
+    var type = (qs("#researchBlockType") && qs("#researchBlockType").value) || "paragraph";
+    var text = (qs("#researchBlockText") && qs("#researchBlockText").value) || "";
+    var assetText = (qs("#researchBlockAsset") && qs("#researchBlockAsset").value.trim()) || "";
+    var caption = (qs("#researchBlockCaption") && qs("#researchBlockCaption").value) || "";
+    return { type: type, text: text, asset: type === "gallery" ? "" : assetText, assets: type === "gallery" ? parseList(assetText) : [], caption: caption, label: caption, poster: "", thumbnail: "" };
+  }
+
+  function clearResearchComposer() {
+    ["researchBlockText", "researchBlockAsset", "researchBlockCaption"].forEach(function (id) {
+      var input = qs("#" + id); if (input) { input.value = ""; }
+    });
+  }
+
+  function addResearchBlock() {
+    var block = readPendingResearchBlock();
+    if (!isMeaningfulArticleBlock(block)) {
+      showAdminStamp("请先填写研究正文内容");
+      return;
+    }
+    var current = collectResearchBlocksFromEditor();
+    if (!current.length) { current = getResearchEditorDraft(state.activeResearchEditorId); }
+    var additions = block.type === "divider" ? [block] : expandArticleBlockForSave(block);
+    setResearchEditorDraft(state.activeResearchEditorId, current.concat(additions));
+    clearResearchComposer();
+    renderResearchBlockList();
+    showAdminStamp("研究正文块已新增，尚未保存");
+  }
+
+  function removeResearchBlock(index) {
+    var blocks = collectResearchBlocksFromEditor();
+    if (!blocks.length) { blocks = getResearchEditorDraft(state.activeResearchEditorId); }
+    if (index < 0 || index >= blocks.length) { return; }
+    blocks.splice(index, 1);
+    setResearchEditorDraft(state.activeResearchEditorId, blocks);
+    renderResearchBlockList();
+  }
+
+  function moveResearchBlock(index, direction) {
+    var blocks = collectResearchBlocksFromEditor();
+    if (!blocks.length) { blocks = getResearchEditorDraft(state.activeResearchEditorId); }
+    var target = index + direction;
+    if (index < 0 || target < 0 || index >= blocks.length || target >= blocks.length) { return; }
+    var item = blocks.splice(index, 1)[0];
+    blocks.splice(target, 0, item);
+    setResearchEditorDraft(state.activeResearchEditorId, blocks);
+    renderResearchBlockList();
+  }
+
+  async function saveResearchArticle() {
+    var pending = readPendingResearchBlock();
+    if (isMeaningfulArticleBlock(pending)) {
+      if (window.alert) { window.alert("研究正文编辑器中还有尚未新增的内容，请先点击“新增块”。"); }
+      showAdminStamp("请先新增研究正文块");
+      return;
+    }
+    var meta = readResearchMetaForm();
+    var blocks = collectResearchBlocksFromEditor();
+    if (!blocks.length) { blocks = getResearchEditorDraft(meta.id); }
+    var existingIndex = researchArticles.findIndex(function (item) { return item.id === meta.id; });
+    var previous = existingIndex >= 0 ? researchArticles[existingIndex] : null;
+    var next = normalizeResearchArticle(Object.assign({}, previous || {}, meta, { articleBlocks: blocks, order: previous ? previous.order : researchArticles.length }), existingIndex >= 0 ? existingIndex : researchArticles.length);
+    if (next.featured) {
+      researchArticles.forEach(function (item) { item.featured = false; });
+    }
+    if (existingIndex >= 0) { researchArticles[existingIndex] = next; }
+    else { researchArticles.push(next); }
+    researchArticles = normalizeResearchArticles(researchArticles);
+    state.activeResearchEditorId = next.id;
+    state.researchEditorDrafts[next.id] = clone(next.articleBlocks);
+    writeStorage();
+    await refreshData();
+    renderResearch();
+    renderResearchEditorControls();
+    renderPathReport();
+    markAdminPanelSaved("research", "研究文章");
+    showAdminStamp("研究文章已暂存 · " + next.number);
+  }
+
+  function newResearchArticle() {
+    state.activeResearchEditorId = "";
+    fillResearchMetaForm(null);
+    var select = qs("#researchArticleSelect");
+    if (select) { select.value = ""; }
+    markAdminPanelDirty("research");
+    showAdminStamp("已建立新的研究文章草稿");
+  }
+
+  async function deleteResearchArticle() {
+    var id = state.activeResearchEditorId;
+    var existing = researchArticleById(id);
+    if (!existing) {
+      newResearchArticle();
+      return;
+    }
+    if (window.confirm && !window.confirm("这是永久删除，不是隐藏。确定彻底删除研究文章“" + existing.titleCN + "”？")) { return; }
+    researchArticles = researchArticles.filter(function (item) { return item.id !== id; });
+    delete state.researchEditorDrafts[id];
+    state.activeResearchEditorId = "";
+    writeStorage();
+    await refreshData();
+    renderResearch();
+    renderResearchEditorControls();
+    markAdminPanelSaved("research", "研究文章");
+    showAdminStamp("研究文章已删除并暂存");
+  }
+
+  function bindResearchEditorEvents() {
+    var select = qs("#researchArticleSelect");
+    if (select) {
+      select.addEventListener("change", function () {
+        var id = select.value;
+        if (!id) { newResearchArticle(); return; }
+        state.activeResearchEditorId = id;
+        fillResearchMetaForm(researchArticleById(id));
+        renderAdminSectionSaveState();
+      });
+    }
+    var add = qs("#addResearchBlockButton"); if (add) { add.addEventListener("click", addResearchBlock); }
+    var save = qs("#saveResearchArticleButton"); if (save) { save.addEventListener("click", saveResearchArticle); }
+    var fresh = qs("#newResearchArticleButton"); if (fresh) { fresh.addEventListener("click", newResearchArticle); }
+    var remove = qs("#deleteResearchArticleButton"); if (remove) { remove.addEventListener("click", deleteResearchArticle); }
+  }
+
   function bindArticleEditorEvents() {
     var projectSelect = qs("#articleProjectSelect");
     var addButton = qs("#addArticleBlockButton");
@@ -4726,6 +5694,7 @@
   }
 
   function showAdminConsole() {
+    closeMobileNav();
     var overlay = qs("#adminOverlay");
     if (!overlay || overlay.classList.contains("is-open")) {
       return;
@@ -4913,7 +5882,10 @@
     }
     list.innerHTML = state.projects.map(function (project) {
       var assetCount = collectProjectAssets(project).length;
-      return '<div class="admin-list-item" data-admin-project="' + escapeHTML(project.id) + '"><div><strong>' + escapeHTML(project.titleCN) + '</strong><span>' + escapeHTML(project.category) + ' / ' + escapeHTML(project.year) + ' / ' + (project.published ? "已发布" : "草稿") + ' / 素材 ' + assetCount + '</span></div><div class="admin-item-actions"><button class="icon-button" type="button" title="编辑" data-edit-project="' + escapeHTML(project.id) + '">✎</button><button class="icon-button" type="button" title="切换发布" data-toggle-project="' + escapeHTML(project.id) + '">●</button><button class="icon-button" type="button" title="删除" data-delete-project="' + escapeHTML(project.id) + '">×</button></div></div>';
+      var placements = formatProjectDisplaySections(project);
+      var placementText = placements.length ? placements.join("、") : "不在任何板块显示";
+      var visible = isProjectVisible(project);
+      return '<div class="admin-list-item' + (visible ? '' : ' is-hidden-record') + '" data-admin-project="' + escapeHTML(project.id) + '"><div><strong>' + escapeHTML(project.titleCN) + '</strong><span>' + escapeHTML(project.category) + ' / ' + escapeHTML(project.year) + ' / ' + (visible ? "前台显示" : "已隐藏") + ' / 素材 ' + assetCount + '</span><small>板块：' + escapeHTML(placementText) + ' · 数据始终保留并参与 JSON 导出</small></div><div class="admin-item-actions"><button class="icon-button" type="button" title="编辑" data-edit-project="' + escapeHTML(project.id) + '">✎</button><button class="icon-button visibility-toggle-button" type="button" title="' + (visible ? '隐藏项目' : '显示项目') + '" aria-label="' + (visible ? '隐藏项目' : '显示项目') + '" data-toggle-project="' + escapeHTML(project.id) + '">' + (visible ? '◉' : '○') + '</button><button class="icon-button" type="button" title="永久删除" data-delete-project="' + escapeHTML(project.id) + '">×</button></div></div>';
     }).join("");
 
     qsa("[data-edit-project]", list).forEach(function (button) {
@@ -4925,20 +5897,26 @@
 
     qsa("[data-toggle-project]", list).forEach(function (button) {
       button.addEventListener("click", async function () {
-        await togglePublishStatus(button.getAttribute("data-toggle-project"));
+        var changed = await togglePublishStatus(button.getAttribute("data-toggle-project"));
         await refreshData();
         renderAll();
+        markAdminPanelSaved("projects", "项目案卷");
+        showAdminStamp(changed && isProjectVisible(changed) ? "项目已恢复前台显示" : "项目已隐藏，数据仍保留");
       });
     });
 
     qsa("[data-delete-project]", list).forEach(function (button) {
       button.addEventListener("click", async function () {
-        if (!window.confirm("确定删除这个项目？这个操作会更新本地项目数据。")) {
+        var project = state.projects.find(function (item) { return item.id === button.getAttribute("data-delete-project"); });
+        if (!project) { return; }
+        if (window.confirm && !window.confirm("这是永久删除，不是隐藏。确定彻底删除项目“" + project.titleCN + "”？")) {
           return;
         }
-        await deleteProject(button.getAttribute("data-delete-project"));
+        await deleteProject(project.id);
         await refreshData();
         renderAll();
+        markAdminPanelSaved("projects", "项目案卷");
+        showAdminStamp("项目已永久删除");
       });
     });
   }
@@ -4975,20 +5953,27 @@
     form.elements.tags.value = project ? project.tags.join(", ") : "";
     form.elements.concept.value = project ? project.concept : "";
     form.elements.description.value = project ? project.description : "";
-    form.elements.featured.checked = project ? Boolean(project.featured) : false;
-    form.elements.published.checked = project ? Boolean(project.published) : true;
+    var selectedSections = project ? normalizeProjectDisplaySections(project.displaySections) : ["works"];
+    qsa('input[name="displaySections"]', form).forEach(function (input) {
+      input.checked = selectedSections.indexOf(input.value) !== -1;
+    });
+    if (form.elements.visible) {
+      form.elements.visible.checked = project ? isProjectVisible(project) : true;
+    }
   }
 
   async function handleProjectFormSubmit(event) {
     event.preventDefault();
     var form = event.currentTarget;
+    var visible = Boolean(form.elements.visible && form.elements.visible.checked);
+    var selectedSections = readProjectDisplaySections(form);
     var data = {
       titleCN: form.elements.titleCN.value.trim(),
       titleEN: form.elements.titleEN.value.trim(),
       category: form.elements.category.value,
       year: form.elements.year.value.trim(),
       location: form.elements.location.value.trim(),
-      status: form.elements.status.value.trim() || (form.elements.published.checked ? "Published" : "Draft"),
+      status: form.elements.status.value.trim() || (visible ? "Published" : "Hidden"),
       material: form.elements.material.value.trim(),
       scale: form.elements.scale.value.trim(),
       role: form.elements.role.value.trim(),
@@ -5008,8 +5993,9 @@
       tags: parseTags(form.elements.tags.value),
       description: form.elements.description.value.trim(),
       concept: form.elements.concept.value.trim() || form.elements.description.value.trim().slice(0, 48),
-      featured: form.elements.featured.checked,
-      published: form.elements.published.checked
+      displaySections: selectedSections,
+      featured: selectedSections.indexOf("featured") !== -1,
+      visible: visible
     };
     var id = form.elements.id.value;
     if (id) {
@@ -5021,7 +6007,7 @@
     renderAll();
     fillProjectForm(null);
     markAdminPanelSaved("projects", "项目案卷");
-    showAdminStamp("案卷已暂存");
+    showAdminStamp(visible ? "案卷已暂存并显示" : "案卷已暂存并隐藏");
   }
 
   function fillSettingsForm() {
@@ -5034,8 +6020,11 @@
     form.elements.taglineCN.value = state.settings.taglineCN;
     form.elements.taglineEN.value = state.settings.taglineEN;
     form.elements.intro.value = state.settings.intro;
-    form.elements.email.value = state.settings.email;
-    form.elements.portfolioPdf.value = state.settings.portfolioPdf;
+    var contact = normalizeContactContent(state.settings.contact, state.settings);
+    form.elements.contactEmail.value = contact.email;
+    form.elements.contactXiaohongshu.value = contact.xiaohongshu;
+    form.elements.contactOfficialAccount.value = contact.officialAccount;
+    form.elements.contactVx.value = contact.vx;
     var visualAssets = normalizeVisualAssets(state.settings.visualAssets);
     form.elements.heroDepthMountain.value = visualAssets.heroDepth.mountain;
     form.elements.heroDepthWindowFrame.value = visualAssets.heroDepth.windowFrame;
@@ -5055,8 +6044,12 @@
       taglineCN: form.elements.taglineCN.value.trim(),
       taglineEN: form.elements.taglineEN.value.trim(),
       intro: form.elements.intro.value.trim(),
-      email: form.elements.email.value.trim(),
-      portfolioPdf: form.elements.portfolioPdf.value.trim(),
+      contact: {
+        email: form.elements.contactEmail.value.trim(),
+        xiaohongshu: form.elements.contactXiaohongshu.value.trim(),
+        officialAccount: form.elements.contactOfficialAccount.value.trim(),
+        vx: form.elements.contactVx.value.trim()
+      },
       visualAssets: normalizeVisualAssets({
         heroDepth: {
           mountain: form.elements.heroDepthMountain.value.trim(),
@@ -5377,7 +6370,7 @@
       return "unknown";
     }
 
-    if (Array.isArray(data.projects) || data.siteSettings || data.navigation || data.methods || data.schema === "northern-atelier-site-data-v1") {
+    if (Array.isArray(data.projects) || data.siteSettings || data.navigation || data.methods || data.researchArticles || /^northern-atelier-site-data-v[12]$/.test(String(data.schema || ""))) {
       return "full";
     }
 
@@ -5501,6 +6494,7 @@
         navigation = normalized.navigation;
         methods = normalized.methods;
         projects = normalized.projects;
+        researchArticles = normalized.researchArticles;
         showAdminStamp("完整站点数据已导入为本机草稿");
       } else if (type === "settings") {
         if (!askImportConfirmation("检测到这是设置 JSON，不是完整 site-data.json。\n\n是否只导入设置，并保留当前项目、导航和方法数据？")) {
@@ -5865,6 +6859,11 @@
     }
 
     function preloadHeroAssets() {
+      if (isMobileExperience()) {
+        imageReadyTimer = window.setTimeout(markAssetsReady, 260);
+        return;
+      }
+
       var sources = [
         "assets/hero-depth/optimized/hero-mountain-2560.webp",
         "assets/hero-depth/optimized/hero-window-frame-2560.webp",

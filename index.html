@@ -13,7 +13,7 @@
   <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-vignette-2560.webp" fetchpriority="high" media="(min-width: 841px) and (hover: hover)">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@600;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.css">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260714103453">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260714115428">
 </head>
 <body>
   <a class="skip-link" href="#works">跳至作品</a>
@@ -60,7 +60,7 @@
       <div class="hero-grid" aria-hidden="true"></div>
       <div class="hero-content">
         <p class="eyebrow seal-line"><span id="heroSeal">DATA</span><span>DATA SOURCE</span></p>
-        <h1 id="heroTitle">天有时，地有气，材有美，工有巧，合此四者，然后可以为良。</h1>
+        <h1 id="heroTitle">site-data.json 未读取成功。</h1>
         <p class="hero-title-en" id="heroTitleEN">Site data was not loaded.</p>
         <p class="hero-intro" id="heroIntro">当前显示的是诊断占位内容，不是正式网站内容。请检查 assets/data/site-data.json。</p>
         <div class="hero-actions">
@@ -99,6 +99,7 @@
       </div>
       <div class="filter-bar" id="filterBar" aria-label="作品分类筛选"></div>
       <div class="works-grid" id="worksGrid"></div>
+      <nav class="section-pagination" id="worksPagination" aria-label="作品总览翻页"></nav>
     </section>
 
     <section class="section deep-section section-observe" id="architecture" data-section="Architecture">
@@ -110,6 +111,7 @@
         <p>建筑与空间设计入口，覆盖展陈、公共空间、更新改造和沉浸式场景。</p>
       </div>
       <div class="category-rail" id="architectureRail"></div>
+      <nav class="section-pagination pagination-inverse" id="architecturePagination" aria-label="建筑项目翻页"></nav>
     </section>
 
     <section class="section paper-section section-observe" id="objects" data-section="Objects">
@@ -121,6 +123,7 @@
         <p>产品设计、家具、装置与器物实验，保持克制的东方平面和年轻的结构敏感度。</p>
       </div>
       <div class="category-rail object-rail" id="objectsRail"></div>
+      <nav class="section-pagination" id="objectsPagination" aria-label="器物项目翻页"></nav>
     </section>
 
     <section class="section research-section section-observe" id="research" data-section="Research">
@@ -132,17 +135,24 @@
         <p>研究文章使用独立编号、独立数据与独立阅读界面，与建筑及器物项目分开维护。</p>
       </div>
       <div class="research-library" id="researchLibrary" aria-live="polite"></div>
+      <nav class="section-pagination pagination-inverse research-pagination" id="researchPagination" aria-label="研究文章翻页"></nav>
     </section>
 
     <section class="section contact-section section-observe" id="contact" data-section="Contact">
-      <div class="contact-panel">
-        <div>
-          <p class="eyebrow">CONTACT / 联系</p>
-          <h2>点击键位，复制对应的联系方式。</h2>
+      <div class="contact-panel contact-panel-modern">
+        <div class="contact-panel-head">
+          <div class="contact-panel-label">
+            <p class="eyebrow">CONTACT / 联系</p>
+            <span>CHANNEL DIRECTORY · CLICK TO COPY</span>
+          </div>
+          <p class="contact-copy-status" id="contactCopyStatus" role="status" aria-live="polite">选择一个联系方式，点击即可复制。</p>
         </div>
         <div class="contact-actions contact-copy-actions">
           <div class="contact-copy-grid" id="contactCopyGrid" aria-label="复制联系方式"></div>
-          <p class="contact-copy-status" id="contactCopyStatus" role="status" aria-live="polite">点击键位复制对应联系方式。</p>
+        </div>
+        <div class="contact-panel-foot" aria-hidden="true">
+          <span>SOVEN / CONTACT INDEX</span>
+          <span>06 — DIRECT CHANNELS</span>
         </div>
       </div>
     </section>
@@ -494,6 +504,6 @@
 
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js" defer></script>
-  <script src="assets/js/app.js?v=20260714103453" defer></script>
+  <script src="assets/js/app.js?v=20260714115428" defer></script>
 </body>
 </html>

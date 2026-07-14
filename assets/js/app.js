@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260714115428
+// CACHE_BUST_VERSION: 20260714163356
 (function () {
   "use strict";
 
@@ -115,6 +115,7 @@
   var projects = [];
   var researchArticles = [];
   var activePanoramaViewer = null;
+  var contactCurtainController = null;
   var mobilePageLocks = {};
   var mobilePageScrollY = 0;
   var mobileViewportTimer = 0;
@@ -282,25 +283,7 @@
   }
 
   function createDefaultHeroContent() {
-    return {
-      sealSuffix: "DATA SOURCE",
-      primaryAction: {
-        labelCN: "检查数据",
-        labelEN: "Check Data",
-        href: "#atelier-console"
-      },
-      secondaryAction: {
-        labelCN: "导入 JSON",
-        labelEN: "Import JSON",
-        href: "#atelier-console"
-      },
-      indexLinks: [
-        { no: "01", label: "JSON", href: "#atelier-console" },
-        { no: "02", label: "DATA", href: "#atelier-console" },
-        { no: "03", label: "CHECK", href: "#atelier-console" }
-      ],
-      bottomStrip: ["SITE-DATA.JSON", "OFFICIAL SOURCE", "NO OLD FALLBACK", "CHECK DATA"]
-    };
+    return {};
   }
 
   function createDefaultSectionContent() {
@@ -343,7 +326,9 @@
       email: "",
       xiaohongshu: "",
       officialAccount: "",
-      vx: ""
+      vx: "",
+      curtainText: "凡屋内彻上明造者，梁头相叠处须随举势高下用驼峰。其驼峰长加高一倍，厚一材，枓下两肩或作入瓣，或作出瓣，或圜讹两肩、两头卷尖。梁头安替木处并作隐枓，两头造耍头或切几头，与令栱或襻间相交。\n\n凡屋内若施平棋，平暗亦同，在大梁之上。平棋之上又施草栿，乳栿之上亦施草栿，并在压槽方之止。其草栿长同下梁，直至橑檐方止。若在两面，则安丁栿。丁栿之上别安抹角栿，与草栿相交。\n\n凡角梁下又施隐衬角栿，在明梁之上，外至橑檐方，内至角后栿项，长以两椽材斜长加之。凡衬方头施之于梁背耍头之上，其广厚同材，前至橑檐方，后至昂背或平棋方。若无铺作，即至托脚木止；若骑槽，即前后各随跳，与方、栱相交，开子荫以压枓上。\n\n凡平棋之上，须随槫栿用方木及矮柱、敦㮇，随宜枝撑樘固济，并在草栿之上。凡明梁只阁平棋，草栿在上，承屋盖之重。凡平棋方在梁背上，其广厚并如材，长随间广。每架下平棋方一道，又随架安椽，以遮版缝。\n\n凡杀梭柱之法，随柱之长，分为三分。上一分又分为三分，如栱卷杀，渐收至上，径比栌枓底四周各出四分；又量柱头四分，紧杀如覆盆样，令柱头与栌枓底相副。其柱身下一分杀令径围与中一分同。\n\n凡立柱，并令柱首微收向内，柱脚微出向外，谓之侧脚。每屋正面，随柱之长，每一尺即侧脚一分；若侧面，每长一尺，即侧脚八厘。至角柱，其柱首相向各依本法。凡下侧脚墨，于柱十字墨心里再下直墨，然后截柱脚、柱首，各令平正。若楼阁柱侧脚，只以柱以上为则，侧脚上更加侧脚，逐层仿此。\n\n凡角梁之长，大角梁自下平槫至下架檐头；子角梁随飞檐头外至小连檐下，斜至柱心，安于大角梁内；隐角梁随架之广，自下平槫至子角梁尾，安于大角梁中，皆以斜长加之。\n\n凡造四阿殿阁，若四椽、六椽五间及八椽七间，或十椽九间以上，其角梁相续，直至脊槫，各以逐架斜长加之。如八椽五间至十椽七间，并两头增出脊槫各三尺。随所加脊槫尽处，别施角梁一重，俗谓之吴殿，亦曰五脊殿。\n\n凡堂厅若厦两头造，则两梢间用角梁转过两椽。亭榭之类转一椽。今亦用此制为殿阁者，俗谓之曹殿，又曰汉殿，亦曰九脊殿。按《唐六典》及《营缮令》云：王公以下居第并听厦两头者，此制也。\n\n造蜀柱之制，于平梁上，长随举势高下，殿阁径一材半，余屋量栿厚加减。两面各顺平栿，随举势斜安叉手。凡中下平槫缝，并于梁首向里斜安托脚，其广随材，厚三分之一，从上梁角过，抱槫出卯，以托向上槫缝。\n\n凡屋如彻上明造，即于蜀柱之上安枓，枓上安随间襻间，或一材，或两材。襻间广厚并如材，长随间广，出半栱在外，半栱连身对隐。若两材造，即每间各用一材，隔间上下相闪，令慢栱在上，瓜子栱在下。若一材造，只用令栱，隔间一材。如屋内遍用襻间，一材或两材，并与梁头相交。\n\n凡蜀柱，量所用长短，于中心安顺脊串。广厚如材，或加三分至四分，长随间，隔间用之。若梁上用矮柱者，径随相对之柱，其长随举势高下。凡顺栿串，并出柱作丁头栱，其广一足材；或不及，即作㭼头，厚如材，在牵梁或乳栿下。\n\n用槫之制，若殿阁槫径一材一契，或加材一倍；厅堂槫径加材三分至一契；余屋槫径加材一分至二分，长随间广。凡正屋用槫，若心间及西间者，皆头东而尾西；如东间者，头西而尾东。其廊屋面东西者，皆头南而尾北。\n\n凡两头梢间槫背上并安生头木，广厚并如材，长随梢间，斜杀向里，令生势圜和，与前后橑檐方相应。其转角者，高与角梁背平；或随宜加高，令椽头背低角梁头背一椽分。\n\n凡下昂作，第一跳心之上用槫承椽，以代承椽方，谓之牛脊槫，安于草栿之上，至角即抱角梁，下用矮柱敦㮇。如七铺作以上，其牛脊槫于前跳内更加一缝。\n\n造抟风版之制，于屋两际出槫头之外安抟风版，广两材至三材，厚三分至四分，长随架道。中上架两面各斜出搭掌，长二尺五寸至三尺；下架随椽，与瓦头齐。转角者至曲脊内。\n\n用椽之制，椽每架平不过六尺。若殿阁或加五寸至一尺五寸，径九分至十分；若厅堂，椽径七分至八分；余屋径六分至七分。长随架，斜至下架，即加长出檐。每槫上为缝，斜批相搭钉之。凡用椽，皆令椽头向下而尾在上。\n\n凡布椽，令一间当间心。若有补间铺作者，令一间当耍头心。若四面回转角者，并随角梁分布，令椽头疏密得所，过角归间，并随上中架取直。若屋内有平棋者，即随椽长短，令一头取齐，一头放过上架，当槫钉之，不用裁截，谓之雁脚钉。\n\n造檐之制，皆从橑檐方心出。如椽径三寸，即檐出三尺五寸；椽径五寸，即檐出四尺至四尺五寸。檐外别加飞檐，每檐一尺，出飞子六寸。其檐自次角柱补间铺作心，椽头皆生出向外，渐至角梁。其角柱之内，檐身亦令微杀向里，不尔恐檐圜而不直。\n\n凡飞子，如椽径十分，则广八分，厚七分。各以其广厚分为五分，两边各斜杀一分，底面上留三分，下杀二分，皆以三瓣卷杀。上一瓣长五分，次二瓣各长四分，尾长斜随檐。若近角飞子，随势上曲，令背与小连檐平。\n\n举折之制，先以尺为丈，以寸为尺，以分为寸，以厘为分，以毫为厘，侧画所建之屋于平正壁上；定其举之峻慢，折之圜和，然后可见屋内梁柱之高下，卯眼之远近。今俗谓之定侧样，亦曰点草架。\n\n举屋之法，如殿阁楼台，先量前后橑檐方心相去远近，分为三分，从橑檐方背至脊槫背举起一分。如屋深三丈，即举起一丈之类。如㼧瓦厅堂，即四分中举起一分；又通以四分所得丈尺，每一尺加八分。若㼧瓦廊屋及瓪瓦厅堂，每一尺加五分；或瓪瓦廊屋之类，每一尺加三分。\n\n折屋之法，以举高尺丈每尺折一寸，每架自上递减半为法。如举高二丈，即先从脊槫背上取平，下至橑檐方背，其上第一缝折二尺；又从上第一缝槫背取平，下至橑檐方背，于第二缝折一尺。若椽数多，即逐缝取平，皆下至橑檐方背，每缝并减上缝之半。如第一缝二尺，第二缝一尺，第三缝五寸，第四缝二寸五分之类。\n\n如取平，皆从槫心抨绳令紧为则。如架道不匀，即约度远近，随宜加减，以脊槫及橑檐方为准。若八角或四角斗尖亭榭，自橑檐方背举至角梁底，五分中举一分；至上簇角梁，即两分中举一分。\n\n簇角梁之法，用三折。先从大角背，自橑檐方心量向上，至枨杆卯心，取大角梁背一半，立上折簇梁，斜向枨杆举分尽处。次从上折簇梁尽处，量至橑檐方心，取大角梁背一半，立中折簇梁，斜向上折簇梁当心之下。又次从橑檐方心立下折簇梁，斜向中折簇梁当心近下。其折分并同折屋之制。\n\n凡构屋之制，皆以材为祖。材有八等，度屋之大小，因而用之。各以其材之广分为十五分，以十分为其厚。凡屋宇之高深，名物之短长，曲直举折之势，规矩绳墨之宜，皆以所用材之分，以为制度焉。举折之制：先以尺为丈，定其举之峻慢、折之圜和。臣聞上棟下宇，易為大壯之時；正位辨方，禮實太平之典。共工命於舜日，大匠始於漢朝，各有司存，按為功緒。況神畿之千里，加禁闕之九重，內財宮寢之宜，外定廟朝之次，蟬聯庶府，棊列百司。櫼櫨枅柱之相枝，規矩準繩之先治，五材並用，百堵皆興。惟時鳩僝之工，遂考翬飛之室。\n\n而斲輪之手，巧或失真；董役之官，才非兼技。不知以材而定分，乃或倍斗而取長。弊積因循，法疎檢察，非有治三宮之精識，豈能新一代之成規！\n\n溫詔下頒，成書入奏，空靡歲月，無補涓塵。恭惟皇帝陛下仁儉生知，睿明天縱；淵靜而百姓定，綱舉而衆目張。官得其人，事為之制。丹楹刻桷，淫巧既除；菲食卑宮，淳風斯復。乃詔百工之事，更資千慮之愚。\n\n臣考閱舊章，稽參衆智。功分三等，第為精粗之差；役辨四時，用度長短之晷。以至木議剛柔，而理無不順；土評遠邇，而力易以供。類例相從，條章具在。研精覃思，顧述者之非工；按牒披圖，或將來之有補。",
+      architectureText: ["凡构屋之制", "皆以材为祖", "定其举之峻慢", "折之圜和", "梁柱之高下", "曲直举折之势", "規矩準繩", "五材並用", "角梁 · 飛檐 · 槫 · 椽 · 柱 · 栱"]
     };
   }
 
@@ -423,30 +408,7 @@
   }
 
   function normalizeHeroContent(input) {
-    var defaults = createDefaultHeroContent();
-    var source = input || {};
-    var defaultIndexLinks = defaults.indexLinks;
-    var indexLinks = Array.isArray(source.indexLinks) ? source.indexLinks : defaultIndexLinks;
-    var secondary = normalizeAction(source.secondaryAction, defaults.secondaryAction);
-    if (secondary.href === "#studio" || secondary.href === "studio") {
-      secondary = { labelCN: "", labelEN: "", href: "" };
-    }
-    return {
-      sealSuffix: String(source.sealSuffix || defaults.sealSuffix),
-      primaryAction: normalizeAction(source.primaryAction, defaults.primaryAction),
-      secondaryAction: secondary,
-      indexLinks: indexLinks.map(function (item, index) {
-        var fallback = defaultIndexLinks[index] || {};
-        return {
-          no: String(item.no || fallback.no || padNumber(index)),
-          label: String(item.label || fallback.label || ""),
-          href: String(item.href || fallback.href || "#")
-        };
-      }).filter(function (item) {
-        return item.href !== "#studio" && item.href !== "studio";
-      }),
-      bottomStrip: parseList(source.bottomStrip && source.bottomStrip.length ? source.bottomStrip : defaults.bottomStrip)
-    };
+    return {};
   }
 
   function normalizeSectionContent(input) {
@@ -482,11 +444,21 @@
       return value === "#" ? "" : value;
     }
 
+    function normalizeArchitecturePhrases(value) {
+      var sourceValue = Array.isArray(value) ? value : String(value || "").split(/[\n|]+/);
+      var normalized = sourceValue.map(function (item) {
+        return String(item || "").trim();
+      }).filter(Boolean);
+      return normalized.length ? normalized : defaults.architectureText.slice();
+    }
+
     return {
       email: String(source.email || legacy.email || defaults.email || "").trim(),
       xiaohongshu: String(source.xiaohongshu || source.red || legacy.xiaohongshu || legacy.red || legacySocialValue(/xiaohongshu|小红书|\bred\b/) || defaults.xiaohongshu || "").trim(),
       officialAccount: String(source.officialAccount || source.wechatOfficial || source.official || legacy.officialAccount || legacy.wechatOfficial || defaults.officialAccount || "").trim(),
-      vx: String(source.vx || source.wechat || legacy.vx || legacy.wechat || defaults.vx || "").trim()
+      vx: String(source.vx || source.wechat || legacy.vx || legacy.wechat || defaults.vx || "").trim(),
+      curtainText: String(source.curtainText || source.textCurtain || defaults.curtainText || "").trim(),
+      architectureText: normalizeArchitecturePhrases(source.architectureText || source.architecturePhrases)
     };
   }
 
@@ -2621,13 +2593,47 @@
     renderAdminSectionSaveState();
   }
 
+  function splitHeroManifestoLines(value) {
+    var raw = String(value || "").trim();
+    if (!raw) {
+      return [];
+    }
+
+    var explicitLines = raw.split(/\r?\n/).map(function (line) {
+      return line.trim();
+    }).filter(Boolean);
+    if (explicitLines.length > 1) {
+      return explicitLines;
+    }
+
+    var compact = raw.replace(/\s+/g, "");
+    var classicCompact = "天有时，地有气材有美，工有巧合此四者然后可以为良。";
+    if (compact === classicCompact || compact === classicCompact.replace(/。$/, "")) {
+      return ["天有时，地有气", "材有美，工有巧", "合此四者", "然后可以为良。"]; 
+    }
+
+    return [raw];
+  }
+
+  function renderHeroManifesto(value) {
+    var title = qs("#heroTitle");
+    if (!title) {
+      return;
+    }
+    var raw = String(value || "").trim();
+    var lines = splitHeroManifestoLines(raw);
+    title.innerHTML = lines.map(function (line) {
+      return '<span class="hero-manifesto-line">' + escapeHTML(line) + '</span>';
+    }).join("");
+    title.setAttribute("aria-label", raw.replace(/\s*\r?\n\s*/g, " "));
+  }
+
   function renderSettings() {
     var settings = state.settings;
     document.title = settings.studioName + " | Independent Design Studio";
     setText("navStudioName", settings.studioName);
     setText("brandSeal", settings.studioSeal.slice(0, 1));
-    setText("heroSeal", settings.studioSeal);
-    setText("heroTitle", settings.taglineCN);
+    renderHeroManifesto(settings.taglineCN);
     setText("heroTitleEN", settings.taglineEN);
     setText("heroIntro", settings.intro);
     document.documentElement.style.setProperty("--cangqing", settings.accentColor || "#536A63");
@@ -2638,40 +2644,11 @@
   }
 
   function renderHeroContent(hero) {
-    var content = normalizeHeroContent(hero);
-    var sealSuffix = qs("#home .seal-line span:last-child");
-    if (sealSuffix) {
-      sealSuffix.textContent = content.sealSuffix;
-    }
-    renderHeroAction("#home .hero-actions .button-primary", content.primaryAction);
-    renderHeroAction("#home .hero-actions .button-ghost", content.secondaryAction);
-    var index = qs("#home .hero-index");
-    if (index) {
-      index.innerHTML = content.indexLinks.map(function (link) {
-        return '<a href="' + escapeHTML(link.href) + '"><span>' + escapeHTML(link.no) + '</span> ' + escapeHTML(link.label) + '</a>';
-      }).join("");
-    }
-    var bottomStrip = qs("#home .hero-bottom-strip");
-    if (bottomStrip) {
-      bottomStrip.innerHTML = content.bottomStrip.map(function (item) {
-        return '<span>' + escapeHTML(item) + '</span>';
-      }).join("");
-    }
+    /* V60: the homepage contains only the manifesto, English subtitle and intro. */
   }
 
   function renderHeroAction(selector, action) {
-    var link = qs(selector);
-    if (!link) {
-      return;
-    }
-    var invalid = !action || !action.href || action.href === "#studio" || action.href === "studio" || (!action.labelCN && !action.labelEN);
-    link.hidden = invalid;
-    link.setAttribute("aria-hidden", invalid ? "true" : "false");
-    if (invalid) {
-      return;
-    }
-    link.href = action.href;
-    link.innerHTML = '<span>' + escapeHTML(action.labelCN) + '</span><em>' + escapeHTML(action.labelEN) + '</em>';
+    return;
   }
 
   function renderSectionContent(sections, studioFallback) {
@@ -2729,11 +2706,342 @@
     });
   }
 
+  function destroyContactCurtain() {
+    if (contactCurtainController && typeof contactCurtainController.destroy === "function") {
+      contactCurtainController.destroy();
+    }
+    contactCurtainController = null;
+  }
+
+  function renderContactArchitecture(content) {
+    var svg = qs("#contactArchitecture");
+    if (!svg) {
+      return;
+    }
+    var phrases = content.architectureText && content.architectureText.length
+      ? content.architectureText
+      : createDefaultContactContent().architectureText;
+    function phrase(index, fallback) {
+      return escapeHTML(phrases[index % phrases.length] || fallback || "");
+    }
+    svg.innerHTML =
+      '<defs>' +
+        '<path id="contactRoofUpper" d="M 86 402 Q 330 224 690 250 Q 930 268 1118 132" />' +
+        '<path id="contactRoofLower" d="M 72 430 Q 348 316 694 316 Q 946 318 1142 208" />' +
+        '<path id="contactEaveLine" d="M 124 470 Q 410 376 734 374 Q 960 372 1138 288" />' +
+        '<path id="contactBeamLine" d="M 300 500 L 952 500" />' +
+        '<path id="contactBracketOne" d="M 730 500 Q 780 560 840 500" />' +
+        '<path id="contactBracketTwo" d="M 790 500 Q 846 594 916 500" />' +
+      '</defs>' +
+      '<g class="contact-architecture-lines">' +
+        '<path d="M 86 402 Q 330 224 690 250 Q 930 268 1118 132" />' +
+        '<path d="M 72 430 Q 348 316 694 316 Q 946 318 1142 208" />' +
+        '<path d="M 124 470 Q 410 376 734 374 Q 960 372 1138 288" />' +
+        '<path d="M 300 500 L 952 500" />' +
+        '<path d="M 868 500 L 868 742" />' +
+        '<path d="M 916 500 L 916 742" />' +
+        '<path d="M 730 500 Q 780 560 840 500" />' +
+        '<path d="M 790 500 Q 846 594 916 500" />' +
+      '</g>' +
+      '<g class="contact-architecture-type">' +
+        '<text class="arch-roof arch-roof-main"><textPath href="#contactRoofUpper" startOffset="2%">' + phrase(2, "定其举之峻慢") + '　·　' + phrase(3, "折之圜和") + '　·　' + phrase(8, "角梁飛檐槫椽柱栱") + '</textPath></text>' +
+        '<text class="arch-roof arch-roof-secondary"><textPath href="#contactRoofLower" startOffset="8%">' + phrase(0, "凡构屋之制") + '　' + phrase(1, "皆以材为祖") + '　' + phrase(6, "規矩準繩") + '</textPath></text>' +
+        '<text class="arch-eave"><textPath href="#contactEaveLine" startOffset="13%">' + phrase(4, "梁柱之高下") + '　·　' + phrase(5, "曲直举折之势") + '　·　' + phrase(7, "五材並用") + '</textPath></text>' +
+        '<text class="arch-beam"><textPath href="#contactBeamLine" startOffset="1%">' + phrase(0, "凡构屋之制") + '　' + phrase(1, "皆以材为祖") + '</textPath></text>' +
+        '<text class="arch-column" x="886" y="514">' + phrase(4, "梁柱之高下") + '　' + phrase(5, "曲直举折之势") + '</text>' +
+        '<text class="arch-column arch-column-faint" x="934" y="514">' + phrase(6, "規矩準繩") + '　' + phrase(7, "五材並用") + '</text>' +
+        '<text class="arch-bracket"><textPath href="#contactBracketOne" startOffset="4%">' + phrase(8, "角梁飛檐槫椽柱栱") + '</textPath></text>' +
+        '<text class="arch-bracket arch-bracket-two"><textPath href="#contactBracketTwo" startOffset="2%">' + phrase(6, "規矩準繩") + '</textPath></text>' +
+      '</g>';
+  }
+
+  function createContactCurtain(canvas, stage, rawText) {
+    if (!canvas || !stage) {
+      return null;
+    }
+    var context = canvas.getContext("2d", { alpha: true });
+    if (!context) {
+      return null;
+    }
+
+    var destroyed = false;
+    var raf = 0;
+    var visible = true;
+    var width = 0;
+    var height = 0;
+    var dpr = 1;
+    var strands = [];
+    var pointer = { x: -9999, y: -9999, vx: 0, vy: 0, active: false, lastX: 0, lastY: 0, lastT: 0 };
+    var reducedMotion = Boolean(reduceMotionQuery && reduceMotionQuery.matches);
+    var cleanText = String(rawText || "").replace(/\\s+/g, "").trim();
+    if (!cleanText) {
+      cleanText = createDefaultContactContent().curtainText.replace(/\\s+/g, "");
+    }
+
+    function seeded(index) {
+      var x = Math.sin(index * 12.9898 + 78.233) * 43758.5453;
+      return x - Math.floor(x);
+    }
+
+    function resize() {
+      var rect = stage.getBoundingClientRect();
+      width = Math.max(1, Math.round(rect.width));
+      height = Math.max(1, Math.round(rect.height));
+      dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      buildStrands();
+      draw();
+    }
+
+    function buildStrands() {
+      strands = [];
+      var mobile = width < 720;
+      var count = mobile ? Math.max(12, Math.floor(width / 28)) : Math.max(24, Math.min(46, Math.floor(width / 34)));
+      var margin = mobile ? 14 : Math.max(26, width * 0.025);
+      var available = width - margin * 2;
+      var spacingX = available / Math.max(1, count - 1);
+      var charSpacing = mobile ? 16.5 : 15.5;
+      var topBase = mobile ? 20 : 28;
+      var textIndex = 0;
+
+      for (var i = 0; i < count; i += 1) {
+        var seed = seeded(i + 3);
+        var baseX = margin + i * spacingX;
+        var startOffset = (i % 5) * 5 + seed * 12;
+        var lengthFactor = 0.68 + seeded(i + 20) * 0.25;
+        var maxNodes = Math.max(16, Math.floor((height * lengthFactor) / charSpacing));
+        var nodes = [];
+        var chars = [];
+        for (var j = 0; j < maxNodes; j += 1) {
+          var restY = topBase + startOffset + j * charSpacing;
+          nodes.push({
+            x: baseX,
+            y: restY,
+            restX: baseX,
+            restY: restY,
+            vx: 0,
+            vy: 0
+          });
+          chars.push(cleanText.charAt(textIndex % cleanText.length));
+          textIndex += 1 + ((i + j) % 17 === 0 ? 1 : 0);
+        }
+        strands.push({
+          index: i,
+          nodes: nodes,
+          chars: chars,
+          alpha: 0.27 + seeded(i + 90) * 0.34,
+          accent: i % 7 === 0 || i % 11 === 0,
+          fontSize: mobile ? 9.5 + seeded(i + 70) * 1.4 : 10 + seeded(i + 70) * 1.8
+        });
+      }
+    }
+
+    function update() {
+      var radius = width < 720 ? 78 : 118;
+      var strengthBase = width < 720 ? 1.4 : 2.15;
+
+      strands.forEach(function (strand) {
+        var nodes = strand.nodes;
+        for (var i = 0; i < nodes.length; i += 1) {
+          var node = nodes[i];
+          if (i === 0) {
+            node.x = node.restX;
+            node.y = node.restY;
+            node.vx = 0;
+            node.vy = 0;
+            continue;
+          }
+
+          node.vx += (node.restX - node.x) * 0.022;
+          node.vy += (node.restY - node.y) * 0.035;
+
+          var previous = nodes[i - 1];
+          var next = nodes[i + 1];
+          node.vx += (previous.x - node.x) * 0.045;
+          if (next) {
+            node.vx += (next.x - node.x) * 0.025;
+          }
+
+          if (pointer.active) {
+            var dx = node.x - pointer.x;
+            var dy = node.y - pointer.y;
+            var distance = Math.sqrt(dx * dx + dy * dy) || 1;
+            if (distance < radius) {
+              var influence = Math.pow(1 - distance / radius, 1.7);
+              node.vx += (dx / distance) * influence * strengthBase + pointer.vx * influence * 0.035;
+              node.vy += (dy / distance) * influence * strengthBase * 0.28 + pointer.vy * influence * 0.012;
+            }
+          }
+
+          node.vx *= 0.91;
+          node.vy *= 0.88;
+          node.x += node.vx;
+          node.y += node.vy;
+        }
+
+        for (var iteration = 0; iteration < 2; iteration += 1) {
+          for (var j = 1; j < nodes.length; j += 1) {
+            var a = nodes[j - 1];
+            var b = nodes[j];
+            var target = b.restY - a.restY;
+            var sx = b.x - a.x;
+            var sy = b.y - a.y;
+            var length = Math.sqrt(sx * sx + sy * sy) || 1;
+            var correction = (length - target) / length * 0.35;
+            if (j > 1) {
+              a.x += sx * correction * 0.32;
+              a.y += sy * correction * 0.32;
+            }
+            b.x -= sx * correction * 0.68;
+            b.y -= sy * correction * 0.68;
+          }
+        }
+      });
+    }
+
+    function draw() {
+      context.clearRect(0, 0, width, height);
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+
+      strands.forEach(function (strand) {
+        var nodes = strand.nodes;
+        context.beginPath();
+        nodes.forEach(function (node, index) {
+          if (index === 0) {
+            context.moveTo(node.x, node.y);
+          } else {
+            context.lineTo(node.x, node.y);
+          }
+        });
+        context.strokeStyle = strand.accent ? "rgba(116,154,137,0.11)" : "rgba(231,234,226,0.055)";
+        context.lineWidth = 0.6;
+        context.stroke();
+
+        context.font = strand.fontSize + 'px "Noto Serif SC", "Songti SC", "SimSun", serif';
+        nodes.forEach(function (node, index) {
+          var char = strand.chars[index];
+          if (!char) {
+            return;
+          }
+          var previous = nodes[Math.max(0, index - 1)];
+          var tilt = Math.max(-0.22, Math.min(0.22, (node.x - previous.x) / 22));
+          context.save();
+          context.translate(node.x, node.y);
+          context.rotate(tilt);
+          var alpha = strand.alpha * (0.72 + Math.sin(index * 0.47 + strand.index) * 0.10);
+          context.fillStyle = strand.accent
+            ? "rgba(137,176,157," + Math.max(0.12, alpha * 0.85).toFixed(3) + ")"
+            : "rgba(238,236,226," + Math.max(0.12, alpha).toFixed(3) + ")";
+          context.fillText(char, 0, 0);
+          context.restore();
+        });
+      });
+    }
+
+    function frame() {
+      if (destroyed) {
+        return;
+      }
+      if (visible && !reducedMotion) {
+        update();
+        draw();
+      }
+      raf = window.requestAnimationFrame(frame);
+    }
+
+    function setPointer(event) {
+      var rect = stage.getBoundingClientRect();
+      var now = performance.now();
+      var x = event.clientX - rect.left;
+      var y = event.clientY - rect.top;
+      var dt = Math.max(12, now - (pointer.lastT || now));
+      pointer.vx = (x - pointer.lastX) / dt * 16;
+      pointer.vy = (y - pointer.lastY) / dt * 16;
+      pointer.x = x;
+      pointer.y = y;
+      pointer.lastX = x;
+      pointer.lastY = y;
+      pointer.lastT = now;
+      pointer.active = true;
+      if (reducedMotion) {
+        draw();
+      }
+    }
+
+    function clearPointer() {
+      pointer.active = false;
+      pointer.x = -9999;
+      pointer.y = -9999;
+      pointer.vx = 0;
+      pointer.vy = 0;
+    }
+
+    function onTouchMove(event) {
+      if (!event.touches || !event.touches[0]) {
+        return;
+      }
+      setPointer(event.touches[0]);
+    }
+
+    stage.addEventListener("pointermove", setPointer, { passive: true });
+    stage.addEventListener("pointerleave", clearPointer, { passive: true });
+    stage.addEventListener("pointercancel", clearPointer, { passive: true });
+    stage.addEventListener("touchmove", onTouchMove, { passive: true });
+    stage.addEventListener("touchend", clearPointer, { passive: true });
+
+    var resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null;
+    if (resizeObserver) {
+      resizeObserver.observe(stage);
+    } else {
+      window.addEventListener("resize", resize);
+    }
+
+    var intersectionObserver = typeof IntersectionObserver !== "undefined" ? new IntersectionObserver(function (entries) {
+      visible = Boolean(entries[0] && entries[0].isIntersecting);
+      if (visible) {
+        draw();
+      }
+    }, { threshold: 0.04 }) : null;
+    if (intersectionObserver) {
+      intersectionObserver.observe(stage);
+    }
+
+    resize();
+    raf = window.requestAnimationFrame(frame);
+
+    return {
+      destroy: function () {
+        destroyed = true;
+        window.cancelAnimationFrame(raf);
+        stage.removeEventListener("pointermove", setPointer);
+        stage.removeEventListener("pointerleave", clearPointer);
+        stage.removeEventListener("pointercancel", clearPointer);
+        stage.removeEventListener("touchmove", onTouchMove);
+        stage.removeEventListener("touchend", clearPointer);
+        if (resizeObserver) {
+          resizeObserver.disconnect();
+        } else {
+          window.removeEventListener("resize", resize);
+        }
+        if (intersectionObserver) {
+          intersectionObserver.disconnect();
+        }
+      }
+    };
+  }
+
   function renderContactContent(contact) {
     var content = normalizeContactContent(contact);
     var grid = qs("#contactCopyGrid");
     var status = qs("#contactCopyStatus");
-    if (!grid) {
+    var stage = qs("#contactTextStage");
+    var canvas = qs("#contactCurtainCanvas");
+    if (!grid || !stage) {
       return;
     }
 
@@ -2744,14 +3052,13 @@
       { key: "vx", label: "VX", value: content.vx }
     ];
 
-    grid.innerHTML = channels.map(function (channel, index) {
+    grid.innerHTML = channels.map(function (channel) {
       var disabled = !channel.value;
       return '<button class="contact-copy-key" type="button" data-contact-copy="' + escapeHTML(channel.key) + '"' +
         (disabled ? ' disabled aria-disabled="true"' : '') +
-        ' aria-label="复制' + escapeHTML(channel.label) + '">' +
-          '<span class="contact-key-index">' + String(index + 1).padStart(2, "0") + '</span>' +
+        ' aria-label="' + escapeHTML(channel.label) + '">' +
           '<span class="contact-key-label">' + escapeHTML(channel.label) + '</span>' +
-          '<span class="contact-key-action">' + (disabled ? 'NOT SET' : 'COPY ↗') + '</span>' +
+          '<span class="contact-key-pulse" aria-hidden="true"></span>' +
         '</button>';
     }).join("");
 
@@ -2759,41 +3066,31 @@
       button.addEventListener("click", function () {
         var key = button.getAttribute("data-contact-copy");
         var channel = channels.find(function (item) { return item.key === key; });
-        var action = button.querySelector(".contact-key-action");
         if (!channel || !channel.value) {
-          if (status) {
-            status.textContent = channel ? channel.label + "尚未设置。" : "联系方式尚未设置。";
-          }
           return;
         }
         copyContactText(channel.value).then(function () {
           qsa(".contact-copy-key", grid).forEach(function (item) {
             item.classList.remove("is-copied");
-            var itemAction = item.querySelector(".contact-key-action");
-            if (itemAction && !item.disabled) {
-              itemAction.textContent = "COPY ↗";
-            }
           });
           button.classList.add("is-copied");
-          if (action) {
-            action.textContent = "COPIED ✓";
-          }
           if (status) {
-            status.textContent = channel.label + "已复制到剪贴板。";
+            status.textContent = channel.label + "已复制";
           }
           window.setTimeout(function () {
             button.classList.remove("is-copied");
-            if (action) {
-              action.textContent = "COPY ↗";
-            }
-          }, 1600);
+          }, 1100);
         }).catch(function () {
           if (status) {
-            status.textContent = channel.label + "复制失败，请检查浏览器权限。";
+            status.textContent = channel.label + "复制失败";
           }
         });
       });
     });
+
+    renderContactArchitecture(content);
+    destroyContactCurtain();
+    contactCurtainController = createContactCurtain(canvas, stage, content.curtainText);
   }
 
   function applyVisualAssets(visualAssets) {
@@ -6173,6 +6470,8 @@
     form.elements.contactXiaohongshu.value = contact.xiaohongshu;
     form.elements.contactOfficialAccount.value = contact.officialAccount;
     form.elements.contactVx.value = contact.vx;
+    form.elements.contactCurtainText.value = contact.curtainText;
+    form.elements.contactArchitectureText.value = contact.architectureText.join("\n");
     var visualAssets = normalizeVisualAssets(state.settings.visualAssets);
     form.elements.heroDepthMountain.value = visualAssets.heroDepth.mountain;
     form.elements.heroDepthWindowFrame.value = visualAssets.heroDepth.windowFrame;
@@ -6196,7 +6495,9 @@
         email: form.elements.contactEmail.value.trim(),
         xiaohongshu: form.elements.contactXiaohongshu.value.trim(),
         officialAccount: form.elements.contactOfficialAccount.value.trim(),
-        vx: form.elements.contactVx.value.trim()
+        vx: form.elements.contactVx.value.trim(),
+        curtainText: form.elements.contactCurtainText.value.trim(),
+        architectureText: form.elements.contactArchitectureText.value.split(/[\n|]+/).map(function (item) { return item.trim(); }).filter(Boolean)
       },
       visualAssets: normalizeVisualAssets({
         heroDepth: {

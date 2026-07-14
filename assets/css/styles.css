@@ -8798,3 +8798,494 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   .contact-key-action { grid-column: 3; justify-self: end; }
 }
 /* V59_PAGINATION_CONTACT_CONTRAST_END */
+
+/* V60_HOMEPAGE_MANIFESTO_START */
+/*
+  Homepage UI only. The depth background, lady, window, lighting, navigation,
+  cursor and motion layers remain unchanged.
+*/
+#home .hero-content.hero-manifesto-content {
+  position: absolute;
+  top: 52%;
+  right: clamp(42px, 6.5vw, 118px);
+  left: auto;
+  z-index: 12;
+  width: min(52vw, 820px);
+  max-width: none;
+  margin: 0;
+  transform: translateY(-43%);
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  gap: clamp(13px, 1.55vw, 24px);
+  text-align: right;
+}
+
+#home .hero-content.hero-manifesto-content h1 {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  display: grid;
+  justify-items: end;
+  gap: clamp(1px, 0.25vw, 5px);
+  color: #f8f3e8;
+  font-family: var(--font-heritage);
+  font-size: clamp(54px, 5.05vw, 92px);
+  font-weight: 900;
+  line-height: 0.94;
+  letter-spacing: -0.055em;
+  text-align: right;
+  text-wrap: initial;
+  text-shadow: 0 18px 48px rgba(0, 0, 0, 0.62), 0 0 20px rgba(0, 0, 0, 0.30);
+}
+
+#home .hero-content.hero-manifesto-content h1::after {
+  display: none;
+  content: none;
+}
+
+#home .hero-manifesto-line {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  white-space: nowrap;
+  text-align: right;
+}
+
+#home .hero-title-en {
+  width: 100%;
+  max-width: none;
+  margin: clamp(8px, 0.8vw, 14px) 0 0;
+  color: rgba(246, 240, 228, 0.86);
+  font-size: clamp(19px, 1.65vw, 28px);
+  line-height: 1.25;
+  text-align: right;
+}
+
+#home .hero-intro {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  color: rgba(224, 216, 201, 0.72);
+  font-size: clamp(12px, 0.9vw, 15px);
+  line-height: 1.72;
+  text-align: right;
+}
+
+/* Explicitly suppress all retired homepage controls, including stale DOM injected by cached code. */
+#home .seal-line,
+#home .hero-actions,
+#home .hero-index,
+#home .hero-bottom-strip {
+  display: none !important;
+}
+
+@media (max-width: 1100px) and (min-width: 841px) {
+  #home .hero-content.hero-manifesto-content {
+    right: clamp(30px, 4vw, 54px);
+    width: min(55vw, 700px);
+  }
+
+  #home .hero-content.hero-manifesto-content h1 {
+    font-size: clamp(48px, 5vw, 72px);
+  }
+}
+
+@media (max-width: 840px) {
+  #home .hero-content.hero-manifesto-content {
+    top: 53%;
+    right: max(18px, env(safe-area-inset-right));
+    left: max(18px, env(safe-area-inset-left));
+    width: auto;
+    margin: 0;
+    transform: translateY(-38%);
+    justify-items: end;
+    gap: 12px;
+    text-align: right;
+  }
+
+  #home .hero-content.hero-manifesto-content h1 {
+    font-size: clamp(34px, 10vw, 58px);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    text-align: right;
+  }
+
+  #home .hero-title-en,
+  #home .hero-intro {
+    text-align: right;
+  }
+
+  #home .hero-title-en {
+    margin-top: 8px;
+    font-size: clamp(17px, 5vw, 23px);
+  }
+
+  #home .hero-intro {
+    max-width: min(88vw, 520px);
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 380px) {
+  #home .hero-content.hero-manifesto-content h1 {
+    font-size: clamp(31px, 9.6vw, 38px);
+  }
+}
+
+@media (max-height: 620px) and (orientation: landscape) {
+  #home .hero-content.hero-manifesto-content {
+    top: 57%;
+    right: max(24px, env(safe-area-inset-right));
+    width: min(57vw, 660px);
+    transform: translateY(-42%);
+    gap: 8px;
+  }
+
+  #home .hero-content.hero-manifesto-content h1 {
+    font-size: clamp(34px, 5.4vw, 58px);
+  }
+
+  #home .hero-title-en {
+    font-size: 17px;
+  }
+
+  #home .hero-intro {
+    font-size: 11px;
+  }
+}
+/* V60_HOMEPAGE_MANIFESTO_END */
+
+
+/* V61_CONTACT_TEXT_CURTAIN_START */
+/* Contact is rebuilt as an interactive text installation. */
+#contact.contact-section {
+  padding-top: clamp(68px, 8vw, 118px);
+  padding-bottom: clamp(46px, 6vw, 88px);
+  background: #080b0c;
+}
+
+#contact .contact-panel.contact-text-stage {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-height: clamp(620px, 82vh, 900px);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(227, 231, 222, 0.085);
+  border-radius: clamp(16px, 2vw, 28px);
+  color: #eeeadd;
+  background:
+    radial-gradient(circle at 72% 48%, rgba(75, 105, 94, 0.17), transparent 34%),
+    radial-gradient(circle at 20% 22%, rgba(193, 126, 69, 0.09), transparent 28%),
+    linear-gradient(145deg, #090c0d 0%, #0c1212 52%, #050607 100%);
+  box-shadow: 0 42px 110px rgba(0, 0, 0, 0.38);
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+#contact .contact-panel.contact-text-stage::before,
+#contact .contact-panel.contact-text-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+#contact .contact-panel.contact-text-stage::before {
+  z-index: 0;
+  opacity: 0.13;
+  background-image:
+    linear-gradient(rgba(239, 236, 224, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(239, 236, 224, 0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(115deg, transparent 3%, #000 26%, #000 78%, transparent 100%);
+}
+
+#contact .contact-panel.contact-text-stage::after {
+  z-index: 4;
+  background:
+    linear-gradient(90deg, rgba(5, 7, 8, 0.52), transparent 18%, transparent 78%, rgba(5, 7, 8, 0.34)),
+    linear-gradient(180deg, rgba(5, 7, 8, 0.50), transparent 18%, transparent 78%, rgba(5, 7, 8, 0.68));
+}
+
+.contact-scene-index {
+  position: absolute;
+  top: clamp(18px, 2.2vw, 30px);
+  left: clamp(18px, 2.4vw, 34px);
+  z-index: 6;
+  color: rgba(230, 225, 211, 0.28);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  pointer-events: none;
+}
+
+.contact-scene-index span {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgba(230, 225, 211, 0.10);
+  border-radius: 50%;
+}
+
+.contact-architecture {
+  position: absolute;
+  left: clamp(-100px, -4vw, -34px);
+  top: 50%;
+  z-index: 1;
+  width: min(82%, 1040px);
+  height: 92%;
+  transform: translateY(-47%);
+  overflow: visible;
+  pointer-events: none;
+  filter: drop-shadow(0 22px 50px rgba(0, 0, 0, 0.28));
+}
+
+.contact-architecture-lines {
+  fill: none;
+  stroke: rgba(177, 195, 185, 0.16);
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+}
+
+.contact-architecture-type text {
+  fill: rgba(226, 229, 217, 0.49);
+  font-family: var(--font-heritage), "Noto Serif SC", "Songti SC", "SimSun", serif;
+  letter-spacing: 0.035em;
+}
+
+.contact-architecture-type .arch-roof-main {
+  fill: rgba(236, 231, 215, 0.74);
+  font-size: 54px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.contact-architecture-type .arch-roof-secondary {
+  fill: rgba(132, 164, 148, 0.56);
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.contact-architecture-type .arch-eave {
+  fill: rgba(231, 226, 211, 0.42);
+  font-size: 23px;
+}
+
+.contact-architecture-type .arch-beam {
+  fill: rgba(235, 230, 216, 0.52);
+  font-size: 38px;
+  font-weight: 700;
+}
+
+.contact-architecture-type .arch-column {
+  fill: rgba(231, 226, 212, 0.46);
+  font-size: 26px;
+  font-weight: 650;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 0.16em;
+}
+
+.contact-architecture-type .arch-column-faint {
+  fill: rgba(132, 164, 148, 0.31);
+  font-size: 18px;
+}
+
+.contact-architecture-type .arch-bracket {
+  fill: rgba(223, 218, 202, 0.36);
+  font-size: 13px;
+}
+
+.contact-architecture-type .arch-bracket-two {
+  fill: rgba(132, 164, 148, 0.34);
+}
+
+.contact-curtain-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.contact-copy-dock {
+  position: absolute;
+  right: clamp(18px, 2.5vw, 36px);
+  bottom: clamp(18px, 2.5vw, 34px);
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+#contact .contact-copy-key {
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+  height: auto;
+  padding: 7px 10px 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(232, 228, 214, 0.09);
+  border-radius: 999px;
+  color: rgba(232, 228, 214, 0.38);
+  background: rgba(7, 10, 10, 0.28);
+  box-shadow: none;
+  backdrop-filter: blur(9px);
+  opacity: 0.72;
+  cursor: pointer;
+  transform: none;
+  transition: color 180ms ease, border-color 180ms ease, background 180ms ease, opacity 180ms ease, transform 180ms ease;
+}
+
+#contact .contact-copy-key:hover:not(:disabled),
+#contact .contact-copy-key:focus-visible:not(:disabled) {
+  color: rgba(245, 239, 224, 0.92);
+  border-color: rgba(213, 183, 134, 0.32);
+  background: rgba(20, 27, 25, 0.64);
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+#contact .contact-copy-key.is-copied {
+  color: rgba(240, 232, 211, 0.94);
+  border-color: rgba(132, 175, 152, 0.46);
+  background: rgba(35, 58, 48, 0.58);
+}
+
+#contact .contact-key-label {
+  grid-column: auto;
+  grid-row: auto;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 560;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.contact-key-pulse {
+  width: 4px;
+  height: 4px;
+  flex: 0 0 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.22;
+  transition: transform 180ms ease, opacity 180ms ease, box-shadow 180ms ease;
+}
+
+#contact .contact-copy-key:hover .contact-key-pulse,
+#contact .contact-copy-key:focus-visible .contact-key-pulse {
+  opacity: 0.66;
+}
+
+#contact .contact-copy-key.is-copied .contact-key-pulse {
+  opacity: 1;
+  transform: scale(1.8);
+  box-shadow: 0 0 12px rgba(142, 187, 163, 0.62);
+}
+
+#contact .contact-copy-key:disabled {
+  opacity: 0.20;
+  cursor: default;
+}
+
+#contact .contact-copy-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  #contact .contact-panel.contact-text-stage {
+    min-height: clamp(590px, 76vh, 760px);
+  }
+
+  .contact-architecture {
+    left: -150px;
+    width: 112%;
+    opacity: 0.88;
+  }
+}
+
+@media (max-width: 720px) {
+  #contact.contact-section {
+    padding-inline: 14px;
+  }
+
+  #contact .contact-panel.contact-text-stage {
+    min-height: min(720px, 78svh);
+    border-radius: 18px;
+    cursor: default;
+  }
+
+  .contact-architecture {
+    left: -215px;
+    top: 51%;
+    width: 155%;
+    height: 86%;
+    opacity: 0.69;
+  }
+
+  .contact-architecture-type .arch-roof-main {
+    font-size: 46px;
+  }
+
+  .contact-copy-dock {
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    gap: 4px;
+  }
+
+  #contact .contact-copy-key {
+    min-width: 44px;
+    min-height: 38px;
+    padding: 6px 8px;
+  }
+
+  #contact .contact-key-label {
+    font-size: 9px;
+  }
+
+  .contact-key-pulse {
+    display: none;
+  }
+}
+
+@media (max-width: 430px) {
+  #contact .contact-panel.contact-text-stage {
+    min-height: 640px;
+  }
+
+  .contact-copy-dock {
+    max-width: calc(100% - 24px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .contact-copy-dock::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #contact .contact-copy-key,
+  .contact-key-pulse {
+    transition: none;
+  }
+}
+/* V61_CONTACT_TEXT_CURTAIN_END */

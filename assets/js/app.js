@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260714031659
+// CACHE_BUST_VERSION: 20260714035302
 (function () {
   "use strict";
 
@@ -58,7 +58,7 @@
 
   var ADMIN_HASH_ROUTE = "#atelier-console";
   var ADMIN_SESSION_KEY = "northernAtelier.adminSession.v1";
-  var ADMIN_PASSWORD_HASH = "50b1458955475f1f949da12c1ac7f4c6e77264e59df06ceb82ac1e650ae2d02d";
+  var ADMIN_PASSWORD_HASH = "62a58a23ca12cfdf3350eb9e7b5b2430b32ce49a94704cebfa248e948f343c14";
 
   var FALLBACK_SITE_DATA = {
     siteSettings: {
@@ -143,7 +143,10 @@
     hasLocalDraft: false,
     adminEntryClickCount: 0,
     adminEntryTimer: 0,
-    adminAuthPending: false
+    adminAuthPending: false,
+    adminDirtyPanels: {},
+    adminSavedSections: {},
+    articleEditorDrafts: {}
   };
 
   var ASSET_FIELD_CONFIG = {
@@ -235,7 +238,8 @@
     projects: "northernAtelier.projects.v3",
     navigation: "northernAtelier.navigation.v1",
     methods: "northernAtelier.methods.v1",
-    draftSavedAt: "northernAtelier.localDraftSavedAt.v1"
+    draftSavedAt: "northernAtelier.localDraftSavedAt.v1",
+    sectionStatus: "northernAtelier.adminSectionStatus.v1"
   };
   var defaultSiteSettings = clone(siteSettings);
   var defaultProjects = clone(projects);
@@ -630,6 +634,30 @@
     return path.indexOf("assets/") !== 0 && path.indexOf("./assets/") !== 0;
   }
 
+  function isMeaningfulArticleBlock(block) {
+    var current = normalizeArticleBlocks([block])[0];
+    if (!current) {
+      return false;
+    }
+    if (current.type === "divider") {
+      return true;
+    }
+    if (current.type === "heading" || current.type === "paragraph" || current.type === "quote") {
+      return Boolean(String(current.text || "").trim());
+    }
+    if (current.type === "image") {
+      return Boolean(current.asset);
+    }
+    if (current.type === "gallery") {
+      return parseList(current.assets).length > 0;
+    }
+    return false;
+  }
+
+  function sanitizeArticleBlocks(blocks) {
+    return normalizeArticleBlocks(blocks).filter(isMeaningfulArticleBlock);
+  }
+
   function normalizeArticleBlocks(blocks) {
     if (!Array.isArray(blocks)) {
       return [];
@@ -744,7 +772,7 @@
     next.gallery = parseList(next.gallery);
     next.drawings = parseList(next.drawings);
     next.attachments = normalizeAttachments(next.attachments);
-    next.articleBlocks = normalizeArticleBlocks(next.articleBlocks);
+    next.articleBlocks = sanitizeArticleBlocks(next.articleBlocks);
     next.featured = Boolean(next.featured);
     next.published = Boolean(next.published);
     return next;
@@ -779,6 +807,168 @@
 
   function updateLocalDraftState() {
     state.hasLocalDraft = localDraftExists();
+  }
+
+  var ADMIN_PANEL_LABELS = {
+    projects: "项目案卷",
+    settings: "首页与联系",
+    assets: "素材路径",
+    backgrounds: "板块背景",
+    article: "项目文章",
+    pathCheck: "路径检查"
+  };
+
+  function readAdminSectionStatus() {
+    try {
+      if (typeof localStorage === "undefined") {
+        return {};
+      }
+      var raw = localStorage.getItem(STORAGE_KEYS.sectionStatus);
+      return raw ? JSON.parse(raw) : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function writeAdminSectionStatus() {
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(STORAGE_KEYS.sectionStatus, JSON.stringify(state.adminSavedSections || {}));
+      }
+    } catch (error) {
+      console.warn("Section save status could not be persisted.", error);
+    }
+  }
+
+  function activeAdminPanelName() {
+    var active = qs("[data-admin-panel].is-active");
+    return active ? active.getAttribute("data-admin-panel") : "projects";
+  }
+
+  function markAdminPanelDirty(panelName) {
+    var name = panelName || activeAdminPanelName();
+    if (!name || name === "pathCheck") {
+      return;
+    }
+    state.adminDirtyPanels[name] = true;
+    renderAdminSectionSaveState();
+  }
+
+  function markAdminPanelSaved(panelName, label) {
+    var name = panelName || activeAdminPanelName();
+    delete state.adminDirtyPanels[name];
+    state.adminSavedSections[name] = {
+      label: label || ADMIN_PANEL_LABELS[name] || name,
+      savedAt: new Date().toISOString()
+    };
+    writeAdminSectionStatus();
+    renderAdminSectionSaveState();
+  }
+
+  function dirtyAdminPanelNames() {
+    return Object.keys(state.adminDirtyPanels || {}).filter(function (name) {
+      return Boolean(state.adminDirtyPanels[name]);
+    });
+  }
+
+  function renderAdminSectionSaveState() {
+    var panelName = activeAdminPanelName();
+    var currentLabel = qs("#adminCurrentSectionLabel");
+    var summary = qs("#adminDraftSummary");
+    var saveButton = qs("#saveCurrentAdminPanelButton");
+    var label = ADMIN_PANEL_LABELS[panelName] || panelName;
+
+    if (currentLabel) {
+      currentLabel.textContent = "当前板块：" + label + (state.adminDirtyPanels[panelName] ? " · 有未保存修改" : " · 已同步");
+    }
+
+    if (summary) {
+      var saved = Object.keys(state.adminSavedSections || {}).map(function (name) {
+        var item = state.adminSavedSections[name] || {};
+        var time = item.savedAt ? new Date(item.savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+        return (item.label || ADMIN_PANEL_LABELS[name] || name) + (time ? " " + time : "");
+      });
+      summary.textContent = saved.length
+        ? "本机已暂存：" + saved.join("；") + "。导出完整 JSON 时会合并全部已保存板块。"
+        : "尚未暂存板块。请在每个板块完成编辑后点击保存。";
+    }
+
+    if (saveButton) {
+      saveButton.disabled = panelName === "pathCheck";
+      saveButton.classList.toggle("is-dirty", Boolean(state.adminDirtyPanels[panelName]));
+    }
+  }
+
+  async function saveCurrentAdminPanel() {
+    var panelName = activeAdminPanelName();
+
+    if (panelName === "projects") {
+      var saveCurrentAdminPanelButton = qs("#saveCurrentAdminPanelButton");
+    if (saveCurrentAdminPanelButton) {
+      saveCurrentAdminPanelButton.addEventListener("click", saveCurrentAdminPanel);
+    }
+
+    var projectForm = qs("#projectForm");
+      if (projectForm) {
+        if (typeof projectForm.requestSubmit === "function") {
+          projectForm.requestSubmit();
+        } else {
+          projectForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        }
+      }
+      return;
+    }
+
+    if (panelName === "settings") {
+      var settingsForm = qs("#settingsForm");
+      if (settingsForm) {
+        if (typeof settingsForm.requestSubmit === "function") {
+          settingsForm.requestSubmit();
+        } else {
+          settingsForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        }
+      }
+      return;
+    }
+
+    if (panelName === "assets") {
+      await saveAssetPathsFromManager();
+      return;
+    }
+
+    if (panelName === "backgrounds") {
+      await saveSectionBackgroundFromForm();
+      return;
+    }
+
+    if (panelName === "article") {
+      await saveArticleBlocksFromEditor();
+      return;
+    }
+
+    showAdminStamp("当前板块无需保存");
+  }
+
+  function bindAdminDirtyTracking() {
+    var consolePanel = qs("#adminConsole");
+    if (!consolePanel || consolePanel.dataset.dirtyTrackingBound === "true") {
+      return;
+    }
+    consolePanel.dataset.dirtyTrackingBound = "true";
+
+    ["input", "change"].forEach(function (eventName) {
+      consolePanel.addEventListener(eventName, function (event) {
+        var control = event.target;
+        if (!control || !control.closest) {
+          return;
+        }
+        var panel = control.closest("[data-admin-panel]");
+        if (!panel || control.type === "file") {
+          return;
+        }
+        markAdminPanelDirty(panel.getAttribute("data-admin-panel"));
+      });
+    });
   }
 
   function writeStorage() {
@@ -1296,7 +1486,18 @@
   }
 
   function exportFullSiteData() {
-    flushVisibleAdminEditorsToMemory();
+    var dirtyPanels = dirtyAdminPanelNames();
+    if (dirtyPanels.length) {
+      var dirtyLabels = dirtyPanels.map(function (name) {
+        return ADMIN_PANEL_LABELS[name] || name;
+      });
+      if (typeof window !== "undefined" && window.alert) {
+        window.alert("以下板块还有未保存修改：\n\n- " + dirtyLabels.join("\n- ") + "\n\n请分别点击保存后，再导出完整 site-data.json。");
+      }
+      showAdminStamp("导出被阻止：存在未保存板块");
+      return;
+    }
+
     if (state.dataSource === "fallback") {
       var message = "当前页面正在使用诊断占位数据，不是正式 site-data.json，也不是你明确选择的本机草稿。\n\n已阻止导出，避免把占位内容误当正式数据。\n\n请先确认 assets/data/site-data.json 可读取，或点击“使用本机草稿”后再导出。";
       if (typeof window !== "undefined" && window.alert) {
@@ -3544,6 +3745,8 @@
   }
 
   function bindAdminEvents() {
+    state.adminSavedSections = readAdminSectionStatus();
+    bindAdminDirtyTracking();
     var loginButton = qs("#adminLoginButton");
     if (loginButton) {
       loginButton.addEventListener("click", async function () {
@@ -3560,6 +3763,7 @@
         var name = button.getAttribute("data-admin-tab");
         qsa("[data-admin-tab]").forEach(function (item) { item.classList.toggle("is-active", item === button); });
         qsa("[data-admin-panel]").forEach(function (panel) { panel.classList.toggle("is-active", panel.getAttribute("data-admin-panel") === name); });
+        renderAdminSectionSaveState();
       });
     });
 
@@ -3887,7 +4091,8 @@
     await refreshData();
     applySectionBackgrounds();
     renderSectionBgControls();
-    showAdminStamp("背景已保存");
+    markAdminPanelSaved("backgrounds", "板块背景");
+    showAdminStamp("板块背景已暂存");
   }
 
   function previewSectionBackgroundFromForm() {
@@ -4138,6 +4343,34 @@
     return normalized;
   }
 
+  function getArticleEditorDraft(projectId) {
+    if (!projectId) {
+      return [];
+    }
+    if (!Object.prototype.hasOwnProperty.call(state.articleEditorDrafts, projectId)) {
+      var project = projects.find(function (item) { return item.id === projectId; });
+      state.articleEditorDrafts[projectId] = project ? sanitizeArticleBlocks(project.articleBlocks) : [];
+    }
+    return clone(state.articleEditorDrafts[projectId]);
+  }
+
+  function setArticleEditorDraft(projectId, blocks) {
+    if (!projectId) {
+      return [];
+    }
+    var normalized = sanitizeArticleBlocks(blocks);
+    state.articleEditorDrafts[projectId] = clone(normalized);
+    markAdminPanelDirty("article");
+    return normalized;
+  }
+
+  function resetArticleEditorDraft(projectId) {
+    if (!projectId) {
+      return;
+    }
+    delete state.articleEditorDrafts[projectId];
+  }
+
   function bindArticleEditorEvents() {
     var projectSelect = qs("#articleProjectSelect");
     var addButton = qs("#addArticleBlockButton");
@@ -4149,6 +4382,7 @@
         state.activeArticleProjectId = projectSelect.value;
         clearArticleComposerInputs();
         renderArticleEditorControls();
+        renderAdminSectionSaveState();
       });
     }
     if (addButton) {
@@ -4218,27 +4452,31 @@
       list.innerHTML = "<p>请选择项目。</p>";
       return;
     }
-    var allowed = { heading: true, paragraph: true, image: true, gallery: true, quote: true, divider: true };
-    var blocks = normalizeArticleBlocks(project.articleBlocks).filter(function (block) {
-      return Boolean(allowed[block.type]);
-    });
-    list.innerHTML = '<h4>' + escapeHTML(project.titleCN) + ' / 图文文章</h4>' + (blocks.length ? blocks.map(function (block, index) {
-      return articleBlockEditorHTML(block, index, project.id);
-    }).join("") : '<p>还没有自定义文章块。前台会根据项目描述与图集生成基础图文文章。</p>');
+
+    var blocks = getArticleEditorDraft(project.id);
+    list.innerHTML = '<h4>' + escapeHTML(project.titleCN) + ' / 图文文章</h4>' +
+      (blocks.length
+        ? blocks.map(function (block, index) {
+            return articleBlockEditorHTML(block, index, project.id);
+          }).join("")
+        : '<div class="article-empty-editor"><strong>当前没有文章块</strong><p>点击上方“新增块”后，才会生成一个新的内容块。</p></div>');
 
     qsa("[data-article-delete]", list).forEach(function (button) {
       button.addEventListener("click", function () {
-        if (!window.confirm("删除这个文章块？")) {
-          return;
-        }
         removeArticleBlock(Number(button.getAttribute("data-article-delete")));
       });
     });
+
     qsa("[data-article-up]", list).forEach(function (button) {
-      button.addEventListener("click", function () { moveArticleBlock(Number(button.getAttribute("data-article-up")), -1); });
+      button.addEventListener("click", function () {
+        moveArticleBlock(Number(button.getAttribute("data-article-up")), -1);
+      });
     });
+
     qsa("[data-article-down]", list).forEach(function (button) {
-      button.addEventListener("click", function () { moveArticleBlock(Number(button.getAttribute("data-article-down")), 1); });
+      button.addEventListener("click", function () {
+        moveArticleBlock(Number(button.getAttribute("data-article-down")), 1);
+      });
     });
   }
 
@@ -4266,20 +4504,25 @@
       showAdminStamp("请选择项目");
       return;
     }
+
     var block = readPendingArticleBlock();
     if (!articleBlockHasContent(block) && block.type !== "divider") {
       showAdminStamp("请先填写文章内容");
       return;
     }
+
+    var existing = collectArticleBlocksFromEditor();
+    if (!existing.length) {
+      existing = getArticleEditorDraft(projectId);
+    }
+
     var additions = block.type === "divider" ? [block] : expandArticleBlockForSave(block);
-    var nextBlocks = normalizeArticleBlocks(project.articleBlocks).concat(additions);
-    syncArticleBlocksToProject(projectId, nextBlocks);
-    writeStorage();
-    await refreshData();
+    var nextBlocks = setArticleEditorDraft(projectId, existing.concat(additions));
+
     clearArticleComposerInputs();
     renderArticleBlockList();
-    renderDataSourceStatus();
-    showAdminStamp("已添加 " + additions.length + " 个文章内容块");
+    showAdminStamp("已新增 " + additions.length + " 个内容块，尚未保存文章");
+    return nextBlocks;
   }
 
   async function saveArticleBlocksFromEditor() {
@@ -4290,29 +4533,29 @@
       return;
     }
 
-    var editorNodes = qsa("[data-article-block]", qs("#articleBlockList"));
-    var blocks = collectArticleBlocksFromEditor();
     var pending = readPendingArticleBlock();
-    var pendingBlocks = articleBlockHasContent(pending) ? expandArticleBlockForSave(pending) : [];
-
-    if (pendingBlocks.length) {
-      blocks = blocks.concat(pendingBlocks);
-    }
-
-    if (!editorNodes.length && !pendingBlocks.length && normalizeArticleBlocks(project.articleBlocks).length) {
-      showAdminStamp("未检测到可保存的改动");
+    if (articleBlockHasContent(pending) || pending.type === "divider") {
+      if (typeof window !== "undefined" && window.alert) {
+        window.alert("上方编辑器中还有尚未生成的内容。请先点击“新增块”，再保存文章。");
+      }
+      showAdminStamp("请先新增内容块");
       return;
     }
 
-    var normalized = syncArticleBlocksToProject(projectId, blocks);
+    var blocks = collectArticleBlocksFromEditor();
+    if (!blocks.length) {
+      blocks = getArticleEditorDraft(projectId);
+    }
+
+    var normalized = sanitizeArticleBlocks(blocks);
+    syncArticleBlocksToProject(projectId, normalized);
     writeStorage();
+    resetArticleEditorDraft(projectId);
     await refreshData();
 
-    if (pendingBlocks.length) {
-      clearArticleComposerInputs();
-    }
     renderArticleBlockList();
     renderDataSourceStatus();
+    markAdminPanelSaved("article", "项目文章");
 
     if (state.activeArticleId === projectId) {
       var active = await fetchProjectById(projectId);
@@ -4323,7 +4566,7 @@
       }
     }
 
-    showAdminStamp("文章已保存 · " + normalized.length + " 个内容块");
+    showAdminStamp("文章已暂存 · " + normalized.length + " 个内容块");
   }
 
   function previewArticleAssetFromControls() {
@@ -4386,42 +4629,44 @@
 
   function removeArticleBlock(index) {
     var projectId = state.activeArticleProjectId;
-    var project = projects.find(function (item) { return item.id === projectId; });
-    if (!project) {
+    if (!projectId) {
       return;
     }
-    var blocks = normalizeArticleBlocks(project.articleBlocks);
+    var blocks = collectArticleBlocksFromEditor();
+    if (!blocks.length) {
+      blocks = getArticleEditorDraft(projectId);
+    }
+    if (index < 0 || index >= blocks.length) {
+      return;
+    }
+    if (typeof window !== "undefined" && window.confirm && !window.confirm("从当前文章草稿中删除这个内容块？")) {
+      return;
+    }
     blocks.splice(index, 1);
-    syncArticleBlocksToProject(projectId, blocks);
-    writeStorage();
-    refreshData().then(function () {
-      renderArticleBlockList();
-      renderDataSourceStatus();
-      showAdminStamp("文章块已删除");
-    });
+    setArticleEditorDraft(projectId, blocks);
+    renderArticleBlockList();
+    showAdminStamp("内容块已从编辑草稿删除，尚未保存文章");
   }
 
   function moveArticleBlock(index, direction) {
     var projectId = state.activeArticleProjectId;
-    var project = projects.find(function (item) { return item.id === projectId; });
-    if (!project) {
+    if (!projectId) {
       return;
     }
-    var blocks = normalizeArticleBlocks(project.articleBlocks);
+    var blocks = collectArticleBlocksFromEditor();
+    if (!blocks.length) {
+      blocks = getArticleEditorDraft(projectId);
+    }
     var nextIndex = index + direction;
-    if (nextIndex < 0 || nextIndex >= blocks.length) {
+    if (index < 0 || index >= blocks.length || nextIndex < 0 || nextIndex >= blocks.length) {
       return;
     }
     var item = blocks[index];
     blocks.splice(index, 1);
     blocks.splice(nextIndex, 0, item);
-    syncArticleBlocksToProject(projectId, blocks);
-    writeStorage();
-    refreshData().then(function () {
-      renderArticleBlockList();
-      renderDataSourceStatus();
-      showAdminStamp("顺序已调整");
-    });
+    setArticleEditorDraft(projectId, blocks);
+    renderArticleBlockList();
+    showAdminStamp("顺序已调整，尚未保存文章");
   }
 
   function bindAdminTrigger() {
@@ -4775,7 +5020,8 @@
     await refreshData();
     renderAll();
     fillProjectForm(null);
-    showAdminStamp("案卷已保存");
+    markAdminPanelSaved("projects", "项目案卷");
+    showAdminStamp("案卷已暂存");
   }
 
   function fillSettingsForm() {
@@ -4827,7 +5073,8 @@
     });
     await refreshData();
     renderAll();
-    showAdminStamp("首页已更新");
+    markAdminPanelSaved("settings", "首页与联系");
+    showAdminStamp("首页与联系已暂存");
   }
 
   function selectedAssetProject() {
@@ -4918,7 +5165,8 @@
         select.value = refreshed.id;
       }
     }
-    showAdminStamp("路径已保存");
+    markAdminPanelSaved("assets", "素材路径");
+    showAdminStamp("素材路径已暂存");
   }
 
   function renderAssetPathPreview() {

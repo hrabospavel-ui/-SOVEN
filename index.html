@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-lady-2560.webp" fetchpriority="high">
   <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-vignette-2560.webp" fetchpriority="high">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@600;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260713131405">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260713135300">
 </head>
 <body>
   <a class="skip-link" href="#works">跳至作品</a>
@@ -230,17 +230,17 @@
                 <label>角色<input name="role" placeholder="concept, spatial design"></label>
                 <label>封面键或路径<input name="coverImage" placeholder="abstract:ridge 或 assets/projects/p001-northern-wind-court/cover.jpg"></label>
                 <label>详情主图路径<input name="detailImage" placeholder="assets/projects/p001-northern-wind-court/detail-hero.jpg"></label>
-                <label>文章封面图路径<input name="articleCoverImage" placeholder="assets/projects/p001-northern-wind-court/article-cover.jpg"></label>
+                <input type="hidden" name="articleCoverImage" value="">
                 <label>图集<textarea name="gallery" rows="3" placeholder="一行一个路径，支持 jpg / png / webp / gif"></textarea></label>
-                <label>图纸<textarea name="drawings" rows="3" placeholder="一行一个路径，支持 pdf / jpg / png"></textarea></label>
+                <input type="hidden" name="drawings" value="">
                 <label>3D 模型<input name="model3d" placeholder="assets/projects/p001-northern-wind-court/model.glb"></label>
                 <label>模型缩略图路径<input name="modelThumbnail" placeholder="assets/projects/p001-northern-wind-court/model-thumb.jpg"></label>
                 <label>360 全景<input name="panorama" placeholder="assets/projects/p001-northern-wind-court/panorama.jpg"></label>
                 <label>全景缩略图路径<input name="panoramaThumbnail" placeholder="assets/projects/p001-northern-wind-court/panorama-thumb.jpg"></label>
                 <label>视频<input name="video" placeholder="assets/projects/p001-northern-wind-court/walkthrough.mp4"></label>
                 <label>视频封面 poster 路径<input name="videoPoster" placeholder="assets/projects/p001-northern-wind-court/video-poster.jpg"></label>
-                <label>PDF<input name="pdf" placeholder="assets/projects/p001-northern-wind-court/drawings.pdf"></label>
-                <label class="full">附件清单<textarea name="attachments" rows="4" placeholder="一行一个附件：assets/projects/p001/file.pdf | 文件名 | pdf | 描述"></textarea></label>
+                <input type="hidden" name="pdf" value="">
+                <input type="hidden" name="attachments" value="">
                 <label>标签<input name="tags" placeholder="中轴线, 台基, 3D"></label>
                 <label class="full">设计命题<textarea name="concept" rows="2" placeholder="一句话说明项目的设计命题"></textarea></label>
                 <label class="full">摘要<textarea name="description" rows="4" placeholder="项目简述"></textarea></label>
@@ -288,17 +288,10 @@
                   <select id="assetType">
                     <option value="coverImage">coverImage / 封面</option>
                     <option value="detailImage">detailImage / 详情主图</option>
-                    <option value="articleCoverImage">articleCoverImage / 文章封面</option>
                     <option value="gallery">gallery / 图集，一行一个路径</option>
-                    <option value="drawings">drawings / 图纸，一行一个路径</option>
-                    <option value="model3d">model3d / GLB 或 GLTF</option>
                     <option value="modelThumbnail">modelThumbnail / 模型缩略图</option>
-                    <option value="panorama">panorama / 360 全景</option>
                     <option value="panoramaThumbnail">panoramaThumbnail / 全景缩略图</option>
-                    <option value="video">video / 视频</option>
                     <option value="videoPoster">videoPoster / 视频封面 poster</option>
-                    <option value="pdf">pdf / PDF</option>
-                    <option value="attachments">attachments / 附件，一行一个</option>
                   </select>
                 </label>
                 <label class="full">素材路径<textarea id="assetPathInput" rows="5" placeholder="assets/projects/p001-northern-wind-court/cover.jpg"></textarea></label>
@@ -364,7 +357,7 @@
               <div class="asset-uploader article-editor-tools">
                 <span class="seal-stamp">ARTICLE</span>
                 <h3>项目文章 / Article</h3>
-                <p>为完整项目页维护图文长文。图片、GIF、视频、PDF、模型和全景都使用 assets 相对路径；gallery 请一行一个路径。</p>
+                <p>为完整项目页维护图文文章。仅使用标题、段落、图片、图集、引用和分割线；图集请一行一个图片路径。</p>
                 <label>编辑项目<select id="articleProjectSelect"></select></label>
                 <label>块类型
                   <select id="articleBlockType">
@@ -377,15 +370,13 @@
                     <option value="divider">分割线 divider</option>
                     <option value="model3d">模型台 model3d</option>
                     <option value="panorama">入此空间 panorama</option>
-                    <option value="pdf">PDF pdf</option>
-                    <option value="attachment">附件 attachment</option>
                   </select>
                 </label>
                 <label>正文 / 标题 / 引用<textarea id="articleBlockText" rows="4" placeholder="输入文章文字"></textarea></label>
                 <label>素材路径<textarea id="articleBlockAsset" rows="4" placeholder="assets/projects/p001-northern-wind-court/article-01.jpg"></textarea></label>
-                <label>Poster / Thumbnail 路径<input id="articleBlockPoster" placeholder="assets/projects/p001-northern-wind-court/video-poster.jpg"></label>
+                <input type="hidden" id="articleBlockPoster" value="">
                 <label>Caption / Label<input id="articleBlockCaption" placeholder="图片说明或按钮文字"></label>
-                <label>本地临时预览导入<input id="articleInlineFile" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.pdf,.glb,.gltf,image/*,video/*,application/pdf"></label>
+                <label>本地临时预览导入<input id="articleInlineFile" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.avif,image/*"></label>
                 <p class="asset-note">本机上传仅用于预览。若要让所有设备看到，请将素材文件上传到 GitHub 仓库对应 assets 目录，并在后台填写项目内相对路径。</p>
                 <div class="form-actions">
                   <button class="button button-dark" type="button" id="addArticleBlockButton"><span>新增块</span><em>Add Block</em></button>
@@ -433,6 +424,7 @@
     </article>
   </div>
 
-  <script src="assets/js/app.js?v=20260713131405" defer></script>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script src="assets/js/app.js?v=20260713135300" defer></script>
 </body>
 </html>

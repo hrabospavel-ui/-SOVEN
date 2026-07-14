@@ -2,18 +2,18 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="description" content="独立设计工作室官网原型，面向建筑、产品、空间研究、器物设计、3D 模型与全景场景展示。">
   <title>营造设计工作室 | Independent Design Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-mountain-2560.webp" fetchpriority="high">
-  <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-window-frame-2560.webp" fetchpriority="high">
-  <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-lady-2560.webp" fetchpriority="high">
-  <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-vignette-2560.webp" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-mountain-2560.webp" fetchpriority="high" media="(min-width: 841px) and (hover: hover)">
+  <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-window-frame-2560.webp" fetchpriority="high" media="(min-width: 841px) and (hover: hover)">
+  <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-lady-2560.webp" fetchpriority="high" media="(min-width: 841px) and (hover: hover)">
+  <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-vignette-2560.webp" fetchpriority="high" media="(min-width: 841px) and (hover: hover)">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@600;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.css">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260714035302">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260714103453">
 </head>
 <body>
   <a class="skip-link" href="#works">跳至作品</a>
@@ -27,13 +27,14 @@
       </span>
     </a>
     <nav class="nav-pill" id="mainNav" aria-label="页面栏目"></nav>
-    <button class="mobile-menu-button" type="button" aria-label="打开导航" aria-expanded="false" id="mobileMenuButton">
+    <button class="mobile-menu-button" type="button" aria-label="打开导航" aria-expanded="false" id="mobileMenuButton" aria-controls="mobileNavPanel">
       <span></span>
       <span></span>
     </button>
   </header>
 
   <div class="mobile-nav-panel" id="mobileNavPanel" aria-hidden="true"></div>
+  <button class="mobile-nav-backdrop" id="mobileNavBackdrop" type="button" aria-label="关闭导航" tabindex="-1"></button>
   <div class="threshold-transition" id="thresholdTransition" aria-hidden="true">
     <span class="threshold-line"></span>
     <span class="threshold-glow"></span>
@@ -59,17 +60,16 @@
       <div class="hero-grid" aria-hidden="true"></div>
       <div class="hero-content">
         <p class="eyebrow seal-line"><span id="heroSeal">DATA</span><span>DATA SOURCE</span></p>
-        <h1 id="heroTitle">site-data.json 未读取成功。</h1>
+        <h1 id="heroTitle">天有时，地有气，材有美，工有巧，合此四者，然后可以为良。</h1>
         <p class="hero-title-en" id="heroTitleEN">Site data was not loaded.</p>
         <p class="hero-intro" id="heroIntro">当前显示的是诊断占位内容，不是正式网站内容。请检查 assets/data/site-data.json。</p>
         <div class="hero-actions">
           <a class="button button-primary" href="#works"><span>展开案例</span><em>Browse Works</em></a>
-          <a class="button button-ghost" href="#studio"><span>营造探析</span><em>Studio Method</em></a>
+          <a class="button button-ghost" href="#" hidden aria-hidden="true"></a>
         </div>
         <div class="hero-index" aria-label="工作室能力索引">
           <a href="#architecture"><span>01</span> 建筑</a>
           <a href="#objects"><span>02</span> 造物</a>
-          <a href="#research"><span>03</span> 营造</a>
         </div>
       </div>
       <div class="hero-bottom-strip" aria-hidden="true">
@@ -124,38 +124,25 @@
     </section>
 
     <section class="section research-section section-observe" id="research" data-section="Research">
-      <div class="section-heading wide-heading inverse">
-        <p class="eyebrow">RESEARCH / 研究数据</p>
-        <h2>研究内容等待正式项目数据。</h2>
-      </div>
-      <div class="research-grid" id="researchGrid"></div>
-    </section>
-
-    <section class="section studio-section section-observe" id="studio" data-section="Studio">
-      <div class="studio-layout">
-        <div class="section-heading inverse studio-copy">
-          <p class="eyebrow">STUDIO METHOD / 营造</p>
-          <h2>年轻团队，使用现代系统重新组织传统营造精神。</h2>
-          <p id="studioPhilosophy">我们关注北方建筑的尺度、风、影、材料和秩序，也关注产品在手中被使用的瞬间。每个项目从线稿、模型、图纸和现场材料同时推进。</p>
+      <div class="section-heading research-heading inverse">
+        <div>
+          <p class="eyebrow">RESEARCH NOTES / 独立研究文章</p>
+          <h2>研究不是项目的附属标签，而是一套持续更新的知识档案。</h2>
         </div>
-        <div class="method-stack" id="methodStack"></div>
+        <p>研究文章使用独立编号、独立数据与独立阅读界面，与建筑及器物项目分开维护。</p>
       </div>
+      <div class="research-library" id="researchLibrary" aria-live="polite"></div>
     </section>
 
     <section class="section contact-section section-observe" id="contact" data-section="Contact">
       <div class="contact-panel">
         <div>
           <p class="eyebrow">CONTACT / 联系</p>
-          <h2>让新的空间、器物或研究案卷从一封邮件开始。</h2>
+          <h2>点击键位，复制对应的联系方式。</h2>
         </div>
-        <div class="contact-actions">
-          <a class="button button-dark" id="emailLink" href="mailto:hello@example.com"><span>邮件联系</span><em id="contactEmail">hello@example.com</em></a>
-          <a class="button button-outline" id="pdfLink" href="#" download><span>作品集 PDF</span><em>Portfolio</em></a>
-          <div class="social-links" aria-label="社交链接">
-            <a href="#" aria-label="Instagram">IG</a>
-            <a href="#" aria-label="Behance">BE</a>
-            <a href="#" aria-label="Xiaohongshu">RED</a>
-          </div>
+        <div class="contact-actions contact-copy-actions">
+          <div class="contact-copy-grid" id="contactCopyGrid" aria-label="复制联系方式"></div>
+          <p class="contact-copy-status" id="contactCopyStatus" role="status" aria-live="polite">点击键位复制对应联系方式。</p>
         </div>
       </div>
     </section>
@@ -213,6 +200,7 @@
             <button type="button" data-admin-tab="assets">素材路径</button>
             <button type="button" data-admin-tab="backgrounds">板块背景</button>
             <button type="button" data-admin-tab="article">项目文章</button>
+            <button type="button" data-admin-tab="research">研究文章</button>
             <button type="button" data-admin-tab="pathCheck">路径检查</button>
           </div>
           <div class="admin-panels">
@@ -255,9 +243,19 @@
                 <label>标签<input name="tags" placeholder="中轴线, 台基, 3D"></label>
                 <label class="full">设计命题<textarea name="concept" rows="2" placeholder="一句话说明项目的设计命题"></textarea></label>
                 <label class="full">摘要<textarea name="description" rows="4" placeholder="项目简述"></textarea></label>
-                <div class="form-row full">
-                  <label><input type="checkbox" name="featured"> 精选</label>
-                  <label><input type="checkbox" name="published" checked> 发布</label>
+                <fieldset class="project-placement-fieldset full">
+                  <legend>展示板块（可多选）</legend>
+                  <p>只在勾选的板块中出现。全部取消可保留项目数据，但不在前台项目板块中展示。</p>
+                  <div class="project-placement-options">
+                    <label><input type="checkbox" name="displaySections" value="featured"> 精选作品</label>
+                    <label><input type="checkbox" name="displaySections" value="works" checked> 全部作品</label>
+                    <label><input type="checkbox" name="displaySections" value="architecture"> 建筑</label>
+                    <label><input type="checkbox" name="displaySections" value="objects"> 物件</label>
+                  </div>
+                </fieldset>
+                <div class="form-row full project-publish-row project-visibility-row">
+                  <label><input type="checkbox" name="visible" checked> 前台显示</label>
+                  <span>关闭后项目仍完整保留在后台和导出的 JSON 中，只是不在前台项目板块、详情页和文章页出现。</span>
                 </div>
                 <div class="form-actions full">
                   <button class="button button-dark" type="submit"><span>保存案卷</span><em>Save</em></button>
@@ -271,8 +269,11 @@
               <label class="full">首页中文主张<textarea name="taglineCN" rows="3"></textarea></label>
               <label class="full">英文副标题<textarea name="taglineEN" rows="2"></textarea></label>
               <label class="full">首页介绍<textarea name="intro" rows="3"></textarea></label>
-              <label>联系邮箱<input name="email"></label>
-              <label>作品集 PDF<input name="portfolioPdf"></label>
+              <label>邮箱（点击键位复制）<input name="contactEmail" autocomplete="email"></label>
+              <label>小红书账号 / 号码<input name="contactXiaohongshu"></label>
+              <label>公众号账号 / 名称<input name="contactOfficialAccount"></label>
+              <label>VX 账号 / 号码<input name="contactVx"></label>
+              <p class="admin-note full">以上内容只作为复制值写入 JSON；前台键位仅显示“邮箱 / 小红书 / 公众号 / VX”，不会直接显示账号或号码。</p>
               <label>首页山体层路径<input name="heroDepthMountain" placeholder="assets/hero-depth/hero-mountain.webp"></label>
               <label>首页窗框层路径<input name="heroDepthWindowFrame" placeholder="assets/hero-depth/hero-window-frame.webp"></label>
               <label>首页人物层路径<input name="heroDepthLady" placeholder="assets/hero-depth/hero-lady.webp"></label>
@@ -396,6 +397,64 @@
               <div class="path-preview-grid" id="articlePathPreview"></div>
               <div class="article-block-list" id="articleBlockList"></div>
             </div>
+
+            <div class="admin-panel research-editor-panel" data-admin-panel="research">
+              <div class="research-admin-grid">
+                <div class="asset-uploader research-meta-editor">
+                  <span class="seal-stamp">RESEARCH ARCHIVE</span>
+                  <h3>研究文章 / Research Notes</h3>
+                  <p>研究文章与项目完全分离，使用独立编号和独立文章内容。关闭“前台显示”只会隐藏文章，不会删除后台数据或导出的 JSON 内容。</p>
+                  <label>选择研究文章<select id="researchArticleSelect"></select></label>
+                  <input type="hidden" id="researchArticleId">
+                  <div class="research-admin-fields">
+                    <label>独立编号<input id="researchArticleNumber" placeholder="R-001"></label>
+                    <label>研究主题<input id="researchArticleTopic" placeholder="材料研究 / Material Study"></label>
+                    <label>中文标题<input id="researchArticleTitleCN" placeholder="输入研究文章标题"></label>
+                    <label>英文标题<input id="researchArticleTitleEN" placeholder="Research Article Title"></label>
+                    <label>日期 / 年份<input id="researchArticleDate" placeholder="2026.07"></label>
+                    <label>作者<input id="researchArticleAuthor" placeholder="SOVEN Research"></label>
+                    <label>预计阅读时间<input id="researchArticleReadTime" placeholder="8 min"></label>
+                    <label>封面图路径<input id="researchArticleCover" placeholder="assets/research/r001/cover.webp"></label>
+                    <label class="full">摘要<textarea id="researchArticleSummary" rows="4" placeholder="概括研究问题、方法与结论。"></textarea></label>
+                    <label class="full">标签<input id="researchArticleTags" placeholder="材料, 构造, 文物保护"></label>
+                  </div>
+                  <div class="research-publish-options">
+                    <label><input id="researchArticleFeatured" type="checkbox"> 设为研究板块首篇</label>
+                    <label><input id="researchArticleVisible" type="checkbox"> 前台显示</label>
+                  </div>
+                  <div class="form-actions">
+                    <button class="button button-outline" type="button" id="newResearchArticleButton"><span>新建研究</span><em>New</em></button>
+                    <button class="button button-primary" type="button" id="saveResearchArticleButton"><span>保存研究文章</span><em>Save</em></button>
+                    <button class="button button-outline research-delete-button" type="button" id="deleteResearchArticleButton"><span>永久删除</span><em>Delete Permanently</em></button>
+                  </div>
+                </div>
+
+                <div class="research-block-editor-column">
+                  <div class="asset-uploader research-block-composer">
+                    <span class="seal-stamp">ARTICLE BODY</span>
+                    <h3>研究正文</h3>
+                    <p>正文默认没有空白块。填写内容后点击“新增块”，再保存整篇研究文章。</p>
+                    <label>块类型
+                      <select id="researchBlockType">
+                        <option value="heading">标题 heading</option>
+                        <option value="paragraph">段落 paragraph</option>
+                        <option value="image">图片 / GIF image</option>
+                        <option value="gallery">图集 gallery</option>
+                        <option value="quote">引用 quote</option>
+                        <option value="divider">分割线 divider</option>
+                      </select>
+                    </label>
+                    <label>正文 / 标题 / 引用<textarea id="researchBlockText" rows="5" placeholder="输入研究正文"></textarea></label>
+                    <label>图片路径<textarea id="researchBlockAsset" rows="4" placeholder="assets/research/r001/image-01.webp；图集一行一个路径"></textarea></label>
+                    <label>图片说明<input id="researchBlockCaption" placeholder="图注或来源说明"></label>
+                    <div class="form-actions">
+                      <button class="button button-dark" type="button" id="addResearchBlockButton"><span>新增块</span><em>Add Block</em></button>
+                    </div>
+                  </div>
+                  <div class="research-block-list" id="researchBlockList"></div>
+                </div>
+              </div>
+            </div>
             <div class="admin-panel path-check-panel" data-admin-panel="pathCheck">
               <div class="asset-uploader">
                 <span class="seal-stamp">PUBLISH CHECK</span>
@@ -423,8 +482,9 @@
   </div>
 
   <div class="project-article-overlay" id="projectArticleOverlay" aria-hidden="true">
-    <article class="project-article-view" role="dialog" aria-modal="true" aria-labelledby="projectArticleTitle">
+    <article class="project-article-view" role="dialog" aria-modal="true" aria-labelledby="projectArticleTitle researchArticleTitle">
       <div class="project-article-toolbar">
+        <span class="article-reading-progress" aria-hidden="true"></span>
         <button class="article-back-button" type="button" id="articleBackButton">返回</button>
         <button class="modal-close article-close" type="button" id="articleCloseButton" aria-label="关闭完整项目">×</button>
       </div>
@@ -434,6 +494,6 @@
 
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js" defer></script>
-  <script src="assets/js/app.js?v=20260714035302" defer></script>
+  <script src="assets/js/app.js?v=20260714103453" defer></script>
 </body>
 </html>

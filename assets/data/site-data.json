@@ -1,4 +1,6 @@
 {
+  "schema": "northern-atelier-site-data-v1",
+  "exportedAt": "2026-07-14T03:35:05.955Z",
   "siteSettings": {
     "studioName": "栖衡｜SOVEN",
     "studioSeal": "12",
@@ -295,7 +297,27 @@
       "articleBlocks": [
         {
           "type": "heading",
-          "text": "项目概述",
+          "text": "沿通道斜切，异形玻璃体连通老建筑与新剧场",
+          "asset": "assets/projects/p001-northern-wind-court/11111.webp",
+          "assets": [],
+          "poster": "",
+          "thumbnail": "",
+          "caption": "123456",
+          "label": "123456"
+        },
+        {
+          "type": "paragraph",
+          "text": "Le Diamant 坐落于魁北克市文化区核心地带的德尤维尔广场（Place d'Youville）边缘。该项目将建于 1879 年的前 YMCA 大楼（一座第二帝国风格建筑）改造为一座集戏剧创作与表演于一体的多功能中心。该项目专为 Ex Machina 剧团打造，将历史建筑的保护与一个拥有 625 个座位的多功能剧场、一个创作工作室以及全新公共空间的置入完美结合。",
+          "asset": "assets/projects/p001-northern-wind-court/11111.webp",
+          "assets": [],
+          "poster": "",
+          "thumbnail": "",
+          "caption": "12356",
+          "label": "12356"
+        },
+        {
+          "type": "paragraph",
+          "text": "整个项目围绕一个核心建筑手法展开：在现有的 YMCA 大楼中切出一道斜向通道。受德尤维尔广场“L”形几何构型的启发，这一切口将公共空间延伸至建筑内部，从而将广场的两端连接起来。这一斜向空间不仅是一条交通流线，更成为了一个半公共通道、一个间隙空间，以及一个在确保两者共存的同时，将受保护的历史建筑与新建表演厅隔离开来的空间媒介。",
           "asset": "",
           "assets": [],
           "poster": "",
@@ -305,83 +327,23 @@
         },
         {
           "type": "paragraph",
-          "text": "项目从北方高台建筑的体量感出发，用暗色砖石、冷青光线和折线屋脊组织展陈路径，让空间像从黑色地平线中升起。",
+          "text": "贯穿建筑整体高度的三角形中庭构成了项目明亮的核心。置于其中的玻璃体量经过丝网印刷处理以控制日照得热，使外立面呈现出随日照变化而不断更迭的乳白色光泽。玻璃的通透性向公共空间展示着艺术机构内部的勃勃生机，同时也将自然光引入建筑深处。",
+          "asset": "",
+          "assets": [],
+          "poster": "",
+          "thumbnail": "",
+          "caption": "12456",
+          "label": "12456"
+        },
+        {
+          "type": "divider",
+          "text": "啦啦啦",
           "asset": "",
           "assets": [],
           "poster": "",
           "thumbnail": "",
           "caption": "",
           "label": ""
-        },
-        {
-          "type": "quote",
-          "text": "把台基、风廊和中轴线压缩成一座可行走的数字高台。",
-          "asset": "",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": ""
-        },
-        {
-          "type": "image",
-          "text": "",
-          "asset": "assets/projects/p001-northern-wind-court/article-01.png",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "项目图像",
-          "label": ""
-        },
-        {
-          "type": "pdf",
-          "text": "",
-          "asset": "assets/projects/p001-northern-wind-court/drawings.pdf",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": "查看图纸 / Drawing"
-        },
-        {
-          "type": "model3d",
-          "text": "",
-          "asset": "assets/projects/p001-northern-wind-court/model.glb",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": ""
-        },
-        {
-          "type": "panorama",
-          "text": "",
-          "asset": "assets/projects/p001-northern-wind-court/panorama.png",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": ""
-        },
-        {
-          "type": "pdf",
-          "text": "",
-          "asset": "assets/projects/p001-northern-wind-court/case.pdf",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": "下载完整项目 PDF"
-        },
-        {
-          "type": "heading",
-          "text": "外部改造在历史修复与现代建筑之间建立起一场对话。YMCA 大楼原有的石材外立面得到了精心修复，历史悠久的孟莎式屋顶也采用石板和镀锡铜进行了重建。在玻璃体量上方，不锈钢包覆的创作工作室低调地融入天空。在格拉西斯街（Rue des Glacis）一侧，舞台塔的无窗实墙铺设了预制混凝土板，其上印有建筑师约瑟夫-费迪南德·皮奇（Joseph-Ferdinand Peachy）于 1878 年设计但从未建成的体育翼楼的等比例照相凹版图像。随着光影的变化，这一“幻影立面”时隐时现，将这座历史建筑的建筑存在感延伸至了现实建造之外。",
-          "asset": "assets/projects/p001-northern-wind-court/panorama.png",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "125632",
-          "label": "125632"
         },
         {
           "type": "quote",

@@ -1,14 +1,14 @@
 {
   "schema": "northern-atelier-site-data-v1",
-  "exportedAt": "2026-07-14T03:35:05.955Z",
+  "exportedAt": "2026-07-14T09:06:21.210Z",
   "siteSettings": {
     "studioName": "栖衡｜SOVEN",
-    "studioSeal": "12",
+    "studioSeal": "〇",
     "taglineCN": "天有时，地有气，材有美，工有巧，合此四者，然后可以为良。",
-    "taglineEN": "Heaven grants the season,\nearth breathes its spirit,\nmaterials hold their beauty,\nand craftsmanship brings ingenuity.\nOnly when all four align\ncan true excellence take form.",
+    "taglineEN": "Space in balance.",
     "intro": "在空间、时间与人的关系中，\n寻找克制而持久的秩序。",
     "philosophy": "我们关注北方建筑的尺度、风、影、材料和秩序，也关注产品在手中被使用的瞬间。每个项目从线稿、模型、图纸和现场材料同时推进。",
-    "email": "hello@northern-atelier.example",
+    "email": "406269590@qq.com",
     "portfolioPdf": "assets/portfolio/northern-atelier-portfolio.pdf",
     "accentColor": "#536A63",
     "hero": {
@@ -361,22 +361,39 @@
     },
     {
       "id": "p002",
-      "titleCN": "器物之山",
-      "titleEN": "Vessel Mountain Index",
-      "category": "Objects",
-      "year": "2026",
-      "location": "Beijing",
-      "status": "Prototype",
-      "material": "aluminum, ash wood, cyan glaze",
-      "scale": "object series",
-      "role": "product design, prototype direction",
-      "concept": "把山墙与瓦当转译成可握持、可陈列的器物比例。",
-      "description": "一组从山墙折线、瓦灰与青釉中生成的桌面器物，不追求仿古，而用当代加工方式保留北方器物的稳定和锋利。",
-      "coverImage": "abstract:vessel",
+      "titleCN": "阿那亚艺术中心广州馆与社区食堂",
+      "titleEN": "Aranya Art Center Guangzhou and Community Canteen",
+      "category": "Architecture",
+      "year": "2025",
+      "location": "中国广东省广州市花都区九龙湖度假区",
+      "status": "已建成",
+      "material": "玻璃砖、阳光板、暖色混凝土、金属屋面、玻璃",
+      "scale": "建筑面积 6166.74 平方米 / 占地面积 2892.93 平方米 / 用地面积 8860.53 平方米",
+      "role": "董功",
+      "concept": "以两列保留老榕树和树下微地形为设计起点，将美术馆、社区食堂、街巷、花园与连廊编织成开放的邻里文化聚落。",
+      "description": "阿那亚艺术中心广州馆与社区食堂位于广州花都九龙湖水库河道畔。项目以保留的老榕树大道为核心，将传统美术馆功能打散为多个展厅，并与社区食堂、风雨连廊、花园、广场和戏台相互串联。建筑向树退让，以分散、开放、可停留的空间组织方式，使艺术、生活与自然共同流动在一座榕树花园之中。",
+      "coverImage": "assets/projects/p002-vessel-mountain-index/fengmian.webp",
       "detailImage": "",
       "articleCoverImage": "",
       "gallery": [
-        "assets/projects/p002-vessel-mountain-index/article-01.png"
+        "assets/projects/p002-vessel-mountain-index/tu1.webp",
+        "assets/projects/p002-vessel-mountain-index/tu2.webp",
+        "assets/projects/p002-vessel-mountain-index/tu3.webp",
+        "assets/projects/p002-vessel-mountain-index/tu4.webp",
+        "assets/projects/p002-vessel-mountain-index/tu5.webp",
+        "assets/projects/p002-vessel-mountain-index/tu6.webp",
+        "assets/projects/p002-vessel-mountain-index/tu7.webp",
+        "assets/projects/p002-vessel-mountain-index/tu8.webp",
+        "assets/projects/p002-vessel-mountain-index/tu9.webp",
+        "assets/projects/p002-vessel-mountain-index/tu10.webp",
+        "assets/projects/p002-vessel-mountain-index/tu11.webp",
+        "assets/projects/p002-vessel-mountain-index/tu12.webp",
+        "assets/projects/p002-vessel-mountain-index/tu13.webp",
+        "assets/projects/p002-vessel-mountain-index/tu14.webp",
+        "assets/projects/p002-vessel-mountain-index/tu15.webp",
+        "assets/projects/p002-vessel-mountain-index/tu16.webp",
+        "assets/projects/p002-vessel-mountain-index/tu17.webp",
+        "assets/projects/p002-vessel-mountain-index/tu18.webp"
       ],
       "drawings": [],
       "model3d": "assets/projects/p002-vessel-mountain-index/model.glb",
@@ -388,10 +405,7 @@
       "pdf": "assets/projects/p002-vessel-mountain-index/case.pdf",
       "attachments": [],
       "tags": [
-        "器物",
-        "青釉",
-        "瓦当",
-        "产品"
+        "榕树花园；艺术中心；社区食堂；文化建筑；社区公共空间；岭南气候；风雨连廊；玻璃砖；树下空间；分散式美术馆"
       ],
       "articleBlocks": [
         {
@@ -433,26 +447,6 @@
           "thumbnail": "",
           "caption": "项目图像",
           "label": ""
-        },
-        {
-          "type": "model3d",
-          "text": "",
-          "asset": "assets/projects/p002-vessel-mountain-index/model.glb",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": ""
-        },
-        {
-          "type": "pdf",
-          "text": "",
-          "asset": "assets/projects/p002-vessel-mountain-index/case.pdf",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": "下载完整项目 PDF"
         }
       ],
       "featured": true,
@@ -460,21 +454,42 @@
     },
     {
       "id": "p003",
-      "titleCN": "黑穹模型台",
-      "titleEN": "Obsidian Model Platform",
-      "category": "Research",
-      "year": "2025",
-      "location": "Online Lab",
-      "status": "Published",
-      "material": "web canvas, GLB, point light",
-      "scale": "digital prototype",
-      "role": "interaction research, viewer prototype",
-      "concept": "让模型在加载前保持沉默，只在需要时展开。",
-      "description": "面向未来项目库的 3D 展示模块研究，默认不加载大型模型，点击后再进入模型台，以保证作品集首屏和列表体验轻盈。",
-      "coverImage": "abstract:grid",
+      "titleCN": "研究者公寓",
+      "titleEN": "Maison Julie-Victoire Daubié",
+      "category": "Architecture",
+      "year": "2018",
+      "location": "法国巴黎，大学城公园南缘",
+      "status": "已建成",
+      "material": "玻璃幕墙、高隔声墙体、混凝土结构、架空柱、滑动隔墙、半地下入口层、金属构件",
+      "scale": "项目面积约 4900 平方米 / 用地面积约 1000 平方米",
+      "role": "Antoine Barjon、Baptiste Grandais、Lou Dumont d'Ayot、Stephanie Bru、Alexandre Theriot",
+      "concept": "在仅约 1000 平方米的受限地块中，通过下沉、架空、紧凑结构网格与开放幕墙，形成兼具密度、通透性与居住可变性的青年研究者公寓。",
+      "description": "Maison Julie-Victoire Daubié 位于巴黎大学城公园南缘，是一座面向青年研究者的集合住宅。项目在有限地块、环路噪音和高密度校园环境中，通过半地下入口层、架空住宅体量与 H 形平面组织，形成紧凑而开放的建筑形态。高隔声玻璃幕墙、通透底层、空气缓冲层与可变居住单元共同回应了场地噪音、采光、视线和居住灵活性的多重要求。",
+      "coverImage": "assets/projects/p003-obsidian-model-platform/111.webp",
       "detailImage": "",
       "articleCoverImage": "",
-      "gallery": [],
+      "gallery": [
+        "assets/projects/p003-obsidian-model-platform/222.webp",
+        "assets/projects/p003-obsidian-model-platform/333.webp",
+        "assets/projects/p003-obsidian-model-platform/444.webp",
+        "assets/projects/p003-obsidian-model-platform/555.webp",
+        "assets/projects/p003-obsidian-model-platform/666.webp",
+        "assets/projects/p003-obsidian-model-platform/777.webp",
+        "assets/projects/p003-obsidian-model-platform/888.webp",
+        "assets/projects/p003-obsidian-model-platform/999.webp",
+        "assets/projects/p003-obsidian-model-platform/101010.webp",
+        "assets/projects/p003-obsidian-model-platform/111111.webp",
+        "assets/projects/p003-obsidian-model-platform/121212.webp",
+        "assets/projects/p003-obsidian-model-platform/131313.webp",
+        "assets/projects/p003-obsidian-model-platform/141414.webp",
+        "assets/projects/p003-obsidian-model-platform/151515.webp",
+        "assets/projects/p003-obsidian-model-platform/171717.webp",
+        "assets/projects/p003-obsidian-model-platform/181818.webp",
+        "assets/projects/p003-obsidian-model-platform/191919.webp",
+        "assets/projects/p003-obsidian-model-platform/202020.webp",
+        "assets/projects/p003-obsidian-model-platform/212121.webp",
+        "assets/projects/p003-obsidian-model-platform/222222.webp"
+      ],
       "drawings": [],
       "model3d": "assets/projects/p003-obsidian-model-platform/model.glb",
       "modelThumbnail": "",
@@ -485,10 +500,7 @@
       "pdf": "",
       "attachments": [],
       "tags": [
-        "3D",
-        "GLB",
-        "交互",
-        "模型台"
+        "集合住宅；青年研究者公寓；紧凑体量；架空建筑；半地下入口；H形平面；玻璃幕墙；高隔声立面；可变居住单元"
       ],
       "articleBlocks": [
         {
@@ -520,16 +532,6 @@
           "thumbnail": "",
           "caption": "",
           "label": ""
-        },
-        {
-          "type": "model3d",
-          "text": "",
-          "asset": "assets/projects/p003-obsidian-model-platform/model.glb",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": ""
         }
       ],
       "featured": true,
@@ -537,22 +539,25 @@
     },
     {
       "id": "p004",
-      "titleCN": "塞上院落更新",
-      "titleEN": "Frontier Courtyard Renewal",
+      "titleCN": "慕尼黑 Kinderoase 幼儿园",
+      "titleEN": "Kinderoase Daycare Center Munich",
       "category": "Architecture",
-      "year": "2025",
-      "location": "Datong",
-      "status": "Design Development",
-      "material": "gray brick, rammed earth, recycled wood",
-      "scale": "620 sqm",
+      "year": "2026",
+      "location": "德国慕尼黑，慕尼黑工业大学校园",
+      "status": "已建成",
+      "material": "木结构、木材、玻璃、屋顶露台、滑梯、游乐设施、遮棚、基础结构",
+      "scale": "建筑面积 1540 平方米 / 五层 / 可容纳 60 名儿童",
       "role": "renovation strategy, facade, interior",
-      "concept": "旧院落保留风口和阴影，新界面只做必要介入。",
-      "description": "以灰砖、夯土和木构为材料基础，保留院落的风道和尺度，通过现代平面和模块化构造减少历史符号堆叠。",
-      "coverImage": "abstract:plinth",
-      "detailImage": "",
+      "concept": "在极其受限的城市场地中，以儿童体验为核心，将日托中心组织为一座可奔跑、攀爬、滑行和眺望城市的垂直游乐场。",
+      "description": "慕尼黑 Kinderoase 幼儿园位于慕尼黑工业大学校园内，场地夹在主校区与食堂之间，原为停车场，面临用地紧张、交通噪音和高密度环境等限制。Kéré Architecture 将建筑设计为一座五层的垂直幼儿园，以木结构为主体，通过跨层滑梯、垂直游乐场和屋顶“天空草甸”，将日托中心转化为面向儿童身体体验、想象力和社交活动的立体空间。",
+      "coverImage": "assets/projects/p004-frontier-courtyard-renewal/640.gif",
+      "detailImage": "assets/projects/p004-frontier-courtyard-renewal/tu2.webp",
       "articleCoverImage": "",
       "gallery": [
-        "assets/projects/p004-frontier-courtyard-renewal/article-01.png"
+        "assets/projects/p004-frontier-courtyard-renewal/640.webp",
+        "assets/projects/p004-frontier-courtyard-renewal/fm1.webp",
+        "assets/projects/p004-frontier-courtyard-renewal/tu1.webp",
+        "assets/projects/p004-frontier-courtyard-renewal/tu3.webp"
       ],
       "drawings": [
         "assets/projects/p004-frontier-courtyard-renewal/drawings.pdf"
@@ -566,15 +571,22 @@
       "pdf": "assets/projects/p004-frontier-courtyard-renewal/case.pdf",
       "attachments": [],
       "tags": [
-        "更新",
-        "灰砖",
-        "院落",
-        "360"
+        "幼儿园、垂直幼儿园、木结构、儿童空间、日托中心、垂直游乐场、屋顶露台、滑梯、校园建筑、低碳建筑"
       ],
       "articleBlocks": [
         {
           "type": "heading",
-          "text": "项目概述",
+          "text": "以儿童体验为先，极限场地中的“垂直游乐园”",
+          "asset": "assets/projects/p004-frontier-courtyard-renewal/fm1.",
+          "assets": [],
+          "poster": "",
+          "thumbnail": "",
+          "caption": "",
+          "label": ""
+        },
+        {
+          "type": "paragraph",
+          "text": "慕尼黑 Kinderoase 幼儿园位于慕尼黑工业大学校园内，是一座面向60名儿童的全新日托中心。项目场地原为停车场，夹在大学主校区与食堂之间，周边建筑密集，并受到交通和噪音影响。面对受限的城市条件，建筑没有采用水平铺展的常规幼儿园模式，而是被组织为一座五层的垂直幼儿园",
           "asset": "",
           "assets": [],
           "poster": "",
@@ -584,7 +596,7 @@
         },
         {
           "type": "paragraph",
-          "text": "以灰砖、夯土和木构为材料基础，保留院落的风道和尺度，通过现代平面和模块化构造减少历史符号堆叠。",
+          "text": "\"建筑首层设置接待处和行政办公室，儿童按照年龄分组分布在不同楼层。中高层设置游戏、运动和用餐等共享功能，顶层则形成带有部分遮棚的屋顶露台“天空草甸”，为孩子们提供可以奔跑、感受风与阳光、眺望城市的安全场所。",
           "asset": "",
           "assets": [],
           "poster": "",
@@ -593,8 +605,8 @@
           "label": ""
         },
         {
-          "type": "quote",
-          "text": "旧院落保留风口和阴影，新界面只做必要介入。",
+          "type": "heading",
+          "text": "设计起点：儿童视角",
           "asset": "",
           "assets": [],
           "poster": "",
@@ -603,29 +615,9 @@
           "label": ""
         },
         {
-          "type": "image",
-          "text": "",
-          "asset": "assets/projects/p004-frontier-courtyard-renewal/article-01.png",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "项目图像",
-          "label": ""
-        },
-        {
-          "type": "pdf",
-          "text": "",
-          "asset": "assets/projects/p004-frontier-courtyard-renewal/drawings.pdf",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": "查看图纸 / Drawing"
-        },
-        {
-          "type": "panorama",
-          "text": "",
-          "asset": "assets/projects/p004-frontier-courtyard-renewal/panorama.png",
+          "type": "paragraph",
+          "text": "项目的核心并非单纯解决有限用地中的功能叠加，而是从儿童的身体经验出发，重新理解垂直空间。楼层之间不只是被楼梯、电梯和走廊连接，而是通过滑梯、攀爬、奔跑和游戏被重新激活。",
+          "asset": "",
           "assets": [],
           "poster": "",
           "thumbnail": "",
@@ -633,14 +625,24 @@
           "label": ""
         },
         {
-          "type": "pdf",
-          "text": "",
-          "asset": "assets/projects/p004-frontier-courtyard-renewal/case.pdf",
+          "type": "paragraph",
+          "text": "垂直空间不再是效率问题，而成为儿童探索世界的游乐场。",
+          "asset": "",
           "assets": [],
           "poster": "",
           "thumbnail": "",
           "caption": "",
-          "label": "下载完整项目 PDF"
+          "label": ""
+        },
+        {
+          "type": "paragraph",
+          "text": "滑梯将不同楼层连接起来，使“下楼”成为一种游戏行为。孩子们可以在建筑中奔跑、攀爬、穿行，并从一个楼层滑向另一个楼层。建筑因此不只是容纳儿童活动的背景，而成为儿童行动、想象和协作的一部分。",
+          "asset": "",
+          "assets": [],
+          "poster": "",
+          "thumbnail": "",
+          "caption": "",
+          "label": ""
         }
       ],
       "featured": false,
@@ -710,36 +712,6 @@
           "thumbnail": "",
           "caption": "",
           "label": ""
-        },
-        {
-          "type": "pdf",
-          "text": "",
-          "asset": "assets/projects/p005-cangqing-rail-system/drawings.pdf",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": "查看图纸 / Drawing"
-        },
-        {
-          "type": "model3d",
-          "text": "",
-          "asset": "assets/projects/p005-cangqing-rail-system/model.glb",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": ""
-        },
-        {
-          "type": "pdf",
-          "text": "",
-          "asset": "assets/projects/p005-cangqing-rail-system/case.pdf",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": "下载完整项目 PDF"
         }
       ],
       "featured": false,
@@ -819,16 +791,6 @@
           "thumbnail": "",
           "caption": "项目图像",
           "label": ""
-        },
-        {
-          "type": "panorama",
-          "text": "",
-          "asset": "assets/projects/p006-northern-gallery/panorama.png",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": ""
         }
       ],
       "featured": false,
@@ -898,26 +860,6 @@
           "thumbnail": "",
           "caption": "",
           "label": ""
-        },
-        {
-          "type": "pdf",
-          "text": "",
-          "asset": "assets/projects/p007-tile-gray-material-atlas/drawings.pdf",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": "查看图纸 / Drawing"
-        },
-        {
-          "type": "pdf",
-          "text": "",
-          "asset": "assets/projects/p007-tile-gray-material-atlas/case.pdf",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": "下载完整项目 PDF"
         }
       ],
       "featured": false,
@@ -987,26 +929,6 @@
           "thumbnail": "",
           "caption": "",
           "label": ""
-        },
-        {
-          "type": "pdf",
-          "text": "",
-          "asset": "assets/projects/p008-axis-generation-study/drawings.pdf",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": "查看图纸 / Drawing"
-        },
-        {
-          "type": "pdf",
-          "text": "",
-          "asset": "assets/projects/p008-axis-generation-study/case.pdf",
-          "assets": [],
-          "poster": "",
-          "thumbnail": "",
-          "caption": "",
-          "label": "下载完整项目 PDF"
         }
       ],
       "featured": false,

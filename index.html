@@ -13,7 +13,7 @@
   <link rel="preload" as="image" href="assets/hero-depth/optimized/hero-vignette-2560.webp" fetchpriority="high" media="(min-width: 841px) and (hover: hover)">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@600;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.css">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260715020400">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260715035930">
 </head>
 <body>
   <a class="skip-link" href="#works">跳至作品</a>
@@ -123,10 +123,10 @@
       <nav class="section-pagination pagination-inverse research-pagination" id="researchPagination" aria-label="研究文章翻页"></nav>
     </section>
 
-    <section class="section contact-section section-observe" id="contact" data-section="Contact">
+    <section class="section contact-section" id="contact" data-section="Contact">
       <div class="contact-panel contact-text-stage" id="contactTextStage">
         <div class="contact-scene-index" aria-hidden="true"><span>06</span></div>
-        <div class="contact-curtain-field" id="contactCurtainField" aria-hidden="true"></div>
+        <canvas class="contact-curtain-field contact-bead-canvas" id="contactCurtainField" aria-hidden="true"></canvas>
         <div class="contact-copy-dock" id="contactCopyGrid" aria-label="联系方式"></div>
         <p class="contact-copy-status" id="contactCopyStatus" role="status" aria-live="polite"></p>
       </div>
@@ -480,6 +480,6 @@
 
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js" defer></script>
-  <script src="assets/js/app.js?v=20260715020400" defer></script>
+  <script src="assets/js/app.js?v=20260715035930" defer></script>
 </body>
 </html>

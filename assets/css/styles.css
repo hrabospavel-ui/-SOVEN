@@ -9222,104 +9222,36 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 /* V67_BEAD_TEXT_CURTAIN_END */
 
 
-/* V68_ROOF_CONTACT_SCENE_START */
+/* V69_CONTACT_ROOF_PERFORMANCE_FIX_START */
 #contact .contact-panel.contact-text-stage {
-  min-height: clamp(700px, 86vh, 960px);
+  min-height: clamp(690px, 84vh, 930px);
   background:
-    radial-gradient(circle at 58% 16%, rgba(62, 104, 138, 0.14), transparent 25%),
-    radial-gradient(circle at 62% 42%, rgba(79, 111, 98, 0.16), transparent 37%),
-    radial-gradient(circle at 19% 18%, rgba(193, 126, 69, 0.07), transparent 25%),
-    linear-gradient(145deg, #090c0d 0%, #0b1111 54%, #050607 100%);
+    radial-gradient(circle at 58% 17%, rgba(67, 109, 137, 0.13), transparent 26%),
+    radial-gradient(circle at 64% 45%, rgba(74, 107, 94, 0.13), transparent 38%),
+    radial-gradient(circle at 17% 19%, rgba(185, 122, 68, 0.06), transparent 24%),
+    linear-gradient(145deg, #090c0d 0%, #0a1010 54%, #050607 100%);
 }
-
 .contact-roof-apparatus {
-  position: absolute;
-  top: clamp(20px, 3vw, 44px);
-  left: 50%;
-  z-index: 6;
-  width: min(82vw, 1260px);
-  transform: translateX(calc(-50% - clamp(8px, 1.8vw, 24px)));
-  pointer-events: none;
-  user-select: none;
+  position:absolute; top:clamp(18px,2.4vw,34px); left:50%; z-index:6;
+  width:min(82vw,1260px); transform:translateX(calc(-50% - clamp(4px,1.2vw,16px)));
+  pointer-events:none; user-select:none;
 }
-
-.contact-roof-glow {
-  position: absolute;
-  left: 10%;
-  right: 18%;
-  bottom: 8%;
-  height: clamp(46px, 8vw, 82px);
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 38% 50%, rgba(197, 139, 87, 0.26), transparent 52%),
-    radial-gradient(circle at 63% 50%, rgba(92, 154, 170, 0.16), transparent 48%);
-  filter: blur(28px);
-  opacity: 0.78;
+.contact-roof-inline {display:block;width:100%;height:auto;overflow:visible;filter:drop-shadow(0 16px 25px rgba(0,0,0,.22));}
+.contact-curtain-fallback {
+  position:absolute; z-index:2; left:15%; right:15%; top:clamp(150px,18vh,188px); bottom:92px;
+  display:grid; grid-template-columns:repeat(18,1fr); gap:clamp(5px,1vw,14px); align-items:start;
+  opacity:.52; transition:opacity .25s ease;
+  mask-image:linear-gradient(180deg,#000 0%,#000 86%,transparent 100%);
+  pointer-events:none;
 }
-
-.contact-roof-image {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: auto;
-  opacity: 0.98;
-  filter:
-    drop-shadow(0 18px 26px rgba(0, 0, 0, 0.22))
-    drop-shadow(0 1px 0 rgba(250, 243, 226, 0.08));
+.contact-curtain-fallback span {writing-mode:vertical-rl;text-orientation:upright;color:rgba(235,231,218,.5);font-family:"Noto Serif SC","Songti SC","SimSun",serif;font-size:10px;line-height:1.25;letter-spacing:.06em;white-space:nowrap;}
+#contactTextStage.is-curtain-ready .contact-curtain-fallback {opacity:0;visibility:hidden;}
+.contact-curtain-field.contact-bead-canvas {z-index:3;opacity:.94;filter:none;}
+@media(max-width:720px){
+  #contact .contact-panel.contact-text-stage{min-height:min(750px,82svh)}
+  .contact-roof-apparatus{top:12px;width:calc(100% - 22px);transform:translateX(-50%)}
+  .contact-curtain-fallback{left:8%;right:8%;top:128px;grid-template-columns:repeat(14,1fr);gap:5px;bottom:84px}
+  .contact-curtain-fallback span{font-size:9px}
 }
-
-.contact-roof-apparatus::after {
-  content: "";
-  position: absolute;
-  left: 14%;
-  right: 21%;
-  bottom: 9.5%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(233, 226, 211, 0.2), rgba(127, 178, 196, 0.26), rgba(233, 226, 211, 0.2), transparent);
-  opacity: 0.62;
-}
-
-.contact-curtain-field.contact-bead-canvas {
-  filter: contrast(1.03) saturate(1.01);
-}
-
-@media (max-width: 1100px) {
-  .contact-roof-apparatus {
-    width: min(88vw, 1040px);
-    transform: translateX(calc(-50% - clamp(2px, 1.2vw, 12px)));
-  }
-}
-
-@media (max-width: 720px) {
-  #contact .contact-panel.contact-text-stage {
-    min-height: min(760px, 82svh);
-  }
-
-  .contact-roof-apparatus {
-    top: 14px;
-    width: calc(100% - 24px);
-    transform: translateX(-50%);
-  }
-
-  .contact-roof-glow {
-    left: 8%;
-    right: 13%;
-    bottom: 10%;
-    height: 42px;
-    filter: blur(22px);
-    opacity: 0.72;
-  }
-
-  .contact-roof-apparatus::after {
-    left: 10%;
-    right: 15%;
-    bottom: 11%;
-  }
-}
-
-@media (max-width: 430px) {
-  #contact .contact-panel.contact-text-stage {
-    min-height: 680px;
-  }
-}
-/* V68_ROOF_CONTACT_SCENE_END */
+@media(max-width:430px){#contact .contact-panel.contact-text-stage{min-height:670px}.contact-curtain-fallback{grid-template-columns:repeat(12,1fr)}}
+/* V69_CONTACT_ROOF_PERFORMANCE_FIX_END */

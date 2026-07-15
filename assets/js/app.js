@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260714172001
+// CACHE_BUST_VERSION: 20260715020400
 (function () {
   "use strict";
 
@@ -2713,359 +2713,308 @@
     contactCurtainController = null;
   }
 
-  function renderContactArchitecture(content) {
-    var svg = qs("#contactArchitecture");
-    if (!svg) {
-      return;
+  function renderContactArchitecture() {
+    var legacy = qs("#contactArchitecture");
+    if (legacy) {
+      legacy.remove();
     }
-    var phrases = content.architectureText && content.architectureText.length
-      ? content.architectureText
-      : createDefaultContactContent().architectureText;
-    function phrase(index, fallback) {
-      return escapeHTML(phrases[index % phrases.length] || fallback || "");
-    }
-    svg.innerHTML =
-      '<defs>' +
-        '<path id="contactRoofUpper" d="M 86 402 Q 330 224 690 250 Q 930 268 1118 132" />' +
-        '<path id="contactRoofLower" d="M 72 430 Q 348 316 694 316 Q 946 318 1142 208" />' +
-        '<path id="contactEaveLine" d="M 124 470 Q 410 376 734 374 Q 960 372 1138 288" />' +
-        '<path id="contactBeamLine" d="M 300 500 L 952 500" />' +
-        '<path id="contactBracketOne" d="M 730 500 Q 780 560 840 500" />' +
-        '<path id="contactBracketTwo" d="M 790 500 Q 846 594 916 500" />' +
-      '</defs>' +
-      '<g class="contact-architecture-lines">' +
-        '<path d="M 86 402 Q 330 224 690 250 Q 930 268 1118 132" />' +
-        '<path d="M 72 430 Q 348 316 694 316 Q 946 318 1142 208" />' +
-        '<path d="M 124 470 Q 410 376 734 374 Q 960 372 1138 288" />' +
-        '<path d="M 300 500 L 952 500" />' +
-        '<path d="M 868 500 L 868 742" />' +
-        '<path d="M 916 500 L 916 742" />' +
-        '<path d="M 730 500 Q 780 560 840 500" />' +
-        '<path d="M 790 500 Q 846 594 916 500" />' +
-      '</g>' +
-      '<g class="contact-architecture-type">' +
-        '<text class="arch-roof arch-roof-main"><textPath href="#contactRoofUpper" startOffset="2%">' + phrase(2, "定其举之峻慢") + '　·　' + phrase(3, "折之圜和") + '　·　' + phrase(8, "角梁飛檐槫椽柱栱") + '</textPath></text>' +
-        '<text class="arch-roof arch-roof-secondary"><textPath href="#contactRoofLower" startOffset="8%">' + phrase(0, "凡构屋之制") + '　' + phrase(1, "皆以材为祖") + '　' + phrase(6, "規矩準繩") + '</textPath></text>' +
-        '<text class="arch-eave"><textPath href="#contactEaveLine" startOffset="13%">' + phrase(4, "梁柱之高下") + '　·　' + phrase(5, "曲直举折之势") + '　·　' + phrase(7, "五材並用") + '</textPath></text>' +
-        '<text class="arch-beam"><textPath href="#contactBeamLine" startOffset="1%">' + phrase(0, "凡构屋之制") + '　' + phrase(1, "皆以材为祖") + '</textPath></text>' +
-        '<text class="arch-column" x="886" y="514">' + phrase(4, "梁柱之高下") + '　' + phrase(5, "曲直举折之势") + '</text>' +
-        '<text class="arch-column arch-column-faint" x="934" y="514">' + phrase(6, "規矩準繩") + '　' + phrase(7, "五材並用") + '</text>' +
-        '<text class="arch-bracket"><textPath href="#contactBracketOne" startOffset="4%">' + phrase(8, "角梁飛檐槫椽柱栱") + '</textPath></text>' +
-        '<text class="arch-bracket arch-bracket-two"><textPath href="#contactBracketTwo" startOffset="2%">' + phrase(6, "規矩準繩") + '</textPath></text>' +
-      '</g>';
   }
 
-  function createContactCurtain(canvas, stage, rawText) {
-    if (!canvas || !stage) {
-      return null;
-    }
-    var context = canvas.getContext("2d", { alpha: true });
-    if (!context) {
-      return null;
-    }
+  function createContactCurtain(field, stage, rawText) {
+    if (!field || !stage) return null;
 
     var destroyed = false;
     var raf = 0;
-    var visible = true;
-    var width = 0;
-    var height = 0;
-    var dpr = 1;
+    var width = 1;
+    var height = 1;
     var strands = [];
+    var supportsPointer = "PointerEvent" in window;
+    var reducedMotion = Boolean(reduceMotionQuery && reduceMotionQuery.matches);
+    var cleanText = String(rawText || "").replace(/\s+/g, "").trim();
+    if (!cleanText) cleanText = createDefaultContactContent().curtainText.replace(/\s+/g, "");
+
     var pointer = {
       x: -9999,
       y: -9999,
+      lastX: -9999,
+      lastY: -9999,
+      lastT: 0,
       vx: 0,
       vy: 0,
       speed: 0,
       active: false,
-      lastX: 0,
-      lastY: 0,
-      lastT: 0,
-      glow: 0
+      type: "mouse"
     };
-    var reducedMotion = Boolean(reduceMotionQuery && reduceMotionQuery.matches);
-    var cleanText = String(rawText || "").replace(/\s+/g, "").trim();
-    if (!cleanText) {
-      cleanText = createDefaultContactContent().curtainText.replace(/\s+/g, "");
-    }
+
+    var metrics = {
+      pointerMoves: 0,
+      impulses: 0,
+      maxDisplacement: 0,
+      movingStrands: 0,
+      lastPointerType: "",
+      lastEventAt: 0,
+      strandCount: 0
+    };
 
     function seeded(index) {
-      var x = Math.sin(index * 12.9898 + 78.233) * 43758.5453;
-      return x - Math.floor(x);
+      var value = Math.sin(index * 93.173 + 19.417) * 43758.5453;
+      return value - Math.floor(value);
+    }
+
+    function textChunk(start, length) {
+      var result = "";
+      for (var i = 0; i < length; i += 1) {
+        result += cleanText.charAt((start + i) % cleanText.length);
+      }
+      return result;
+    }
+
+    function buildStrands() {
+      field.innerHTML = "";
+      strands = [];
+      var mobile = width < 720;
+      var count = mobile
+        ? Math.max(18, Math.min(25, Math.floor(width / 16)))
+        : Math.max(28, Math.min(40, Math.floor(width / 34)));
+      var margin = mobile ? 12 : Math.max(24, width * 0.026);
+      var available = Math.max(1, width - margin * 2);
+      var spacing = available / Math.max(1, count - 1);
+      var cursor = 0;
+
+      for (var index = 0; index < count; index += 1) {
+        var center = 1 - Math.abs(index / Math.max(1, count - 1) * 2 - 1);
+        var restX = margin + index * spacing;
+        var top = mobile ? 8 + seeded(index + 4) * 14 : 10 + seeded(index + 4) * 18;
+        var lengthRatio = 0.68 + seeded(index + 17) * 0.18 + center * 0.08;
+        var strandHeight = Math.min(height - top - 58, Math.max(height * 0.52, height * lengthRatio));
+        var fontSize = mobile ? 10.5 + seeded(index + 38) * 1.1 : 11.5 + seeded(index + 38) * 1.35;
+        var letterSpace = mobile ? 3.2 : 3.8;
+        var charStep = fontSize + letterSpace;
+        var charCount = Math.max(18, Math.floor(strandHeight / charStep));
+        var text = textChunk(cursor, charCount);
+        cursor += charCount + 3 + Math.floor(seeded(index + 66) * 9);
+
+        var element = document.createElement("span");
+        element.className = "contact-curtain-strand" + ((index % 8 === 0 || index % 13 === 0) ? " is-accent" : "");
+        element.textContent = text;
+        element.style.left = restX + "px";
+        element.style.top = top + "px";
+        element.style.height = strandHeight + "px";
+        element.style.fontSize = fontSize + "px";
+        element.style.letterSpacing = letterSpace + "px";
+        element.style.opacity = String(0.42 + seeded(index + 82) * 0.22 + center * 0.08);
+        field.appendChild(element);
+
+        strands.push({
+          index: index,
+          element: element,
+          restX: restX,
+          top: top,
+          height: strandHeight,
+          x: 0,
+          y: 0,
+          angle: 0,
+          vx: 0,
+          vy: 0,
+          va: 0,
+          glow: 0
+        });
+      }
+      metrics.strandCount = strands.length;
     }
 
     function resize() {
       var rect = stage.getBoundingClientRect();
       width = Math.max(1, Math.round(rect.width));
       height = Math.max(1, Math.round(rect.height));
-      dpr = Math.min(window.devicePixelRatio || 1, 1.75);
-      canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
-      canvas.style.width = width + "px";
-      canvas.style.height = height + "px";
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
       buildStrands();
-      draw();
+      render();
     }
 
-    function buildStrands() {
-      strands = [];
-      var mobile = width < 720;
-      var count = mobile
-        ? Math.max(15, Math.min(24, Math.floor(width / 23)))
-        : Math.max(30, Math.min(58, Math.floor(width / 25)));
-      var margin = mobile ? 12 : Math.max(22, width * 0.02);
-      var available = width - margin * 2;
-      var spacingX = available / Math.max(1, count - 1);
-      var charSpacing = mobile ? 17 : 16;
-      var topBase = mobile ? 18 : 24;
-      var textIndex = 0;
+    function impulseAt(x, y, vx, vy, pointerType) {
+      var mobile = width < 720 || pointerType === "touch";
+      var radius = mobile ? 82 : 112;
+      var speed = Math.min(30, Math.sqrt(vx * vx + vy * vy));
+      var motionScale = reducedMotion ? 0.32 : 1;
 
-      for (var i = 0; i < count; i += 1) {
-        var seed = seeded(i + 3);
-        var centerFactor = 1 - Math.abs((i / Math.max(1, count - 1)) * 2 - 1);
-        var baseX = margin + i * spacingX;
-        var startOffset = (i % 4) * 4 + seed * 10;
-        var lengthFactor = 0.60 + seeded(i + 20) * 0.22 + centerFactor * 0.10;
-        var maxNodes = Math.max(18, Math.floor((height * lengthFactor) / charSpacing));
-        var nodes = [];
-        var chars = [];
-        for (var j = 0; j < maxNodes; j += 1) {
-          var restY = topBase + startOffset + j * charSpacing;
-          nodes.push({
-            x: baseX,
-            y: restY,
-            restX: baseX,
-            restY: restY,
-            vx: 0,
-            vy: 0
-          });
-          chars.push(cleanText.charAt(textIndex % cleanText.length));
-          textIndex += 1 + ((i + j) % 19 === 0 ? 1 : 0);
-        }
-        strands.push({
-          index: i,
-          nodes: nodes,
-          chars: chars,
-          alpha: 0.28 + seeded(i + 90) * 0.30 + centerFactor * 0.08,
-          accent: i % 8 === 0 || i % 13 === 0,
-          fontSize: mobile ? 10 + seeded(i + 70) * 1.2 : 10.6 + seeded(i + 70) * 1.8,
-          phase: seeded(i + 42) * Math.PI * 2
+      strands.forEach(function (strand, strandIndex) {
+        var horizontal = strand.restX - x;
+        var closestY = Math.max(strand.top, Math.min(y, strand.top + strand.height));
+        var vertical = (closestY - y) * 0.55;
+        var distance = Math.sqrt(horizontal * horizontal + vertical * vertical);
+        if (distance >= radius) return;
+
+        var influence = Math.pow(1 - distance / radius, 2.2);
+        var direction = Math.abs(horizontal) > 0.5
+          ? Math.sign(horizontal)
+          : (Math.abs(vx) > 0.2 ? Math.sign(vx) : (strandIndex % 2 ? 1 : -1));
+        var energy = (1.0 + speed * 0.065) * influence * motionScale;
+
+        strand.vx += direction * 3.9 * energy + vx * 0.045 * influence * motionScale;
+        strand.vy -= 1.15 * energy + Math.max(0, -vy) * 0.018 * influence * motionScale;
+        strand.va += direction * 0.62 * energy + vx * 0.010 * influence * motionScale;
+        strand.glow = Math.min(1, strand.glow + influence * 0.85);
+        metrics.impulses += 1;
+
+        [-2, -1, 1, 2].forEach(function (offset) {
+          var neighbor = strands[strandIndex + offset];
+          if (!neighbor) return;
+          var falloff = Math.abs(offset) === 1 ? 0.22 : 0.075;
+          neighbor.vx += direction * 3.9 * energy * falloff;
+          neighbor.va += direction * 0.62 * energy * falloff;
+          neighbor.glow = Math.min(0.75, neighbor.glow + influence * falloff);
         });
-      }
-    }
-
-    function applyPointerForce(node, radius, speedBoost) {
-      if (!pointer.active) {
-        return;
-      }
-      var dx = node.x - pointer.x;
-      var dy = node.y - pointer.y;
-      var distance = Math.sqrt(dx * dx + dy * dy) || 1;
-      if (distance >= radius) {
-        return;
-      }
-
-      var influence = Math.pow(1 - distance / radius, 2.25);
-      var side = dx === 0 ? (pointer.vx >= 0 ? 1 : -1) : (dx > 0 ? 1 : -1);
-      var sweep = Math.max(-18, Math.min(18, pointer.vx * 0.58));
-      var lift = 8.5 + speedBoost * 0.34;
-      var open = 9.2 + speedBoost * 0.42;
-
-      node.vx += side * open * influence + sweep * influence;
-      node.vy -= lift * influence;
-      node.vy += Math.max(-7, Math.min(7, pointer.vy * 0.16)) * influence;
+      });
     }
 
     function update() {
-      var mobile = width < 720;
-      var radius = mobile ? 104 : 168;
-      var speedBoost = Math.min(34, pointer.speed);
-      var time = performance.now() * 0.001;
+      var moving = 0;
+      var maxDisplacement = 0;
+      var damping = reducedMotion ? 0.78 : 0.89;
+      var springX = reducedMotion ? 0.12 : 0.070;
+      var springY = reducedMotion ? 0.15 : 0.095;
+      var springA = reducedMotion ? 0.13 : 0.062;
 
-      strands.forEach(function (strand) {
-        var nodes = strand.nodes;
-        for (var i = 0; i < nodes.length; i += 1) {
-          var node = nodes[i];
-          if (i === 0) {
-            node.x = node.restX;
-            node.y = node.restY;
-            node.vx = 0;
-            node.vy = 0;
-            continue;
-          }
+      strands.forEach(function (strand, index) {
+        var left = strands[index - 1];
+        var right = strands[index + 1];
+        if (left) strand.vx += (left.x - strand.x) * 0.007;
+        if (right) strand.vx += (right.x - strand.x) * 0.007;
 
-          var idle = pointer.active ? 0 : Math.sin(time * 0.7 + strand.phase) * 0.008 * Math.min(i, 12);
-          node.vx += (node.restX + idle - node.x) * 0.018;
-          node.vy += (node.restY - node.y) * 0.026;
+        strand.vx += -strand.x * springX;
+        strand.vy += -strand.y * springY;
+        strand.va += -strand.angle * springA;
+        strand.vx *= damping;
+        strand.vy *= damping;
+        strand.va *= damping;
+        strand.x += strand.vx;
+        strand.y += strand.vy;
+        strand.angle += strand.va;
+        strand.glow *= 0.93;
 
-          var previous = nodes[i - 1];
-          var next = nodes[i + 1];
-          node.vx += (previous.x - node.x) * 0.055;
-          if (next) {
-            node.vx += (next.x - node.x) * 0.028;
-          }
+        strand.x = Math.max(-44, Math.min(44, strand.x));
+        strand.y = Math.max(-24, Math.min(7, strand.y));
+        strand.angle = Math.max(-8.5, Math.min(8.5, strand.angle));
 
-          applyPointerForce(node, radius, speedBoost);
-
-          node.vx *= 0.885;
-          node.vy *= 0.88;
-          node.x += node.vx;
-          node.y += node.vy;
-        }
-
-        for (var iteration = 0; iteration < 3; iteration += 1) {
-          for (var j = 1; j < nodes.length; j += 1) {
-            var a = nodes[j - 1];
-            var b = nodes[j];
-            var target = b.restY - a.restY;
-            var sx = b.x - a.x;
-            var sy = b.y - a.y;
-            var length = Math.sqrt(sx * sx + sy * sy) || 1;
-            var correction = (length - target) / length * 0.24;
-            if (j > 1) {
-              a.x += sx * correction * 0.22;
-              a.y += sy * correction * 0.22;
-            }
-            b.x -= sx * correction * 0.78;
-            b.y -= sy * correction * 0.78;
-          }
-        }
+        var displacement = Math.sqrt(strand.x * strand.x + strand.y * strand.y + strand.angle * strand.angle);
+        maxDisplacement = Math.max(maxDisplacement, displacement);
+        if (displacement > 1.0 || Math.abs(strand.vx) > 0.12 || Math.abs(strand.va) > 0.08) moving += 1;
       });
 
-      pointer.vx *= 0.84;
-      pointer.vy *= 0.84;
-      pointer.speed *= 0.86;
-      pointer.glow *= 0.90;
+      metrics.maxDisplacement = maxDisplacement;
+      metrics.movingStrands = moving;
+      pointer.vx *= 0.74;
+      pointer.vy *= 0.74;
+      pointer.speed *= 0.78;
     }
 
-    function drawPointerGlow() {
-      if (pointer.glow < 0.02 || pointer.x < 0 || pointer.y < 0) {
-        return;
-      }
-      var radius = width < 720 ? 96 : 148;
-      var glow = context.createRadialGradient(pointer.x, pointer.y, 0, pointer.x, pointer.y, radius);
-      glow.addColorStop(0, "rgba(206,188,146," + (0.065 * pointer.glow).toFixed(4) + ")");
-      glow.addColorStop(0.55, "rgba(112,151,134," + (0.035 * pointer.glow).toFixed(4) + ")");
-      glow.addColorStop(1, "rgba(0,0,0,0)");
-      context.fillStyle = glow;
-      context.fillRect(pointer.x - radius, pointer.y - radius, radius * 2, radius * 2);
-    }
-
-    function draw() {
-      context.clearRect(0, 0, width, height);
-      drawPointerGlow();
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-
+    function render() {
       strands.forEach(function (strand) {
-        var nodes = strand.nodes;
-        context.beginPath();
-        nodes.forEach(function (node, index) {
-          if (index === 0) {
-            context.moveTo(node.x, node.y);
-          } else {
-            context.lineTo(node.x, node.y);
-          }
-        });
-        context.strokeStyle = strand.accent ? "rgba(116,154,137,0.15)" : "rgba(231,234,226,0.075)";
-        context.lineWidth = strand.accent ? 0.72 : 0.52;
-        context.stroke();
-
-        context.font = strand.fontSize + 'px "Noto Serif SC", "Songti SC", "SimSun", serif';
-        nodes.forEach(function (node, index) {
-          var char = strand.chars[index];
-          if (!char) {
-            return;
-          }
-          var previous = nodes[Math.max(0, index - 1)];
-          var tilt = Math.max(-0.42, Math.min(0.42, (node.x - previous.x) / 18));
-          var displacement = Math.min(1, Math.abs(node.x - node.restX) / 55 + Math.abs(node.y - node.restY) / 48);
-          context.save();
-          context.translate(node.x, node.y);
-          context.rotate(tilt);
-          var alpha = strand.alpha * (0.76 + Math.sin(index * 0.47 + strand.index) * 0.08) + displacement * 0.18;
-          context.fillStyle = strand.accent
-            ? "rgba(144,184,164," + Math.max(0.16, Math.min(0.82, alpha * 0.9)).toFixed(3) + ")"
-            : "rgba(241,238,226," + Math.max(0.15, Math.min(0.86, alpha)).toFixed(3) + ")";
-          context.fillText(char, 0, 0);
-          context.restore();
-        });
+        strand.element.style.transform = "translate3d(" + strand.x.toFixed(2) + "px," + strand.y.toFixed(2) + "px,0) rotate(" + strand.angle.toFixed(2) + "deg)";
+        strand.element.style.setProperty("--curtain-glow", strand.glow.toFixed(3));
       });
     }
 
     function frame() {
-      if (destroyed) {
-        return;
-      }
-      if (visible && !reducedMotion) {
-        update();
-        draw();
-      }
+      if (destroyed) return;
+      update();
+      render();
       raf = window.requestAnimationFrame(frame);
     }
 
-    function setPointer(event) {
+    function pointerFromEvent(event) {
+      var source = event;
+      if (event.getCoalescedEvents) {
+        var coalesced = event.getCoalescedEvents();
+        if (coalesced && coalesced.length) source = coalesced[coalesced.length - 1];
+      }
       var rect = stage.getBoundingClientRect();
       var now = performance.now();
-      var x = event.clientX - rect.left;
-      var y = event.clientY - rect.top;
-      var dt = Math.max(8, now - (pointer.lastT || now));
-      var rawVx = (x - pointer.lastX) / dt * 16;
-      var rawVy = (y - pointer.lastY) / dt * 16;
-      pointer.vx = pointer.lastT ? rawVx : 0;
-      pointer.vy = pointer.lastT ? rawVy : 0;
-      pointer.speed = Math.min(48, Math.sqrt(pointer.vx * pointer.vx + pointer.vy * pointer.vy));
+      var x = source.clientX - rect.left;
+      var y = source.clientY - rect.top;
+      var dt = pointer.lastT ? Math.max(8, now - pointer.lastT) : 16;
+      var vx = pointer.lastT ? (x - pointer.lastX) / dt * 16 : 0;
+      var vy = pointer.lastT ? (y - pointer.lastY) / dt * 16 : 0;
       pointer.x = x;
       pointer.y = y;
+      pointer.vx = vx;
+      pointer.vy = vy;
+      pointer.speed = Math.min(30, Math.sqrt(vx * vx + vy * vy));
       pointer.lastX = x;
       pointer.lastY = y;
       pointer.lastT = now;
       pointer.active = true;
-      pointer.glow = 1;
-      if (reducedMotion) {
-        draw();
-      }
+      pointer.type = event.pointerType || "mouse";
+      metrics.pointerMoves += 1;
+      metrics.lastPointerType = pointer.type;
+      metrics.lastEventAt = now;
+      impulseAt(x, y, vx, vy, pointer.type);
+      stage.dataset.curtainPointerMoves = String(metrics.pointerMoves);
     }
 
     function clearPointer() {
       pointer.active = false;
       pointer.lastT = 0;
-      pointer.vx *= 0.65;
-      pointer.vy *= 0.65;
     }
 
-    function onTouchMove(event) {
-      if (!event.touches || !event.touches[0]) {
-        return;
+    function bindEvents() {
+      if (supportsPointer) {
+        stage.addEventListener("pointerenter", pointerFromEvent, { passive: true });
+        stage.addEventListener("pointermove", pointerFromEvent, { passive: true });
+        stage.addEventListener("pointerleave", clearPointer, { passive: true });
+        stage.addEventListener("pointercancel", clearPointer, { passive: true });
+      } else {
+        stage.addEventListener("mouseenter", pointerFromEvent, { passive: true });
+        stage.addEventListener("mousemove", pointerFromEvent, { passive: true });
+        stage.addEventListener("mouseleave", clearPointer, { passive: true });
+        stage.addEventListener("touchmove", function (event) {
+          if (event.touches && event.touches[0]) pointerFromEvent(event.touches[0]);
+        }, { passive: true });
+        stage.addEventListener("touchend", clearPointer, { passive: true });
       }
-      setPointer(event.touches[0]);
     }
 
-    stage.addEventListener("pointerenter", setPointer, { passive: true });
-    stage.addEventListener("pointermove", setPointer, { passive: true });
-    stage.addEventListener("pointerleave", clearPointer, { passive: true });
-    stage.addEventListener("pointercancel", clearPointer, { passive: true });
-    stage.addEventListener("touchmove", onTouchMove, { passive: true });
-    stage.addEventListener("touchend", clearPointer, { passive: true });
+    function unbindEvents() {
+      if (supportsPointer) {
+        stage.removeEventListener("pointerenter", pointerFromEvent);
+        stage.removeEventListener("pointermove", pointerFromEvent);
+        stage.removeEventListener("pointerleave", clearPointer);
+        stage.removeEventListener("pointercancel", clearPointer);
+      } else {
+        stage.removeEventListener("mouseenter", pointerFromEvent);
+        stage.removeEventListener("mousemove", pointerFromEvent);
+        stage.removeEventListener("mouseleave", clearPointer);
+      }
+    }
+
+    stage.__contactCurtainKick = function (x, y, vx, vy) {
+      impulseAt(
+        Number.isFinite(x) ? x : width * 0.5,
+        Number.isFinite(y) ? y : height * 0.48,
+        Number.isFinite(vx) ? vx : 18,
+        Number.isFinite(vy) ? vy : -3,
+        "test"
+      );
+    };
+
+    stage.__contactCurtainDebug = function () {
+      return {
+        pointerMoves: metrics.pointerMoves,
+        impulses: metrics.impulses,
+        maxDisplacement: Number(metrics.maxDisplacement.toFixed(3)),
+        movingStrands: metrics.movingStrands,
+        lastPointerType: metrics.lastPointerType,
+        supportsPointer: supportsPointer,
+        reducedMotion: reducedMotion,
+        strandCount: metrics.strandCount
+      };
+    };
 
     var resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null;
-    if (resizeObserver) {
-      resizeObserver.observe(stage);
-    } else {
-      window.addEventListener("resize", resize);
-    }
+    if (resizeObserver) resizeObserver.observe(stage);
+    else window.addEventListener("resize", resize);
 
-    var intersectionObserver = typeof IntersectionObserver !== "undefined" ? new IntersectionObserver(function (entries) {
-      visible = Boolean(entries[0] && entries[0].isIntersecting);
-      if (visible) {
-        draw();
-      }
-    }, { threshold: 0.04 }) : null;
-    if (intersectionObserver) {
-      intersectionObserver.observe(stage);
-    }
-
+    bindEvents();
     resize();
     raf = window.requestAnimationFrame(frame);
 
@@ -3073,20 +3022,15 @@
       destroy: function () {
         destroyed = true;
         window.cancelAnimationFrame(raf);
-        stage.removeEventListener("pointerenter", setPointer);
-        stage.removeEventListener("pointermove", setPointer);
-        stage.removeEventListener("pointerleave", clearPointer);
-        stage.removeEventListener("pointercancel", clearPointer);
-        stage.removeEventListener("touchmove", onTouchMove);
-        stage.removeEventListener("touchend", clearPointer);
-        if (resizeObserver) {
-          resizeObserver.disconnect();
-        } else {
-          window.removeEventListener("resize", resize);
-        }
-        if (intersectionObserver) {
-          intersectionObserver.disconnect();
-        }
+        unbindEvents();
+        if (resizeObserver) resizeObserver.disconnect();
+        else window.removeEventListener("resize", resize);
+        field.innerHTML = "";
+        try { delete stage.__contactCurtainKick; } catch (error) { stage.__contactCurtainKick = null; }
+        try { delete stage.__contactCurtainDebug; } catch (error) { stage.__contactCurtainDebug = null; }
+      },
+      getMetrics: function () {
+        return stage.__contactCurtainDebug ? stage.__contactCurtainDebug() : {};
       }
     };
   }
@@ -3096,8 +3040,8 @@
     var grid = qs("#contactCopyGrid");
     var status = qs("#contactCopyStatus");
     var stage = qs("#contactTextStage");
-    var canvas = qs("#contactCurtainCanvas");
-    if (!grid || !stage) {
+    var field = qs("#contactCurtainField");
+    if (!grid || !stage || !field) {
       return;
     }
 
@@ -3122,31 +3066,29 @@
       button.addEventListener("click", function () {
         var key = button.getAttribute("data-contact-copy");
         var channel = channels.find(function (item) { return item.key === key; });
-        if (!channel || !channel.value) {
-          return;
-        }
+        if (!channel || !channel.value) return;
         copyContactText(channel.value).then(function () {
-          qsa(".contact-copy-key", grid).forEach(function (item) {
-            item.classList.remove("is-copied");
-          });
+          qsa(".contact-copy-key", grid).forEach(function (item) { item.classList.remove("is-copied"); });
           button.classList.add("is-copied");
-          if (status) {
-            status.textContent = channel.label + "已复制";
-          }
-          window.setTimeout(function () {
-            button.classList.remove("is-copied");
-          }, 1100);
+          if (status) status.textContent = channel.label + "已复制";
+          window.setTimeout(function () { button.classList.remove("is-copied"); }, 900);
         }).catch(function () {
-          if (status) {
-            status.textContent = channel.label + "复制失败";
-          }
+          if (status) status.textContent = channel.label + "复制失败";
         });
       });
     });
 
+    renderContactArchitecture(content);
     destroyContactCurtain();
-    contactCurtainController = createContactCurtain(canvas, stage, content.curtainText);
+    contactCurtainController = createContactCurtain(field, stage, content.curtainText);
   }
+
+  window.__bootContactCurtainForTest = function () {
+    renderContactContent(createDefaultContactContent());
+    return qs("#contactTextStage") && qs("#contactTextStage").__contactCurtainDebug
+      ? qs("#contactTextStage").__contactCurtainDebug()
+      : null;
+  };
 
   function applyVisualAssets(visualAssets) {
     var assets = normalizeVisualAssets(visualAssets);

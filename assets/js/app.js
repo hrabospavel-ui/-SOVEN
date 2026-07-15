@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260715035930
+// CACHE_BUST_VERSION: 20260715143000
 (function () {
   "use strict";
 
@@ -2726,6 +2726,7 @@
     var ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return null;
 
+    var architecture = qs(".contact-text-architecture", stage);
     var destroyed = false;
     var raf = 0;
     var resizeObserver = null;
@@ -2733,6 +2734,9 @@
     var width = 1;
     var height = 1;
     var dpr = 1;
+    var anchorY = 360;
+    var curtainLeft = 40;
+    var curtainRight = 960;
     var strands = [];
     var cleanText = String(rawText || "").replace(/\s+/g, "").trim();
     if (!cleanText) cleanText = createDefaultContactContent().curtainText.replace(/\s+/g, "");
@@ -2741,7 +2745,6 @@
     var reducedMotion = Boolean(reduceMotionQuery && reduceMotionQuery.matches);
     var inViewport = true;
     var pageVisible = !document.hidden;
-    var pointerActive = false;
     var idleFrames = 0;
     var lastPointer = { x: 0, y: 0, t: 0 };
 
@@ -2766,41 +2769,82 @@
       return cleanText.charAt(index % cleanText.length) || "·";
     }
 
+    function readArchitectureGeometry() {
+      var stageRect = stage.getBoundingClientRect();
+      if (architecture) {
+        var roofRect = architecture.getBoundingClientRect();
+        if (roofRect.width > 20 && roofRect.height > 20) {
+          curtainLeft = Math.max(12, roofRect.left - stageRect.left + roofRect.width * 0.035);
+          curtainRight = Math.min(width - 12, roofRect.right - stageRect.left - roofRect.width * 0.035);
+          anchorY = Math.max(120, roofRect.bottom - stageRect.top - Math.min(18, roofRect.height * 0.025));
+          return;
+        }
+      }
+      curtainLeft = Math.max(18, width * 0.05);
+      curtainRight = width - curtainLeft;
+      anchorY = width < 720 ? 245 : Math.min(height * 0.52, 610);
+    }
+
     function buildStrands() {
       strands = [];
+      readArchitectureGeometry();
       var mobile = width < 720;
-      var margin = mobile ? 18 : Math.max(34, width * 0.042);
-      var count = mobile
-        ? Math.max(15, Math.min(20, Math.floor(width / 22)))
-        : Math.max(23, Math.min(30, Math.floor(width / 44)));
-      var spacingX = (width - margin * 2) / Math.max(1, count - 1);
+      var availableWidth = Math.max(120, curtainRight - curtainLeft);
+      var target = mobile
+        ? Math.max(18, Math.min(27, Math.round(availableWidth / 18)))
+        : Math.max(36, Math.min(54, Math.round(availableWidth / 34)));
       var charCursor = 0;
       var beadCount = 0;
+      var positions = [];
 
-      for (var s = 0; s < count; s += 1) {
-        var centerWeight = 1 - Math.abs((s / Math.max(1, count - 1)) * 2 - 1);
-        var top = mobile ? 132 + seeded(s + 3) * 8 : 158 + seeded(s + 3) * 10;
-        var strandLength = Math.min(
-          height - top - (mobile ? 76 : 88),
-          height * (0.60 + seeded(s + 17) * 0.15 + centerWeight * 0.10)
-        );
-        var beadStep = mobile ? 18 : 19;
-        var beadTotal = Math.max(18, Math.floor(strandLength / beadStep));
-        var restX = margin + s * spacingX;
+      for (var i = 0; i < target + 9; i += 1) {
+        var t = i / Math.max(1, target + 8);
+        var jitter = (seeded(i + 211) - 0.5) * (mobile ? 0.024 : 0.018);
+        var wave = Math.sin(i * 1.73) * (mobile ? 0.004 : 0.006);
+        var keep = seeded(i + 437);
+        if (i > 1 && i < target + 7 && keep < (mobile ? 0.15 : 0.18)) continue;
+        positions.push(Math.max(0, Math.min(1, t + jitter + wave)));
+      }
+      positions.sort(function (a, b) { return a - b; });
+
+      positions.forEach(function (t, s) {
+        var centerWeight = 1 - Math.abs(t * 2 - 1);
+        var edgeWeight = Math.min(1, t * 5, (1 - t) * 5);
+        var top = anchorY + (seeded(s + 31) - 0.5) * (mobile ? 10 : 15);
+        var availableHeight = Math.max(170, height - top - (mobile ? 74 : 92));
+        var lengthFactor = 0.34 + seeded(s + 73) * 0.43 + centerWeight * 0.16;
+        if (s % 7 === 0 || s % 13 === 0) lengthFactor += 0.12;
+        lengthFactor *= 0.72 + edgeWeight * 0.28;
+        var strandLength = Math.min(availableHeight, Math.max(135, availableHeight * lengthFactor));
+        var baseStep = mobile ? 18 : 19;
+        var beadTotal = Math.max(8, Math.floor(strandLength / baseStep));
+        var restX = curtainLeft + t * availableWidth;
+        var restY = 0;
         var beads = [];
+        var strandAccent = s % 9 === 0 || s % 14 === 0 || seeded(s + 501) > 0.92;
 
         for (var b = 0; b < beadTotal; b += 1) {
+          var depth = b / Math.max(1, beadTotal - 1);
+          var step = baseStep + Math.round((seeded(b + s * 41) - 0.5) * (mobile ? 5 : 7));
+          if (b > 0) restY += Math.max(13, step);
+          var gapSeed = seeded(b * 17 + s * 59 + 811);
+          var visible = !(b > 2 && gapSeed < (depth > 0.72 ? 0.16 : 0.075));
+          var fontSize = (mobile ? 9 : 10) + Math.round(seeded(b + s * 19 + 927) * (mobile ? 3 : 5));
+          if (gapSeed > 0.955) fontSize += mobile ? 2 : 4;
           beads.push({
             index: b,
             char: nextChar(charCursor++),
-            restY: b * beadStep,
+            restY: restY,
             x: 0,
             y: 0,
             vx: 0,
             vy: 0,
-            glow: 0
+            glow: 0,
+            visible: visible,
+            fontSize: fontSize,
+            alphaScale: 0.76 + seeded(b + s * 23 + 1111) * 0.42
           });
-          if (b % 7 === 0) charCursor += 1;
+          if (b % 6 === 0) charCursor += 1;
         }
 
         beadCount += beads.length;
@@ -2808,12 +2852,11 @@
           index: s,
           restX: restX,
           top: top,
-          beadStep: beadStep,
-          opacity: 0.38 + seeded(s + 51) * 0.20 + centerWeight * 0.10,
-          accent: s % 9 === 0 || s % 13 === 0,
+          opacity: 0.42 + seeded(s + 151) * 0.25 + centerWeight * 0.08,
+          accent: strandAccent,
           beads: beads
         });
-      }
+      });
 
       metrics.strandCount = strands.length;
       metrics.beadCount = beadCount;
@@ -2823,7 +2866,7 @@
       var rect = stage.getBoundingClientRect();
       width = Math.max(1, Math.round(rect.width));
       height = Math.max(1, Math.round(rect.height));
-      dpr = Math.min(1.5, Math.max(1, window.devicePixelRatio || 1));
+      dpr = Math.min(1.35, Math.max(1, window.devicePixelRatio || 1));
       canvas.width = Math.max(1, Math.round(width * dpr));
       canvas.height = Math.max(1, Math.round(height * dpr));
       canvas.style.width = width + "px";
@@ -2834,13 +2877,23 @@
       stage.classList.add("is-curtain-ready");
     }
 
+    function transferImpulse(sourceIndex, beadIndex, forceX, forceY, strength) {
+      var strand = strands[sourceIndex];
+      if (!strand || !strand.beads.length) return;
+      var bead = strand.beads[Math.max(1, Math.min(strand.beads.length - 1, beadIndex))];
+      if (!bead) return;
+      bead.vx += forceX * strength;
+      bead.vy += forceY * strength;
+      bead.glow = Math.min(1, bead.glow + strength * 0.58);
+    }
+
     function applyImpulse(x, y, vx, vy, pointerType) {
       if (reducedMotion) return;
       var mobile = width < 720 || pointerType === "touch";
-      var radius = mobile ? 92 : 118;
-      var speed = Math.min(30, Math.sqrt(vx * vx + vy * vy));
+      var radius = mobile ? 94 : 128;
+      var speed = Math.min(34, Math.sqrt(vx * vx + vy * vy));
 
-      strands.forEach(function (strand) {
+      strands.forEach(function (strand, strandIndex) {
         strand.beads.forEach(function (bead, beadIndex) {
           if (beadIndex === 0) return;
           var globalX = strand.restX + bead.x;
@@ -2851,28 +2904,33 @@
           if (distance >= radius) return;
 
           var depth = beadIndex / Math.max(1, strand.beads.length - 1);
-          var mobility = 0.18 + Math.pow(depth, 0.82) * 0.82;
-          var influence = Math.pow(1 - distance / radius, 2.2) * mobility;
+          var mobility = 0.16 + Math.pow(depth, 0.80) * 0.84;
+          var influence = Math.pow(1 - distance / radius, 2.05) * mobility;
           var side = Math.abs(dx) > 2 ? Math.sign(dx) : (vx >= 0 ? 1 : -1);
-          var force = (4.4 + speed * 0.20) * influence;
+          var force = (4.8 + speed * 0.23) * influence;
+          var forceX = side * force + vx * 0.14 * influence;
+          var forceY = -(1.0 + Math.abs(vx) * 0.035) * influence + vy * 0.025 * influence;
 
-          bead.vx += side * force + vx * 0.12 * influence;
-          bead.vy -= (1.1 + Math.abs(vx) * 0.035) * influence;
-          bead.glow = Math.min(1, bead.glow + influence * 1.2);
+          bead.vx += forceX;
+          bead.vy += forceY;
+          bead.glow = Math.min(1, bead.glow + influence * 1.3);
           metrics.impulses += 1;
 
-          // Motion travels only along the same hanging strand: bead-curtain behaviour,
-          // without strong horizontal fabric coupling between neighbouring strands.
           for (var offset = 1; offset <= 5; offset += 1) {
-            var falloff = Math.pow(0.56, offset);
+            var falloff = Math.pow(0.58, offset);
             [beadIndex - offset, beadIndex + offset].forEach(function (neighborIndex) {
               var neighbor = strand.beads[neighborIndex];
               if (!neighbor || neighborIndex === 0) return;
-              neighbor.vx += side * force * falloff * 0.72;
-              neighbor.vy -= force * falloff * 0.10;
-              neighbor.glow = Math.min(0.74, neighbor.glow + influence * falloff);
+              neighbor.vx += forceX * falloff * 0.68;
+              neighbor.vy += forceY * falloff * 0.28;
+              neighbor.glow = Math.min(0.78, neighbor.glow + influence * falloff);
             });
           }
+
+          [-2, -1, 1, 2].forEach(function (strandOffset) {
+            var coupling = Math.pow(0.42, Math.abs(strandOffset));
+            transferImpulse(strandIndex + strandOffset, beadIndex, forceX, forceY * 0.55, coupling * influence);
+          });
         });
       });
 
@@ -2880,14 +2938,14 @@
       startLoop();
     }
 
-    function updateStrand(strand) {
+    function updateStrand(strand, strandIndex) {
       var beads = strand.beads;
-      var damping = 0.905;
-      var restSpringX = 0.026;
-      var restSpringY = 0.070;
-      var stringSpring = 0.125;
-
+      var damping = 0.908;
+      var restSpringX = 0.025;
+      var restSpringY = 0.068;
+      var stringSpring = 0.128;
       if (!beads.length) return;
+
       beads[0].x = 0;
       beads[0].y = 0;
       beads[0].vx = 0;
@@ -2900,41 +2958,48 @@
         var next = beads[i + 1] || bead;
         var curveTargetX = (prev.x + next.x) * 0.5;
         var curveTargetY = (prev.y + next.y) * 0.5;
-        var topStiffness = 1.0 + (1 - depth) * 1.8;
+        var topStiffness = 1.0 + (1 - depth) * 1.85;
 
         bead.vx += -bead.x * restSpringX * topStiffness;
         bead.vy += -bead.y * restSpringY * topStiffness;
         bead.vx += (curveTargetX - bead.x) * stringSpring;
-        bead.vy += (curveTargetY - bead.y) * 0.055;
+        bead.vy += (curveTargetY - bead.y) * 0.052;
+
+        var leftStrand = strands[strandIndex - 1];
+        var rightStrand = strands[strandIndex + 1];
+        var neighborX = 0;
+        var neighborCount = 0;
+        if (leftStrand && leftStrand.beads[i]) { neighborX += leftStrand.beads[i].x; neighborCount += 1; }
+        if (rightStrand && rightStrand.beads[i]) { neighborX += rightStrand.beads[i].x; neighborCount += 1; }
+        if (neighborCount) bead.vx += (neighborX / neighborCount - bead.x) * 0.010 * depth;
+
         bead.vx *= damping;
         bead.vy *= damping;
         bead.x += bead.vx;
         bead.y += bead.vy;
 
-        var maxX = 8 + depth * 66;
-        var maxLift = 3 + depth * 20;
+        var maxX = 7 + depth * (width < 720 ? 52 : 78);
+        var maxLift = 3 + depth * 23;
         bead.x = Math.max(-maxX, Math.min(maxX, bead.x));
-        bead.y = Math.max(-maxLift, Math.min(7, bead.y));
+        bead.y = Math.max(-maxLift, Math.min(8, bead.y));
         bead.glow *= 0.91;
       }
 
-      // One light curvature pass keeps each string fluid without turning all
-      // strings into one connected sheet.
       for (var j = 2; j < beads.length - 1; j += 1) {
         var smooth = (beads[j - 1].x + beads[j + 1].x) * 0.5;
-        beads[j].x += (smooth - beads[j].x) * 0.10;
+        beads[j].x += (smooth - beads[j].x) * 0.11;
       }
     }
 
     function update() {
       var moving = 0;
       var maxDisplacement = 0;
-      strands.forEach(function (strand) {
-        updateStrand(strand);
+      strands.forEach(function (strand, strandIndex) {
+        updateStrand(strand, strandIndex);
         strand.beads.forEach(function (bead) {
           var displacement = Math.sqrt(bead.x * bead.x + bead.y * bead.y);
           maxDisplacement = Math.max(maxDisplacement, displacement);
-          if (displacement > 0.55 || Math.abs(bead.vx) > 0.045 || Math.abs(bead.vy) > 0.045) moving += 1;
+          if (displacement > 0.48 || Math.abs(bead.vx) > 0.040 || Math.abs(bead.vy) > 0.040) moving += 1;
         });
       });
       metrics.maxNodeDisplacement = maxDisplacement;
@@ -2960,53 +3025,40 @@
           ctx.quadraticCurveTo(prevX, prevY, (prevX + px) * 0.5, (prevY + py) * 0.5);
         }
       }
-      ctx.strokeStyle = strand.accent ? "rgba(158,196,174,0.13)" : "rgba(237,232,217,0.095)";
-      ctx.lineWidth = strand.accent ? 0.85 : 0.62;
+      ctx.strokeStyle = strand.accent ? "rgba(134,178,153,0.12)" : "rgba(224,225,216,0.072)";
+      ctx.lineWidth = strand.accent ? 0.72 : 0.48;
       ctx.stroke();
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = (width < 720 ? "10px" : "11px") + ' "Noto Serif SC", "Songti SC", "SimSun", serif';
 
       beads.forEach(function (bead, index) {
+        if (!bead.visible) return;
         var x = strand.restX + bead.x;
         var y = strand.top + bead.restY + bead.y;
         var depth = index / Math.max(1, beads.length - 1);
-        var alpha = Math.min(0.90, strand.opacity + bead.glow * 0.26 - depth * 0.025);
+        var tailFade = depth < 0.72 ? 1 : Math.max(0.18, 1 - (depth - 0.72) / 0.28 * 0.82);
+        var alpha = Math.min(0.94, strand.opacity * bead.alphaScale + bead.glow * 0.24) * tailFade;
 
+        ctx.font = bead.fontSize + 'px "Noto Serif SC", "Songti SC", "SimSun", serif';
         if (bead.glow > 0.08) {
-          ctx.shadowColor = "rgba(161,207,180," + (bead.glow * 0.20).toFixed(3) + ")";
-          ctx.shadowBlur = 3 + bead.glow * 4;
+          ctx.shadowColor = "rgba(132,184,155," + (bead.glow * 0.19).toFixed(3) + ")";
+          ctx.shadowBlur = 2 + bead.glow * 4;
         } else {
           ctx.shadowBlur = 0;
         }
 
         ctx.fillStyle = strand.accent
-          ? "rgba(176,211,191," + alpha.toFixed(3) + ")"
-          : "rgba(239,234,220," + alpha.toFixed(3) + ")";
+          ? "rgba(137,181,157," + alpha.toFixed(3) + ")"
+          : "rgba(224,224,214," + alpha.toFixed(3) + ")";
         ctx.fillText(bead.char, x, y);
-
         ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.arc(x, y + 6.2, strand.accent ? 1.1 : 0.75, 0, Math.PI * 2);
-        ctx.fillStyle = strand.accent
-          ? "rgba(167,202,182," + Math.min(0.32, alpha * 0.42).toFixed(3) + ")"
-          : "rgba(233,228,214," + Math.min(0.22, alpha * 0.34).toFixed(3) + ")";
-        ctx.fill();
       });
       ctx.restore();
     }
 
     function draw() {
       ctx.clearRect(0, 0, width, height);
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(width * 0.035, 12);
-      ctx.lineTo(width * 0.965, 12);
-      ctx.strokeStyle = "rgba(238,232,216,0.11)";
-      ctx.lineWidth = 0.75;
-      ctx.stroke();
-      ctx.restore();
       strands.forEach(drawString);
     }
 
@@ -3019,14 +3071,12 @@
       var moving = update();
       draw();
       metrics.running = true;
-      pointerActive = false;
-
       if (moving > 0) {
         idleFrames = 0;
         raf = window.requestAnimationFrame(frame);
       } else {
         idleFrames += 1;
-        if (idleFrames < 8) raf = window.requestAnimationFrame(frame);
+        if (idleFrames < 9) raf = window.requestAnimationFrame(frame);
         else metrics.running = false;
       }
     }
@@ -3053,13 +3103,11 @@
       lastPointer.x = x;
       lastPointer.y = y;
       lastPointer.t = now;
-      pointerActive = true;
       metrics.pointerMoves += 1;
       applyImpulse(x, y, vx, vy, event.pointerType || "mouse");
     }
 
     function clearPointer() {
-      pointerActive = false;
       lastPointer.t = 0;
     }
 
@@ -3070,14 +3118,17 @@
     function bindEvents() {
       if (reducedMotion) return;
       if (supportsPointer) {
+        stage.addEventListener("pointerdown", eventPoint, { passive: true });
         stage.addEventListener("pointerenter", eventPoint, { passive: true });
         stage.addEventListener("pointermove", eventPoint, { passive: true });
+        stage.addEventListener("pointerup", clearPointer, { passive: true });
         stage.addEventListener("pointerleave", clearPointer, { passive: true });
         stage.addEventListener("pointercancel", clearPointer, { passive: true });
       } else {
         stage.addEventListener("mouseenter", eventPoint, { passive: true });
         stage.addEventListener("mousemove", eventPoint, { passive: true });
         stage.addEventListener("mouseleave", clearPointer, { passive: true });
+        stage.addEventListener("touchstart", touchFallback, { passive: true });
         stage.addEventListener("touchmove", touchFallback, { passive: true });
         stage.addEventListener("touchend", clearPointer, { passive: true });
         stage.addEventListener("touchcancel", clearPointer, { passive: true });
@@ -3086,14 +3137,17 @@
 
     function unbindEvents() {
       if (supportsPointer) {
+        stage.removeEventListener("pointerdown", eventPoint);
         stage.removeEventListener("pointerenter", eventPoint);
         stage.removeEventListener("pointermove", eventPoint);
+        stage.removeEventListener("pointerup", clearPointer);
         stage.removeEventListener("pointerleave", clearPointer);
         stage.removeEventListener("pointercancel", clearPointer);
       } else {
         stage.removeEventListener("mouseenter", eventPoint);
         stage.removeEventListener("mousemove", eventPoint);
         stage.removeEventListener("mouseleave", clearPointer);
+        stage.removeEventListener("touchstart", touchFallback);
         stage.removeEventListener("touchmove", touchFallback);
         stage.removeEventListener("touchend", clearPointer);
         stage.removeEventListener("touchcancel", clearPointer);
@@ -3114,7 +3168,7 @@
     stage.__contactCurtainKick = function (x, y, vx, vy) {
       applyImpulse(
         Number.isFinite(x) ? x : width * 0.52,
-        Number.isFinite(y) ? y : height * 0.47,
+        Number.isFinite(y) ? y : Math.min(height - 120, anchorY + 180),
         Number.isFinite(vx) ? vx : 18,
         Number.isFinite(vy) ? vy : -2,
         "test"
@@ -3129,16 +3183,20 @@
         movingNodes: metrics.movingNodes,
         strandCount: metrics.strandCount,
         beadCount: metrics.beadCount,
+        anchorY: Number(anchorY.toFixed(1)),
         inViewport: inViewport,
         running: metrics.running,
         reducedMotion: reducedMotion,
-        renderer: "canvas-bead-curtain-v69-roof"
+        renderer: "canvas-real-text-curtain-v71"
       };
     };
+
+    if (architecture && !architecture.complete) architecture.addEventListener("load", resize, { once: true });
 
     if (typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(resize);
       resizeObserver.observe(stage);
+      if (architecture) resizeObserver.observe(architecture);
     } else {
       window.addEventListener("resize", resize);
     }

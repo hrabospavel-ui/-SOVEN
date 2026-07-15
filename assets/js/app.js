@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260715143000
+// CACHE_BUST_VERSION: 20260715172000
 (function () {
   "use strict";
 
@@ -2774,9 +2774,9 @@
       if (architecture) {
         var roofRect = architecture.getBoundingClientRect();
         if (roofRect.width > 20 && roofRect.height > 20) {
-          curtainLeft = Math.max(12, roofRect.left - stageRect.left + roofRect.width * 0.035);
-          curtainRight = Math.min(width - 12, roofRect.right - stageRect.left - roofRect.width * 0.035);
-          anchorY = Math.max(120, roofRect.bottom - stageRect.top - Math.min(18, roofRect.height * 0.025));
+          curtainLeft = Math.max(12, roofRect.left - stageRect.left + roofRect.width * 0.012);
+          curtainRight = Math.min(width - 12, roofRect.right - stageRect.left - roofRect.width * 0.012);
+          anchorY = Math.max(120, roofRect.bottom - stageRect.top - Math.min(18, roofRect.height * 0.018));
           return;
         }
       }
@@ -2791,18 +2791,18 @@
       var mobile = width < 720;
       var availableWidth = Math.max(120, curtainRight - curtainLeft);
       var target = mobile
-        ? Math.max(18, Math.min(27, Math.round(availableWidth / 18)))
-        : Math.max(36, Math.min(54, Math.round(availableWidth / 34)));
+        ? Math.max(28, Math.min(40, Math.round(availableWidth / 13.5)))
+        : Math.max(54, Math.min(76, Math.round(availableWidth / 23)));
       var charCursor = 0;
       var beadCount = 0;
       var positions = [];
 
-      for (var i = 0; i < target + 9; i += 1) {
-        var t = i / Math.max(1, target + 8);
-        var jitter = (seeded(i + 211) - 0.5) * (mobile ? 0.024 : 0.018);
-        var wave = Math.sin(i * 1.73) * (mobile ? 0.004 : 0.006);
+      for (var i = 0; i < target + 11; i += 1) {
+        var t = i / Math.max(1, target + 10);
+        var jitter = (seeded(i + 211) - 0.5) * (mobile ? 0.019 : 0.014);
+        var wave = Math.sin(i * 1.73) * (mobile ? 0.003 : 0.0045);
         var keep = seeded(i + 437);
-        if (i > 1 && i < target + 7 && keep < (mobile ? 0.15 : 0.18)) continue;
+        if (i > 1 && i < target + 9 && keep < (mobile ? 0.075 : 0.065)) continue;
         positions.push(Math.max(0, Math.min(1, t + jitter + wave)));
       }
       positions.sort(function (a, b) { return a - b; });
@@ -2810,13 +2810,15 @@
       positions.forEach(function (t, s) {
         var centerWeight = 1 - Math.abs(t * 2 - 1);
         var edgeWeight = Math.min(1, t * 5, (1 - t) * 5);
-        var top = anchorY + (seeded(s + 31) - 0.5) * (mobile ? 10 : 15);
-        var availableHeight = Math.max(170, height - top - (mobile ? 74 : 92));
-        var lengthFactor = 0.34 + seeded(s + 73) * 0.43 + centerWeight * 0.16;
-        if (s % 7 === 0 || s % 13 === 0) lengthFactor += 0.12;
-        lengthFactor *= 0.72 + edgeWeight * 0.28;
-        var strandLength = Math.min(availableHeight, Math.max(135, availableHeight * lengthFactor));
-        var baseStep = mobile ? 18 : 19;
+        var top = anchorY + (seeded(s + 31) - 0.5) * (mobile ? 13 : 19);
+        var visibleHeight = Math.max(260, height - top);
+        var availableHeight = visibleHeight + (mobile ? 72 : 118);
+        var lengthFactor = 0.64 + seeded(s + 73) * 0.34 + centerWeight * 0.12;
+        if (s % 5 === 0) lengthFactor += 0.12;
+        if (s % 11 === 0) lengthFactor += 0.15;
+        lengthFactor *= 0.86 + edgeWeight * 0.14;
+        var strandLength = Math.max(240, availableHeight * lengthFactor);
+        var baseStep = mobile ? 15 : 16;
         var beadTotal = Math.max(8, Math.floor(strandLength / baseStep));
         var restX = curtainLeft + t * availableWidth;
         var restY = 0;
@@ -2828,9 +2830,13 @@
           var step = baseStep + Math.round((seeded(b + s * 41) - 0.5) * (mobile ? 5 : 7));
           if (b > 0) restY += Math.max(13, step);
           var gapSeed = seeded(b * 17 + s * 59 + 811);
-          var visible = !(b > 2 && gapSeed < (depth > 0.72 ? 0.16 : 0.075));
-          var fontSize = (mobile ? 9 : 10) + Math.round(seeded(b + s * 19 + 927) * (mobile ? 3 : 5));
-          if (gapSeed > 0.955) fontSize += mobile ? 2 : 4;
+          var sparseStrand = seeded(s * 37 + 1301) > 0.86;
+          var gapLimit = sparseStrand
+            ? (depth > 0.70 ? 0.19 : 0.105)
+            : (depth > 0.78 ? 0.095 : 0.038);
+          var visible = !(b > 2 && gapSeed < gapLimit);
+          var fontSize = (mobile ? 8 : 9) + Math.round(seeded(b + s * 19 + 927) * (mobile ? 4 : 6));
+          if (gapSeed > 0.95) fontSize += mobile ? 3 : 5;
           beads.push({
             index: b,
             char: nextChar(charCursor++),
@@ -2842,7 +2848,7 @@
             glow: 0,
             visible: visible,
             fontSize: fontSize,
-            alphaScale: 0.76 + seeded(b + s * 23 + 1111) * 0.42
+            alphaScale: 0.72 + seeded(b + s * 23 + 1111) * 0.50
           });
           if (b % 6 === 0) charCursor += 1;
         }
@@ -2852,7 +2858,7 @@
           index: s,
           restX: restX,
           top: top,
-          opacity: 0.42 + seeded(s + 151) * 0.25 + centerWeight * 0.08,
+          opacity: 0.46 + seeded(s + 151) * 0.27 + centerWeight * 0.07,
           accent: strandAccent,
           beads: beads
         });
@@ -3037,8 +3043,10 @@
         var x = strand.restX + bead.x;
         var y = strand.top + bead.restY + bead.y;
         var depth = index / Math.max(1, beads.length - 1);
-        var tailFade = depth < 0.72 ? 1 : Math.max(0.18, 1 - (depth - 0.72) / 0.28 * 0.82);
-        var alpha = Math.min(0.94, strand.opacity * bead.alphaScale + bead.glow * 0.24) * tailFade;
+        var tailFade = depth < 0.78 ? 1 : Math.max(0.14, 1 - (depth - 0.78) / 0.22 * 0.86);
+        var lowerFadeStart = height * 0.87;
+        var viewportFade = y <= lowerFadeStart ? 1 : Math.max(0.08, 1 - (y - lowerFadeStart) / Math.max(1, height * 0.15));
+        var alpha = Math.min(0.96, strand.opacity * bead.alphaScale + bead.glow * 0.24) * tailFade * viewportFade;
 
         ctx.font = bead.fontSize + 'px "Noto Serif SC", "Songti SC", "SimSun", serif';
         if (bead.glow > 0.08) {
@@ -3187,7 +3195,7 @@
         inViewport: inViewport,
         running: metrics.running,
         reducedMotion: reducedMotion,
-        renderer: "canvas-real-text-curtain-v71"
+        renderer: "canvas-real-text-curtain-v72-dense-full-length"
       };
     };
 

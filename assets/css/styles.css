@@ -9453,28 +9453,28 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 
 
 
-/* V71_TYPOGRAPHIC_ARCHITECTURE_CURTAIN_START */
-#contact.contact-section-v71 {
+/* V72_DENSER_FULL_LENGTH_TEXT_CURTAIN_START */
+#contact.contact-section-v72 {
   position: relative;
-  min-height: clamp(980px, 118vh, 1280px);
+  min-height: clamp(1120px, 132vh, 1500px);
   padding: 0;
   overflow: hidden;
   isolation: isolate;
   background:
-    radial-gradient(ellipse at 53% 27%, rgba(70, 102, 91, 0.14), transparent 38%),
-    radial-gradient(ellipse at 28% 42%, rgba(93, 119, 111, 0.055), transparent 34%),
+    radial-gradient(ellipse at 53% 25%, rgba(70, 102, 91, 0.145), transparent 39%),
+    radial-gradient(ellipse at 27% 44%, rgba(93, 119, 111, 0.06), transparent 35%),
     linear-gradient(180deg, #080b0c 0%, #070a0b 48%, #040607 100%);
 }
 
-#contact.contact-section-v71::before,
-#contact.contact-section-v71::after {
+#contact.contact-section-v72::before,
+#contact.contact-section-v72::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-#contact.contact-section-v71::before {
+#contact.contact-section-v72::before {
   z-index: 0;
   opacity: .16;
   background-image:
@@ -9484,18 +9484,18 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   mask-image: linear-gradient(120deg, transparent 0%, #000 20%, #000 82%, transparent 100%);
 }
 
-#contact.contact-section-v71::after {
+#contact.contact-section-v72::after {
   z-index: 6;
   background:
-    linear-gradient(90deg, rgba(4, 6, 7, .48), transparent 8%, transparent 92%, rgba(4, 6, 7, .48)),
-    linear-gradient(180deg, rgba(4, 6, 7, .14), transparent 14%, transparent 85%, rgba(4, 6, 7, .48));
+    linear-gradient(90deg, rgba(4, 6, 7, .42), transparent 7%, transparent 93%, rgba(4, 6, 7, .42)),
+    linear-gradient(180deg, rgba(4, 6, 7, .12), transparent 12%, transparent 88%, rgba(4, 6, 7, .34));
 }
 
 #contact .contact-typographic-stage {
   position: relative;
   z-index: 1;
   width: 100%;
-  min-height: clamp(980px, 118vh, 1280px);
+  min-height: clamp(1120px, 132vh, 1500px);
   overflow: hidden;
   cursor: crosshair;
   touch-action: pan-y;
@@ -9506,17 +9506,17 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 #contact .contact-text-architecture {
   position: absolute;
   z-index: 4;
-  top: clamp(52px, 6vh, 82px);
+  top: clamp(42px, 4.8vh, 68px);
   left: 50%;
   display: block;
-  width: min(94vw, 1820px);
+  width: min(84.6vw, 1638px);
   height: auto;
   transform: translateX(-50%);
   object-fit: contain;
   object-position: center top;
   pointer-events: none;
   filter:
-    drop-shadow(0 0 9px rgba(135, 169, 153, .075))
+    drop-shadow(0 0 9px rgba(135, 169, 153, .08))
     drop-shadow(0 22px 38px rgba(0, 0, 0, .22));
 }
 
@@ -9530,36 +9530,41 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   pointer-events: none;
   opacity: 1;
   filter: none;
-  mask-image: linear-gradient(180deg, #000 0%, #000 91%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 96%, transparent 100%);
 }
 
 #contact .contact-curtain-fallback {
   position: absolute;
   z-index: 2;
-  left: 8%;
-  right: 8%;
-  top: clamp(420px, 36vw, 690px);
-  bottom: 92px;
+  left: 7.5%;
+  right: 7.5%;
+  top: clamp(380px, 31vw, 610px);
+  bottom: -5%;
   display: grid;
-  grid-template-columns: repeat(16, minmax(0, 1fr));
-  gap: clamp(7px, 1.2vw, 22px);
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  gap: clamp(4px, .72vw, 13px);
   align-items: start;
-  opacity: .42;
+  opacity: .48;
   transition: opacity .2s ease, visibility .2s ease;
-  mask-image: linear-gradient(180deg, #000 0%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 86%, transparent 100%);
   pointer-events: none;
 }
 
 #contact .contact-curtain-fallback span {
   writing-mode: vertical-rl;
   text-orientation: upright;
-  color: rgba(221, 222, 214, .52);
+  color: rgba(221, 222, 214, .56);
   font-family: "Noto Serif SC", "Songti SC", "SimSun", serif;
-  font-size: clamp(9px, .68vw, 12px);
-  line-height: 1.18;
-  letter-spacing: .06em;
+  font-size: clamp(8px, .62vw, 12px);
+  line-height: 1.12;
+  letter-spacing: .045em;
   white-space: nowrap;
 }
+
+#contact .contact-curtain-fallback span:nth-child(4n) { transform: translateY(4.5vh); opacity: .62; }
+#contact .contact-curtain-fallback span:nth-child(5n) { transform: translateY(1.8vh) scaleY(1.08); }
+#contact .contact-curtain-fallback span:nth-child(7n) { opacity: .42; font-size: clamp(10px, .78vw, 15px); }
+#contact .contact-curtain-fallback span:nth-child(9n) { transform: translateY(7vh); }
 
 #contactTextStage.is-curtain-ready .contact-curtain-fallback {
   opacity: 0;
@@ -9606,14 +9611,8 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   background: rgba(34, 62, 50, .62);
 }
 
-#contact .contact-copy-key:disabled {
-  opacity: .22;
-}
-
-#contact .contact-key-label {
-  font-size: 9px;
-  letter-spacing: .08em;
-}
+#contact .contact-copy-key:disabled { opacity: .22; }
+#contact .contact-key-label { font-size: 9px; letter-spacing: .08em; }
 
 #contact .contact-copy-status {
   position: absolute;
@@ -9628,40 +9627,38 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 }
 
 @media (max-width: 900px) {
-  #contact.contact-section-v71,
+  #contact.contact-section-v72,
   #contact .contact-typographic-stage {
-    min-height: clamp(820px, 108svh, 980px);
+    min-height: max(980px, 122svh);
   }
 
   #contact .contact-text-architecture {
-    top: clamp(46px, 7svh, 68px);
-    width: 105vw;
+    top: clamp(38px, 5.8svh, 56px);
+    width: 94.5vw;
     max-width: none;
   }
 }
 
 @media (max-width: 720px) {
-  #contact.contact-section-v71,
+  #contact.contact-section-v72,
   #contact .contact-typographic-stage {
-    min-height: max(800px, 108svh);
+    min-height: max(980px, 124svh);
   }
 
-  #contact .contact-typographic-stage {
-    cursor: default;
-  }
+  #contact .contact-typographic-stage { cursor: default; }
 
   #contact .contact-text-architecture {
-    top: 54px;
-    width: 100vw;
+    top: 46px;
+    width: 92vw;
   }
 
   #contact .contact-curtain-fallback {
-    left: 5%;
-    right: 5%;
-    top: clamp(220px, 45vw, 300px);
-    bottom: 86px;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 5px;
+    left: 4%;
+    right: 4%;
+    top: clamp(205px, 39vw, 270px);
+    bottom: -4%;
+    grid-template-columns: repeat(16, minmax(0, 1fr));
+    gap: 3px;
   }
 
   #contact .contact-copy-dock {
@@ -9687,16 +9684,16 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 
 @media (max-width: 430px) {
   #contact .contact-text-architecture {
-    top: 62px;
-    width: 100vw;
+    top: 52px;
+    width: 92vw;
   }
 
   #contact .contact-curtain-fallback {
-    grid-template-columns: repeat(10, minmax(0, 1fr));
+    grid-template-columns: repeat(14, minmax(0, 1fr));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   #contact .contact-typographic-stage { cursor: default; }
 }
-/* V71_TYPOGRAPHIC_ARCHITECTURE_CURTAIN_END */
+/* V72_DENSER_FULL_LENGTH_TEXT_CURTAIN_END */

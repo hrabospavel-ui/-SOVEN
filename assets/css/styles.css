@@ -9453,8 +9453,8 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 
 
 
-/* V74_TIGHTER_RESPONSIVE_CONTACT_STAGE_START */
-#contact.contact-section-v73 {
+/* V75_REFINED_BIRDS_LONGER_DESKTOP_CURTAIN_START */
+#contact.contact-section-v75 {
   position: relative;
   min-height: clamp(860px, 100vh, 1040px);
   padding: 0;
@@ -9466,15 +9466,15 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
     linear-gradient(180deg, #080b0c 0%, #070a0b 48%, #040607 100%);
 }
 
-#contact.contact-section-v73::before,
-#contact.contact-section-v73::after {
+#contact.contact-section-v75::before,
+#contact.contact-section-v75::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-#contact.contact-section-v73::before {
+#contact.contact-section-v75::before {
   z-index: 0;
   opacity: .13;
   background-image:
@@ -9484,7 +9484,7 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   mask-image: linear-gradient(120deg, transparent 0%, #000 20%, #000 82%, transparent 100%);
 }
 
-#contact.contact-section-v73::after {
+#contact.contact-section-v75::after {
   z-index: 7;
   background:
     linear-gradient(90deg, rgba(4, 6, 7, .40), transparent 7%, transparent 93%, rgba(4, 6, 7, .40)),
@@ -9515,6 +9515,7 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   object-fit: contain;
   object-position: center top;
   pointer-events: none;
+  clip-path: polygon(10.6% 0, 100% 0, 100% 100%, 0 100%, 0 44%, 10.6% 44%);
   filter: drop-shadow(0 0 7px rgba(135, 169, 153, .07)) drop-shadow(0 18px 32px rgba(0, 0, 0, .20));
 }
 
@@ -9525,40 +9526,51 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
   pointer-events: none;
 }
 
-#contact .contact-text-bird {
+#contact .contact-bird-svg {
   position: absolute;
-  color: rgba(225, 228, 220, .72);
-  font-family: "Noto Serif SC", "Songti SC", "SimSun", serif;
-  font-size: clamp(8px, .56vw, 11px);
-  line-height: 1;
-  white-space: nowrap;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,.16));
+  display: block;
+  overflow: visible;
+  color: rgba(224, 228, 220, .68);
+  filter: drop-shadow(0 4px 11px rgba(0, 0, 0, .15));
 }
-#contact .contact-text-bird .wing,
-#contact .contact-text-bird .body { position: absolute; display: block; transform-origin: center center; }
-#contact .contact-text-bird .wing-left { left: 0; top: 0; }
-#contact .contact-text-bird .wing-right { left: 0; top: 0; }
-#contact .contact-text-bird .body { left: 50%; top: 50%; color: rgba(158, 197, 173, .82); letter-spacing: .14em; }
-#contact .bird-1 { left: 17%; top: 8.5%; }
-#contact .bird-1 .wing-left { transform: translate(-56px, 2px) rotate(-18deg); }
-#contact .bird-1 .body { transform: translate(-6px, 4px) rotate(-8deg) scale(.84); }
-#contact .bird-1 .wing-right { transform: translate(8px, -4px) rotate(18deg); }
-#contact .bird-2 { left: 25%; top: 13.6%; }
-#contact .bird-2 .wing-left { transform: translate(-48px, 3px) rotate(-14deg) scale(.92); }
-#contact .bird-2 .body { transform: translate(-2px, 4px) rotate(-2deg) scale(.78); }
-#contact .bird-2 .wing-right { transform: translate(10px, -3px) rotate(20deg) scale(.86); }
-#contact .bird-3 { right: 22%; top: 10.2%; }
-#contact .bird-3 .wing-left { transform: translate(-60px, 0) rotate(-20deg); }
-#contact .bird-3 .body { transform: translate(-5px, 4px) rotate(0deg) scale(.80); }
-#contact .bird-3 .wing-right { transform: translate(10px, -5px) rotate(17deg); }
-#contact .bird-4 { right: 16%; top: 7.8%; }
-#contact .bird-4 .wing-left { transform: translate(-26px, 1px) rotate(-22deg) scale(.82); }
-#contact .bird-4 .body { transform: translate(-4px, 4px) rotate(-2deg) scale(.70); }
-#contact .bird-4 .wing-right { transform: translate(6px, -5px) rotate(22deg) scale(.84); }
-#contact .bird-5 { right: 28%; top: 15.4%; }
-#contact .bird-5 .wing-left { transform: translate(-52px, 4px) rotate(-12deg) scale(.86); }
-#contact .bird-5 .body { transform: translate(-1px, 5px) rotate(4deg) scale(.74); }
-#contact .bird-5 .wing-right { transform: translate(10px, -4px) rotate(19deg) scale(.82); }
+
+#contact .contact-bird-svg .bird-text-fill {
+  fill: currentColor;
+  font-family: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  font-size: 4.15px;
+  letter-spacing: .08em;
+}
+
+#contact .contact-bird-svg .bird-outline {
+  fill: none;
+  stroke: rgba(211, 220, 211, .34);
+  stroke-width: .75;
+  vector-effect: non-scaling-stroke;
+}
+
+#contact .bird-a {
+  left: 13.5%;
+  top: 10.2%;
+  width: clamp(84px, 8.2vw, 136px);
+  transform: rotate(-5deg);
+  opacity: .78;
+}
+
+#contact .bird-b {
+  right: 18.5%;
+  top: 13.0%;
+  width: clamp(70px, 6.8vw, 112px);
+  transform: rotate(4deg) scaleX(-1);
+  opacity: .68;
+}
+
+#contact .bird-c {
+  right: 10.5%;
+  top: 9.0%;
+  width: clamp(50px, 4.8vw, 78px);
+  transform: rotate(-2deg);
+  opacity: .56;
+}
 
 #contact .contact-curtain-field.contact-bead-canvas {
   position: absolute;
@@ -9661,7 +9673,7 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 }
 
 @media (max-width: 900px) {
-  #contact.contact-section-v73,
+  #contact.contact-section-v75,
   #contact .contact-typographic-stage {
     min-height: min(100svh, 920px);
   }
@@ -9677,7 +9689,7 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 }
 
 @media (max-width: 720px) {
-  #contact.contact-section-v73,
+  #contact.contact-section-v75,
   #contact .contact-typographic-stage {
     min-height: 100svh;
     height: 100svh;
@@ -9706,4 +9718,4 @@ body:has(#dataSourceStatus.is-fallback) .hero-content::after {
 @media (prefers-reduced-motion: reduce) {
   #contact .contact-typographic-stage { cursor: default; }
 }
-/* V74_TIGHTER_RESPONSIVE_CONTACT_STAGE_END */
+/* V75_REFINED_BIRDS_LONGER_DESKTOP_CURTAIN_END */

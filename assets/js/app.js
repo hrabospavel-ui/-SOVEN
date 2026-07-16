@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260715172000
+// CACHE_BUST_VERSION: 20260716043000
 (function () {
   "use strict";
 
@@ -2734,7 +2734,7 @@
     var width = 1;
     var height = 1;
     var dpr = 1;
-    var anchorY = 360;
+    var anchorY = 320;
     var curtainLeft = 40;
     var curtainRight = 960;
     var strands = [];
@@ -2746,7 +2746,7 @@
     var inViewport = true;
     var pageVisible = !document.hidden;
     var idleFrames = 0;
-    var lastPointer = { x: 0, y: 0, t: 0 };
+    var lastPointer = { x: 0, y: 0, t: 0, handled: 0 };
 
     var metrics = {
       pointerMoves: 0,
@@ -2761,7 +2761,7 @@
     };
 
     function seeded(index) {
-      var value = Math.sin(index * 78.233 + 12.9898) * 43758.5453;
+      var value = Math.sin(index * 63.618 + 8.327) * 43758.5453;
       return value - Math.floor(value);
     }
 
@@ -2774,15 +2774,15 @@
       if (architecture) {
         var roofRect = architecture.getBoundingClientRect();
         if (roofRect.width > 20 && roofRect.height > 20) {
-          curtainLeft = Math.max(12, roofRect.left - stageRect.left + roofRect.width * 0.012);
-          curtainRight = Math.min(width - 12, roofRect.right - stageRect.left - roofRect.width * 0.012);
-          anchorY = Math.max(120, roofRect.bottom - stageRect.top - Math.min(18, roofRect.height * 0.018));
+          curtainLeft = Math.max(12, roofRect.left - stageRect.left + roofRect.width * 0.018);
+          curtainRight = Math.min(width - 12, roofRect.right - stageRect.left - roofRect.width * 0.018);
+          anchorY = Math.max(112, roofRect.bottom - stageRect.top - Math.min(14, roofRect.height * 0.016));
           return;
         }
       }
-      curtainLeft = Math.max(18, width * 0.05);
+      curtainLeft = Math.max(18, width * 0.15);
       curtainRight = width - curtainLeft;
-      anchorY = width < 720 ? 245 : Math.min(height * 0.52, 610);
+      anchorY = width < 720 ? 250 : Math.min(height * 0.40, 410);
     }
 
     function buildStrands() {
@@ -2791,52 +2791,42 @@
       var mobile = width < 720;
       var availableWidth = Math.max(120, curtainRight - curtainLeft);
       var target = mobile
-        ? Math.max(28, Math.min(40, Math.round(availableWidth / 13.5)))
-        : Math.max(54, Math.min(76, Math.round(availableWidth / 23)));
+        ? Math.max(16, Math.min(22, Math.round(availableWidth / 26)))
+        : Math.max(30, Math.min(38, Math.round(availableWidth / 23)));
       var charCursor = 0;
       var beadCount = 0;
       var positions = [];
-
-      for (var i = 0; i < target + 11; i += 1) {
-        var t = i / Math.max(1, target + 10);
-        var jitter = (seeded(i + 211) - 0.5) * (mobile ? 0.019 : 0.014);
-        var wave = Math.sin(i * 1.73) * (mobile ? 0.003 : 0.0045);
-        var keep = seeded(i + 437);
-        if (i > 1 && i < target + 9 && keep < (mobile ? 0.075 : 0.065)) continue;
-        positions.push(Math.max(0, Math.min(1, t + jitter + wave)));
+      for (var i = 0; i < target; i += 1) {
+        var t = target === 1 ? 0.5 : i / (target - 1);
+        var jitter = (seeded(i + 19) - 0.5) * (mobile ? 0.012 : 0.008);
+        positions.push(Math.max(0, Math.min(1, t + jitter)));
       }
       positions.sort(function (a, b) { return a - b; });
 
       positions.forEach(function (t, s) {
         var centerWeight = 1 - Math.abs(t * 2 - 1);
-        var edgeWeight = Math.min(1, t * 5, (1 - t) * 5);
-        var top = anchorY + (seeded(s + 31) - 0.5) * (mobile ? 13 : 19);
-        var visibleHeight = Math.max(260, height - top);
-        var availableHeight = visibleHeight + (mobile ? 72 : 118);
-        var lengthFactor = 0.64 + seeded(s + 73) * 0.34 + centerWeight * 0.12;
-        if (s % 5 === 0) lengthFactor += 0.12;
-        if (s % 11 === 0) lengthFactor += 0.15;
-        lengthFactor *= 0.86 + edgeWeight * 0.14;
-        var strandLength = Math.max(240, availableHeight * lengthFactor);
+        var top = anchorY + (seeded(s + 31) - 0.5) * (mobile ? 7 : 10);
+        var bottomAllowance = mobile ? 118 : 122;
+        var availableHeight = Math.max(132, height - top - bottomAllowance);
+        var lengthFactor = 0.50 + seeded(s + 73) * 0.20 + centerWeight * 0.12;
+        if (s % 6 === 0 || s % 11 === 0) lengthFactor += 0.06;
+        if (s % 8 === 0) lengthFactor -= 0.04;
+        var strandLength = Math.max(mobile ? 110 : 120, availableHeight * lengthFactor);
         var baseStep = mobile ? 15 : 16;
-        var beadTotal = Math.max(8, Math.floor(strandLength / baseStep));
+        var beadTotal = Math.max(10, Math.floor(strandLength / baseStep));
         var restX = curtainLeft + t * availableWidth;
         var restY = 0;
         var beads = [];
-        var strandAccent = s % 9 === 0 || s % 14 === 0 || seeded(s + 501) > 0.92;
+        var strandAccent = s % 8 === 0 || seeded(s + 501) > 0.9;
 
         for (var b = 0; b < beadTotal; b += 1) {
           var depth = b / Math.max(1, beadTotal - 1);
-          var step = baseStep + Math.round((seeded(b + s * 41) - 0.5) * (mobile ? 5 : 7));
-          if (b > 0) restY += Math.max(13, step);
+          var step = baseStep + Math.round((seeded(b + s * 41) - 0.5) * (mobile ? 3 : 4));
+          if (b > 0) restY += Math.max(11, step);
           var gapSeed = seeded(b * 17 + s * 59 + 811);
-          var sparseStrand = seeded(s * 37 + 1301) > 0.86;
-          var gapLimit = sparseStrand
-            ? (depth > 0.70 ? 0.19 : 0.105)
-            : (depth > 0.78 ? 0.095 : 0.038);
-          var visible = !(b > 2 && gapSeed < gapLimit);
-          var fontSize = (mobile ? 8 : 9) + Math.round(seeded(b + s * 19 + 927) * (mobile ? 4 : 6));
-          if (gapSeed > 0.95) fontSize += mobile ? 3 : 5;
+          var visible = !(b > 3 && gapSeed < (depth > 0.78 ? 0.055 : 0.02));
+          var fontSize = (mobile ? 9 : 10) + Math.round(seeded(b + s * 19 + 927) * (mobile ? 2 : 4));
+          if (gapSeed > 0.972) fontSize += mobile ? 1 : 3;
           beads.push({
             index: b,
             char: nextChar(charCursor++),
@@ -2848,9 +2838,9 @@
             glow: 0,
             visible: visible,
             fontSize: fontSize,
-            alphaScale: 0.72 + seeded(b + s * 23 + 1111) * 0.50
+            alphaScale: 0.84 + seeded(b + s * 23 + 1111) * 0.28
           });
-          if (b % 6 === 0) charCursor += 1;
+          if (b % 9 === 0) charCursor += 1;
         }
 
         beadCount += beads.length;
@@ -2858,7 +2848,7 @@
           index: s,
           restX: restX,
           top: top,
-          opacity: 0.46 + seeded(s + 151) * 0.27 + centerWeight * 0.07,
+          opacity: 0.56 + seeded(s + 151) * 0.18 + centerWeight * 0.08,
           accent: strandAccent,
           beads: beads
         });
@@ -2872,7 +2862,7 @@
       var rect = stage.getBoundingClientRect();
       width = Math.max(1, Math.round(rect.width));
       height = Math.max(1, Math.round(rect.height));
-      dpr = Math.min(1.35, Math.max(1, window.devicePixelRatio || 1));
+      dpr = Math.min(1.1, Math.max(1, window.devicePixelRatio || 1));
       canvas.width = Math.max(1, Math.round(width * dpr));
       canvas.height = Math.max(1, Math.round(height * dpr));
       canvas.style.width = width + "px";
@@ -2890,18 +2880,18 @@
       if (!bead) return;
       bead.vx += forceX * strength;
       bead.vy += forceY * strength;
-      bead.glow = Math.min(1, bead.glow + strength * 0.58);
+      bead.glow = Math.min(1, bead.glow + strength * 0.62);
     }
 
     function applyImpulse(x, y, vx, vy, pointerType) {
       if (reducedMotion) return;
       var mobile = width < 720 || pointerType === "touch";
-      var radius = mobile ? 94 : 128;
-      var speed = Math.min(34, Math.sqrt(vx * vx + vy * vy));
+      var radius = mobile ? 112 : 188;
+      var speed = Math.min(52, Math.sqrt(vx * vx + vy * vy));
 
       strands.forEach(function (strand, strandIndex) {
         strand.beads.forEach(function (bead, beadIndex) {
-          if (beadIndex === 0) return;
+          if (beadIndex === 0 || !bead.visible) return;
           var globalX = strand.restX + bead.x;
           var globalY = strand.top + bead.restY + bead.y;
           var dx = globalX - x;
@@ -2910,32 +2900,33 @@
           if (distance >= radius) return;
 
           var depth = beadIndex / Math.max(1, strand.beads.length - 1);
-          var mobility = 0.16 + Math.pow(depth, 0.80) * 0.84;
-          var influence = Math.pow(1 - distance / radius, 2.05) * mobility;
+          var mobility = 0.28 + Math.pow(depth, 0.82) * 1.12;
+          var influence = Math.pow(1 - distance / radius, 1.55) * mobility;
           var side = Math.abs(dx) > 2 ? Math.sign(dx) : (vx >= 0 ? 1 : -1);
-          var force = (4.8 + speed * 0.23) * influence;
-          var forceX = side * force + vx * 0.14 * influence;
-          var forceY = -(1.0 + Math.abs(vx) * 0.035) * influence + vy * 0.025 * influence;
+          var force = (mobile ? 7.2 : 10.8) + speed * (mobile ? 0.24 : 0.34);
+          force *= influence;
+          var forceX = side * force + vx * 0.26 * influence;
+          var forceY = -(0.9 + Math.abs(vx) * 0.03) * influence + vy * 0.035 * influence;
 
           bead.vx += forceX;
           bead.vy += forceY;
-          bead.glow = Math.min(1, bead.glow + influence * 1.3);
+          bead.glow = Math.min(1, bead.glow + influence * 1.2);
           metrics.impulses += 1;
 
           for (var offset = 1; offset <= 5; offset += 1) {
-            var falloff = Math.pow(0.58, offset);
+            var falloff = Math.pow(0.62, offset);
             [beadIndex - offset, beadIndex + offset].forEach(function (neighborIndex) {
               var neighbor = strand.beads[neighborIndex];
-              if (!neighbor || neighborIndex === 0) return;
-              neighbor.vx += forceX * falloff * 0.68;
-              neighbor.vy += forceY * falloff * 0.28;
+              if (!neighbor || neighborIndex === 0 || !neighbor.visible) return;
+              neighbor.vx += forceX * falloff * 0.82;
+              neighbor.vy += forceY * falloff * 0.30;
               neighbor.glow = Math.min(0.78, neighbor.glow + influence * falloff);
             });
           }
 
-          [-2, -1, 1, 2].forEach(function (strandOffset) {
-            var coupling = Math.pow(0.42, Math.abs(strandOffset));
-            transferImpulse(strandIndex + strandOffset, beadIndex, forceX, forceY * 0.55, coupling * influence);
+          [-3, -2, -1, 1, 2, 3].forEach(function (strandOffset) {
+            var coupling = Math.pow(0.56, Math.abs(strandOffset));
+            transferImpulse(strandIndex + strandOffset, beadIndex, forceX, forceY * 0.56, coupling * influence);
           });
         });
       });
@@ -2946,10 +2937,10 @@
 
     function updateStrand(strand, strandIndex) {
       var beads = strand.beads;
-      var damping = 0.908;
-      var restSpringX = 0.025;
-      var restSpringY = 0.068;
-      var stringSpring = 0.128;
+      var damping = 0.932;
+      var restSpringX = 0.016;
+      var restSpringY = 0.048;
+      var stringSpring = 0.098;
       if (!beads.length) return;
 
       beads[0].x = 0;
@@ -2964,12 +2955,12 @@
         var next = beads[i + 1] || bead;
         var curveTargetX = (prev.x + next.x) * 0.5;
         var curveTargetY = (prev.y + next.y) * 0.5;
-        var topStiffness = 1.0 + (1 - depth) * 1.85;
+        var topStiffness = 0.88 + (1 - depth) * 1.38;
 
         bead.vx += -bead.x * restSpringX * topStiffness;
         bead.vy += -bead.y * restSpringY * topStiffness;
         bead.vx += (curveTargetX - bead.x) * stringSpring;
-        bead.vy += (curveTargetY - bead.y) * 0.052;
+        bead.vy += (curveTargetY - bead.y) * 0.05;
 
         var leftStrand = strands[strandIndex - 1];
         var rightStrand = strands[strandIndex + 1];
@@ -2977,92 +2968,78 @@
         var neighborCount = 0;
         if (leftStrand && leftStrand.beads[i]) { neighborX += leftStrand.beads[i].x; neighborCount += 1; }
         if (rightStrand && rightStrand.beads[i]) { neighborX += rightStrand.beads[i].x; neighborCount += 1; }
-        if (neighborCount) bead.vx += (neighborX / neighborCount - bead.x) * 0.010 * depth;
+        if (neighborCount) bead.vx += ((neighborX / neighborCount) - bead.x) * 0.034;
 
         bead.vx *= damping;
         bead.vy *= damping;
         bead.x += bead.vx;
         bead.y += bead.vy;
-
-        var maxX = 7 + depth * (width < 720 ? 52 : 78);
-        var maxLift = 3 + depth * 23;
-        bead.x = Math.max(-maxX, Math.min(maxX, bead.x));
-        bead.y = Math.max(-maxLift, Math.min(8, bead.y));
-        bead.glow *= 0.91;
-      }
-
-      for (var j = 2; j < beads.length - 1; j += 1) {
-        var smooth = (beads[j - 1].x + beads[j + 1].x) * 0.5;
-        beads[j].x += (smooth - beads[j].x) * 0.11;
+        bead.glow *= 0.945;
       }
     }
 
     function update() {
       var moving = 0;
-      var maxDisplacement = 0;
+      metrics.maxNodeDisplacement = 0;
+      metrics.movingNodes = 0;
       strands.forEach(function (strand, strandIndex) {
         updateStrand(strand, strandIndex);
-        strand.beads.forEach(function (bead) {
+        strand.beads.forEach(function (bead, beadIndex) {
+          if (beadIndex === 0) return;
           var displacement = Math.sqrt(bead.x * bead.x + bead.y * bead.y);
-          maxDisplacement = Math.max(maxDisplacement, displacement);
-          if (displacement > 0.48 || Math.abs(bead.vx) > 0.040 || Math.abs(bead.vy) > 0.040) moving += 1;
+          if (displacement > metrics.maxNodeDisplacement) metrics.maxNodeDisplacement = displacement;
+          if (displacement > 0.12 || Math.abs(bead.vx) > 0.05 || Math.abs(bead.vy) > 0.05) {
+            moving += 1;
+            metrics.movingNodes += 1;
+          }
         });
       });
-      metrics.maxNodeDisplacement = maxDisplacement;
-      metrics.movingNodes = moving;
       return moving;
     }
 
     function drawString(strand) {
       var beads = strand.beads;
-      if (!beads.length) return;
+      if (!beads || !beads.length) return;
 
       ctx.save();
       ctx.beginPath();
-      for (var i = 0; i < beads.length; i += 1) {
+      ctx.moveTo(strand.restX, strand.top);
+      for (var i = 1; i < beads.length; i += 1) {
+        var prev = beads[i - 1];
         var bead = beads[i];
-        var px = strand.restX + bead.x;
-        var py = strand.top + bead.restY + bead.y;
-        if (i === 0) ctx.moveTo(px, py);
-        else {
-          var prev = beads[i - 1];
-          var prevX = strand.restX + prev.x;
-          var prevY = strand.top + prev.restY + prev.y;
-          ctx.quadraticCurveTo(prevX, prevY, (prevX + px) * 0.5, (prevY + py) * 0.5);
-        }
+        var px = strand.restX + prev.x;
+        var py = strand.top + prev.restY + prev.y;
+        var x = strand.restX + bead.x;
+        var y = strand.top + bead.restY + bead.y;
+        ctx.quadraticCurveTo(px, py, (px + x) * 0.5, (py + y) * 0.5);
       }
-      ctx.strokeStyle = strand.accent ? "rgba(134,178,153,0.12)" : "rgba(224,225,216,0.072)";
-      ctx.lineWidth = strand.accent ? 0.72 : 0.48;
+      ctx.strokeStyle = strand.accent ? "rgba(150,191,169,0.06)" : "rgba(238,233,219,0.05)";
+      ctx.lineWidth = strand.accent ? 0.70 : 0.56;
       ctx.stroke();
-
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+      ctx.restore();
 
       beads.forEach(function (bead, index) {
         if (!bead.visible) return;
         var x = strand.restX + bead.x;
         var y = strand.top + bead.restY + bead.y;
         var depth = index / Math.max(1, beads.length - 1);
-        var tailFade = depth < 0.78 ? 1 : Math.max(0.14, 1 - (depth - 0.78) / 0.22 * 0.86);
-        var lowerFadeStart = height * 0.87;
-        var viewportFade = y <= lowerFadeStart ? 1 : Math.max(0.08, 1 - (y - lowerFadeStart) / Math.max(1, height * 0.15));
-        var alpha = Math.min(0.96, strand.opacity * bead.alphaScale + bead.glow * 0.24) * tailFade * viewportFade;
+        var alpha = Math.min(0.96, (strand.opacity + bead.glow * 0.16 - depth * 0.024) * bead.alphaScale);
+        if (alpha <= 0.03) return;
 
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.font = bead.fontSize + 'px "Noto Serif SC", "Songti SC", "SimSun", serif';
-        if (bead.glow > 0.08) {
-          ctx.shadowColor = "rgba(132,184,155," + (bead.glow * 0.19).toFixed(3) + ")";
-          ctx.shadowBlur = 2 + bead.glow * 4;
-        } else {
-          ctx.shadowBlur = 0;
+        if (bead.glow > 0.1) {
+          ctx.shadowColor = strand.accent ? "rgba(128,186,156,0.18)" : "rgba(233,231,223,0.14)";
+          ctx.shadowBlur = 2 + bead.glow * 2.5;
         }
-
         ctx.fillStyle = strand.accent
-          ? "rgba(137,181,157," + alpha.toFixed(3) + ")"
-          : "rgba(224,224,214," + alpha.toFixed(3) + ")";
+          ? "rgba(172,211,188," + alpha.toFixed(3) + ")"
+          : "rgba(240,235,223," + alpha.toFixed(3) + ")";
         ctx.fillText(bead.char, x, y);
-        ctx.shadowBlur = 0;
+        ctx.restore();
       });
-      ctx.restore();
     }
 
     function draw() {
@@ -3084,7 +3061,7 @@
         raf = window.requestAnimationFrame(frame);
       } else {
         idleFrames += 1;
-        if (idleFrames < 9) raf = window.requestAnimationFrame(frame);
+        if (idleFrames < 8) raf = window.requestAnimationFrame(frame);
         else metrics.running = false;
       }
     }
@@ -3101,8 +3078,11 @@
         var coalesced = event.getCoalescedEvents();
         if (coalesced && coalesced.length) source = coalesced[coalesced.length - 1];
       }
-      var rect = stage.getBoundingClientRect();
       var now = performance.now();
+      if ((event.type === "pointermove" || event.type === "mousemove" || event.type === "touchmove") && now - lastPointer.handled < 12) {
+        return;
+      }
+      var rect = stage.getBoundingClientRect();
       var x = source.clientX - rect.left;
       var y = source.clientY - rect.top;
       var dt = lastPointer.t ? Math.max(8, now - lastPointer.t) : 16;
@@ -3111,6 +3091,7 @@
       lastPointer.x = x;
       lastPointer.y = y;
       lastPointer.t = now;
+      lastPointer.handled = now;
       metrics.pointerMoves += 1;
       applyImpulse(x, y, vx, vy, event.pointerType || "mouse");
     }
@@ -3176,8 +3157,8 @@
     stage.__contactCurtainKick = function (x, y, vx, vy) {
       applyImpulse(
         Number.isFinite(x) ? x : width * 0.52,
-        Number.isFinite(y) ? y : Math.min(height - 120, anchorY + 180),
-        Number.isFinite(vx) ? vx : 18,
+        Number.isFinite(y) ? y : Math.min(height - 120, anchorY + 160),
+        Number.isFinite(vx) ? vx : 22,
         Number.isFinite(vy) ? vy : -2,
         "test"
       );
@@ -3195,7 +3176,7 @@
         inViewport: inViewport,
         running: metrics.running,
         reducedMotion: reducedMotion,
-        renderer: "canvas-real-text-curtain-v72-dense-full-length"
+        renderer: "canvas-real-text-curtain-v74-responsive"
       };
     };
 

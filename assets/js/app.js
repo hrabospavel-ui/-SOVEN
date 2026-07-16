@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260716093000
+// CACHE_BUST_VERSION: 20260716121500
 (function () {
   "use strict";
 
@@ -2738,6 +2738,7 @@
     var curtainLeft = 40;
     var curtainRight = 960;
     var strands = [];
+    var pendingImpulses = [];
     var cleanText = String(rawText || "").replace(/\s+/g, "").trim();
     if (!cleanText) cleanText = createDefaultContactContent().curtainText.replace(/\s+/g, "");
 
@@ -2826,8 +2827,11 @@
           if (b > 0) restY += Math.max(11, step);
           var gapSeed = seeded(b * 17 + s * 59 + 811);
           var visible = !(b > 3 && gapSeed < (depth > 0.78 ? 0.055 : 0.02));
-          var fontSize = (mobile ? 9 : 10) + Math.round(seeded(b + s * 19 + 927) * (mobile ? 2 : 4));
-          if (gapSeed > 0.972) fontSize += mobile ? 1 : 3;
+          var sizeSeed = seeded(b + s * 19 + 927);
+          var fontSize = (mobile ? 8 : 8) + Math.round(sizeSeed * (mobile ? 4 : 7));
+          if (gapSeed > 0.968) fontSize += mobile ? 1 : 2;
+          var alphaSeed = seeded(b + s * 23 + 1111);
+          var blurSeed = seeded(b + s * 29 + 1319);
           beads.push({
             index: b,
             char: nextChar(charCursor++),
@@ -2839,7 +2843,10 @@
             glow: 0,
             visible: visible,
             fontSize: fontSize,
-            alphaScale: 0.84 + seeded(b + s * 23 + 1111) * 0.28
+            alphaScale: 0.46 + alphaSeed * 0.64,
+            blur: blurSeed > 0.95 ? 0.55 : (blurSeed > 0.86 ? 0.22 : 0),
+            stretchY: 0.90 + seeded(b + s * 31 + 1451) * 0.24,
+            hasCrossed: false
           });
           if (b % 9 === 0) charCursor += 1;
         }
@@ -2874,23 +2881,56 @@
       stage.classList.add("is-curtain-ready");
     }
 
-    function transferImpulse(sourceIndex, beadIndex, forceX, forceY, strength) {
-      var strand = strands[sourceIndex];
+    function applyNodeImpulse(strand, beadIndex, forceX, forceY, strength) {
       if (!strand || !strand.beads.length) return;
       var bead = strand.beads[Math.max(1, Math.min(strand.beads.length - 1, beadIndex))];
-      if (!bead) return;
+      if (!bead || !bead.visible) return;
       bead.vx += forceX * strength;
       bead.vy += forceY * strength;
-      bead.glow = Math.min(1, bead.glow + strength * 0.62);
+      bead.hasCrossed = false;
+      bead.glow = Math.min(1, bead.glow + strength * 0.42);
+    }
+
+    function queueStrandImpulse(strandIndex, beadIndex, forceX, forceY, strength, delay) {
+      pendingImpulses.push({
+        due: performance.now() + delay,
+        strandIndex: strandIndex,
+        beadIndex: beadIndex,
+        forceX: forceX,
+        forceY: forceY,
+        strength: strength
+      });
+    }
+
+    function processPendingImpulses(now) {
+      if (!pendingImpulses.length) return;
+      var waiting = [];
+      pendingImpulses.forEach(function (item) {
+        if (item.due > now) {
+          waiting.push(item);
+          return;
+        }
+        applyNodeImpulse(strands[item.strandIndex], item.beadIndex, item.forceX, item.forceY, item.strength);
+      });
+      pendingImpulses = waiting;
     }
 
     function applyImpulse(x, y, vx, vy, pointerType) {
       if (reducedMotion) return;
       var mobile = width < 720 || pointerType === "touch";
-      var radius = mobile ? 106 : 154;
-      var speed = Math.min(40, Math.sqrt(vx * vx + vy * vy));
+      var speed = Math.sqrt(vx * vx + vy * vy);
+      if (speed < (mobile ? 0.8 : 1.15)) return;
+
+      var radius = mobile ? 94 : 128;
+      var cappedSpeed = Math.min(mobile ? 32 : 46, speed);
+      var horizontalIntent = Math.min(1, Math.abs(vx) / Math.max(1, cappedSpeed));
+      var liftBase = (mobile ? 7.0 : 9.5) + cappedSpeed * (mobile ? 0.19 : 0.27);
+      var driftBase = vx * (mobile ? 0.08 : 0.105);
 
       strands.forEach(function (strand, strandIndex) {
+        var nearestIndex = -1;
+        var nearestDistance = radius;
+
         strand.beads.forEach(function (bead, beadIndex) {
           if (beadIndex === 0 || !bead.visible) return;
           var globalX = strand.restX + bead.x;
@@ -2898,38 +2938,47 @@
           var dx = globalX - x;
           var dy = globalY - y;
           var distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance >= radius) return;
-
-          var depth = beadIndex / Math.max(1, strand.beads.length - 1);
-          var mobility = 0.20 + Math.pow(depth, 0.88) * 0.86;
-          var influence = Math.pow(1 - distance / radius, 1.90) * mobility;
-          var side = Math.abs(dx) > 2 ? Math.sign(dx) : (vx >= 0 ? 1 : -1);
-          var force = (mobile ? 5.6 : 6.8) + speed * (mobile ? 0.16 : 0.19);
-          force *= influence;
-          var forceX = side * force + vx * 0.13 * influence;
-          var forceY = vy * 0.010 * influence;
-
-          bead.vx += forceX;
-          bead.vy += forceY;
-          bead.glow = Math.min(1, bead.glow + influence * 1.2);
-          metrics.impulses += 1;
-
-          for (var offset = 1; offset <= 4; offset += 1) {
-            var falloff = Math.pow(0.54, offset);
-            [beadIndex - offset, beadIndex + offset].forEach(function (neighborIndex) {
-              var neighbor = strand.beads[neighborIndex];
-              if (!neighbor || neighborIndex === 0 || !neighbor.visible) return;
-              neighbor.vx += forceX * falloff * 0.66;
-              neighbor.vy += forceY * falloff * 0.16;
-              neighbor.glow = Math.min(0.78, neighbor.glow + influence * falloff);
-            });
+          if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearestIndex = beadIndex;
           }
-
-          [-2, -1, 1, 2].forEach(function (strandOffset) {
-            var coupling = Math.pow(0.43, Math.abs(strandOffset));
-            transferImpulse(strandIndex + strandOffset, beadIndex, forceX, forceY * 0.34, coupling * influence);
-          });
         });
+
+        if (nearestIndex < 0) return;
+
+        var bead = strand.beads[nearestIndex];
+        var depth = nearestIndex / Math.max(1, strand.beads.length - 1);
+        var mobility = 0.22 + Math.pow(depth, 0.82) * 0.88;
+        var influence = Math.pow(1 - nearestDistance / radius, 1.72) * mobility;
+        var localLift = -liftBase * influence * (0.72 + horizontalIntent * 0.28);
+        var localDrift = driftBase * influence;
+
+        /* Lift one local arc per strand, avoiding a multiplied "explosion" of forces. */
+        for (var offset = -6; offset <= 6; offset += 1) {
+          var neighborIndex = nearestIndex + offset;
+          if (neighborIndex <= 0 || neighborIndex >= strand.beads.length) continue;
+          var arcFalloff = Math.exp(-(offset * offset) / 15.5);
+          applyNodeImpulse(strand, neighborIndex, localDrift, localLift, arcFalloff);
+        }
+
+        if (influence > 0.08) {
+          [-2, -1, 1, 2].forEach(function (strandOffset) {
+            var absOffset = Math.abs(strandOffset);
+            var followStrength = absOffset === 1 ? 0.38 : 0.16;
+            var delay = absOffset === 1 ? 42 : 86;
+            queueStrandImpulse(
+              strandIndex + strandOffset,
+              nearestIndex,
+              localDrift,
+              localLift,
+              followStrength,
+              delay
+            );
+          });
+        }
+
+        bead.glow = Math.min(1, bead.glow + influence * 0.75);
+        metrics.impulses += 1;
       });
 
       idleFrames = 0;
@@ -2938,10 +2987,6 @@
 
     function updateStrand(strand, strandIndex) {
       var beads = strand.beads;
-      var damping = 0.910;
-      var restSpringX = 0.025;
-      var restSpringY = 0.080;
-      var stringSpring = 0.132;
       if (!beads.length) return;
 
       beads[0].x = 0;
@@ -2956,33 +3001,61 @@
         var next = beads[i + 1] || bead;
         var curveTargetX = (prev.x + next.x) * 0.5;
         var curveTargetY = (prev.y + next.y) * 0.5;
-        var topStiffness = 1.10 + (1 - depth) * 1.92;
+        var topStiffness = 1.0 + (1 - depth) * 1.55;
+        var oldY = bead.y;
 
-        bead.vx += -bead.x * restSpringX * topStiffness;
-        bead.vy += -bead.y * restSpringY * topStiffness;
-        bead.vx += (curveTargetX - bead.x) * stringSpring;
-        bead.vy += (curveTargetY - bead.y) * 0.05;
+        bead.vx += -bead.x * 0.021 * topStiffness;
+        bead.vy += -bead.y * 0.014 * topStiffness;
+        bead.vx += (curveTargetX - bead.x) * 0.112;
+        bead.vy += (curveTargetY - bead.y) * 0.028;
 
         var leftStrand = strands[strandIndex - 1];
         var rightStrand = strands[strandIndex + 1];
         var neighborX = 0;
+        var neighborY = 0;
         var neighborCount = 0;
-        if (leftStrand && leftStrand.beads[i]) { neighborX += leftStrand.beads[i].x; neighborCount += 1; }
-        if (rightStrand && rightStrand.beads[i]) { neighborX += rightStrand.beads[i].x; neighborCount += 1; }
-        if (neighborCount) bead.vx += ((neighborX / neighborCount) - bead.x) * 0.023;
+        if (leftStrand && leftStrand.beads[i]) {
+          neighborX += leftStrand.beads[i].x;
+          neighborY += leftStrand.beads[i].y;
+          neighborCount += 1;
+        }
+        if (rightStrand && rightStrand.beads[i]) {
+          neighborX += rightStrand.beads[i].x;
+          neighborY += rightStrand.beads[i].y;
+          neighborCount += 1;
+        }
+        if (neighborCount) {
+          bead.vx += ((neighborX / neighborCount) - bead.x) * 0.018;
+          bead.vy += ((neighborY / neighborCount) - bead.y) * 0.008;
+        }
 
-        bead.vx *= damping;
-        bead.vy *= damping;
+        var verticalDamping = bead.hasCrossed ? 0.79 : 0.962;
+        bead.vx *= 0.925;
+        bead.vy *= verticalDamping;
         bead.x += bead.vx;
         bead.y += bead.vy;
-        var maxSway = width < 720 ? 30 : 44;
+
+        /* One tiny overshoot only, then settle without repeated bouncing. */
+        if (!bead.hasCrossed && oldY < 0 && bead.y >= 0 && bead.vy > 0) {
+          bead.hasCrossed = true;
+          bead.y = Math.min(2.8, bead.y);
+          bead.vy *= 0.12;
+        }
+        if (bead.hasCrossed && Math.abs(bead.y) < 0.18 && Math.abs(bead.vy) < 0.08) {
+          bead.y = 0;
+          bead.vy = 0;
+        }
+
+        var maxSway = width < 720 ? 22 : 30;
+        var maxLift = width < 720 ? 42 : 62;
         bead.x = Math.max(-maxSway, Math.min(maxSway, bead.x));
-        bead.y = Math.max(-7, Math.min(7, bead.y));
-        bead.glow *= 0.945;
+        bead.y = Math.max(-maxLift, Math.min(3.2, bead.y));
+        bead.glow *= 0.952;
       }
     }
 
     function update() {
+      processPendingImpulses(performance.now());
       var moving = 0;
       metrics.maxNodeDisplacement = 0;
       metrics.movingNodes = 0;
@@ -3031,17 +3104,20 @@
         if (alpha <= 0.03) return;
 
         ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(1, bead.stretchY);
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = bead.fontSize + 'px "Noto Serif SC", "Songti SC", "SimSun", serif';
+        if (bead.blur > 0) ctx.filter = "blur(" + bead.blur.toFixed(2) + "px)";
         if (bead.glow > 0.1) {
-          ctx.shadowColor = strand.accent ? "rgba(128,186,156,0.18)" : "rgba(233,231,223,0.14)";
-          ctx.shadowBlur = 2 + bead.glow * 2.5;
+          ctx.shadowColor = strand.accent ? "rgba(128,186,156,0.15)" : "rgba(233,231,223,0.11)";
+          ctx.shadowBlur = 1.5 + bead.glow * 2.0;
         }
         ctx.fillStyle = strand.accent
           ? "rgba(172,211,188," + alpha.toFixed(3) + ")"
           : "rgba(240,235,223," + alpha.toFixed(3) + ")";
-        ctx.fillText(bead.char, x, y);
+        ctx.fillText(bead.char, 0, 0);
         ctx.restore();
       });
     }
@@ -3060,7 +3136,7 @@
       var moving = update();
       draw();
       metrics.running = true;
-      if (moving > 0) {
+      if (moving > 0 || pendingImpulses.length) {
         idleFrames = 0;
         raf = window.requestAnimationFrame(frame);
       } else {
@@ -3083,15 +3159,22 @@
         if (coalesced && coalesced.length) source = coalesced[coalesced.length - 1];
       }
       var now = performance.now();
-      if ((event.type === "pointermove" || event.type === "mousemove" || event.type === "touchmove") && now - lastPointer.handled < 18) {
-        return;
-      }
+      if (now - lastPointer.handled < 14) return;
+
       var rect = stage.getBoundingClientRect();
       var x = source.clientX - rect.left;
       var y = source.clientY - rect.top;
-      var dt = lastPointer.t ? Math.max(8, now - lastPointer.t) : 16;
-      var vx = lastPointer.t ? (x - lastPointer.x) / dt * 16 : 0;
-      var vy = lastPointer.t ? (y - lastPointer.y) / dt * 16 : 0;
+      if (!lastPointer.t) {
+        lastPointer.x = x;
+        lastPointer.y = y;
+        lastPointer.t = now;
+        lastPointer.handled = now;
+        return;
+      }
+
+      var dt = Math.max(8, now - lastPointer.t);
+      var vx = (x - lastPointer.x) / dt * 16;
+      var vy = (y - lastPointer.y) / dt * 16;
       lastPointer.x = x;
       lastPointer.y = y;
       lastPointer.t = now;
@@ -3111,17 +3194,12 @@
     function bindEvents() {
       if (reducedMotion) return;
       if (supportsPointer) {
-        stage.addEventListener("pointerdown", eventPoint, { passive: true });
-        stage.addEventListener("pointerenter", eventPoint, { passive: true });
         stage.addEventListener("pointermove", eventPoint, { passive: true });
-        stage.addEventListener("pointerup", clearPointer, { passive: true });
         stage.addEventListener("pointerleave", clearPointer, { passive: true });
         stage.addEventListener("pointercancel", clearPointer, { passive: true });
       } else {
-        stage.addEventListener("mouseenter", eventPoint, { passive: true });
         stage.addEventListener("mousemove", eventPoint, { passive: true });
         stage.addEventListener("mouseleave", clearPointer, { passive: true });
-        stage.addEventListener("touchstart", touchFallback, { passive: true });
         stage.addEventListener("touchmove", touchFallback, { passive: true });
         stage.addEventListener("touchend", clearPointer, { passive: true });
         stage.addEventListener("touchcancel", clearPointer, { passive: true });
@@ -3130,17 +3208,12 @@
 
     function unbindEvents() {
       if (supportsPointer) {
-        stage.removeEventListener("pointerdown", eventPoint);
-        stage.removeEventListener("pointerenter", eventPoint);
         stage.removeEventListener("pointermove", eventPoint);
-        stage.removeEventListener("pointerup", clearPointer);
         stage.removeEventListener("pointerleave", clearPointer);
         stage.removeEventListener("pointercancel", clearPointer);
       } else {
-        stage.removeEventListener("mouseenter", eventPoint);
         stage.removeEventListener("mousemove", eventPoint);
         stage.removeEventListener("mouseleave", clearPointer);
-        stage.removeEventListener("touchstart", touchFallback);
         stage.removeEventListener("touchmove", touchFallback);
         stage.removeEventListener("touchend", clearPointer);
         stage.removeEventListener("touchcancel", clearPointer);
@@ -3180,7 +3253,7 @@
         inViewport: inViewport,
         running: metrics.running,
         reducedMotion: reducedMotion,
-        renderer: "canvas-real-text-curtain-v75-gentle"
+        renderer: "canvas-real-text-curtain-v76-lifted"
       };
     };
 

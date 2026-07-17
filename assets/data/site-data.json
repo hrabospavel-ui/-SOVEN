@@ -1,6 +1,6 @@
 {
   "schema": "northern-atelier-site-data-v2",
-  "exportedAt": "2026-07-14T16:33:56.863Z",
+  "exportedAt": "2026-07-17T11:10:22.118Z",
   "siteSettings": {
     "studioName": "栖衡｜SOVEN",
     "studioSeal": "〇",
@@ -274,12 +274,12 @@
           "label": ""
         }
       ],
-      "featured": true,
       "displaySections": [
         "featured",
         "works",
         "architecture"
       ],
+      "featured": true,
       "visible": true
     },
     {
@@ -328,7 +328,16 @@
       "pdf": "assets/projects/p002-vessel-mountain-index/case.pdf",
       "attachments": [],
       "tags": [
-        "榕树花园、艺术中心、社区食堂、文化建筑、社区公共空间、岭南气候、风雨连廊、玻璃砖、树下空间、分散式美术馆"
+        "榕树花园",
+        "艺术中心",
+        "社区食堂",
+        "文化建筑",
+        "社区公共空间",
+        "岭南气候",
+        "风雨连廊",
+        "玻璃砖",
+        "树下空间",
+        "分散式美术馆"
       ],
       "articleBlocks": [
         {
@@ -372,12 +381,12 @@
           "label": ""
         }
       ],
-      "featured": true,
       "displaySections": [
         "featured",
         "works",
         "architecture"
       ],
+      "featured": true,
       "visible": true
     },
     {
@@ -428,7 +437,15 @@
       "pdf": "",
       "attachments": [],
       "tags": [
-        "集合住宅、青年研究者公寓、紧凑体量、架空建筑、半地下入口、H形平面、玻璃幕墙、高隔声立面、可变居住单元"
+        "集合住宅",
+        "青年研究者公寓",
+        "紧凑体量",
+        "架空建筑",
+        "半地下入口",
+        "H形平面",
+        "玻璃幕墙",
+        "高隔声立面",
+        "可变居住单元"
       ],
       "articleBlocks": [
         {
@@ -462,11 +479,11 @@
           "label": ""
         }
       ],
-      "featured": false,
       "displaySections": [
         "works",
         "architecture"
       ],
+      "featured": false,
       "visible": true
     },
     {
@@ -503,7 +520,16 @@
       "pdf": "assets/projects/p004-frontier-courtyard-renewal/case.pdf",
       "attachments": [],
       "tags": [
-        "幼儿园、垂直幼儿园、木结构、儿童空间、日托中心、垂直游乐场、屋顶露台、滑梯、校园建筑、低碳建筑"
+        "幼儿园",
+        "垂直幼儿园",
+        "木结构",
+        "儿童空间",
+        "日托中心",
+        "垂直游乐场",
+        "屋顶露台",
+        "滑梯",
+        "校园建筑",
+        "低碳建筑"
       ],
       "articleBlocks": [
         {
@@ -577,12 +603,12 @@
           "label": ""
         }
       ],
-      "featured": true,
       "displaySections": [
         "featured",
         "works",
         "architecture"
       ],
+      "featured": true,
       "visible": true
     },
     {
@@ -651,11 +677,11 @@
           "label": ""
         }
       ],
-      "featured": false,
       "displaySections": [
         "works",
         "objects"
       ],
+      "featured": false,
       "visible": true
     },
     {
@@ -734,10 +760,10 @@
           "label": ""
         }
       ],
-      "featured": false,
       "displaySections": [
         "works"
       ],
+      "featured": false,
       "visible": true
     },
     {
@@ -806,10 +832,10 @@
           "label": ""
         }
       ],
-      "featured": false,
       "displaySections": [
         "works"
       ],
+      "featured": false,
       "visible": true
     },
     {
@@ -878,10 +904,10 @@
           "label": ""
         }
       ],
-      "featured": false,
       "displaySections": [
         "works"
       ],
+      "featured": false,
       "visible": true
     },
     {
@@ -947,11 +973,11 @@
           "label": ""
         }
       ],
-      "featured": false,
       "displaySections": [
         "works",
         "objects"
       ],
+      "featured": false,
       "visible": false
     }
   ],

@@ -1,6 +1,6 @@
 {
   "schema": "northern-atelier-site-data-v2",
-  "exportedAt": "2026-07-17T11:10:22.118Z",
+  "exportedAt": "2026-07-17T11:25:54.013Z",
   "siteSettings": {
     "studioName": "栖衡｜SOVEN",
     "studioSeal": "〇",
@@ -319,9 +319,9 @@
         "assets/projects/p002-vessel-mountain-index/tu18.webp"
       ],
       "drawings": [],
-      "model3d": "assets/projects/p002-vessel-mountain-index/model.glb",
+      "model3d": "",
       "modelThumbnail": "",
-      "panorama": "",
+      "panorama": "assets/projects/p002-vessel-mountain-index/Q.png",
       "panoramaThumbnail": "",
       "video": "",
       "videoPoster": "",
@@ -428,7 +428,7 @@
         "assets/projects/p003-obsidian-model-platform/222222.webp"
       ],
       "drawings": [],
-      "model3d": "assets/projects/p003-obsidian-model-platform/model.glb",
+      "model3d": "",
       "modelThumbnail": "",
       "panorama": "",
       "panoramaThumbnail": "",

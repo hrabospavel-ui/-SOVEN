@@ -1,4 +1,4 @@
-// CACHE_BUST_VERSION: 20260716133000
+// CACHE_BUST_VERSION: 20260716121500
 (function () {
   "use strict";
 
@@ -2723,7 +2723,7 @@
   function createContactCurtain(canvas, stage, rawText) {
     if (!canvas || !stage || typeof canvas.getContext !== "function") return null;
 
-    var ctx = canvas.getContext("2d", { alpha: true });
+    var ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
     if (!ctx) return null;
 
     var architecture = qs(".contact-text-architecture", stage);
@@ -2737,8 +2737,6 @@
     var anchorY = 320;
     var curtainLeft = 40;
     var curtainRight = 960;
-    var strands = [];
-    var pendingImpulses = [];
     var cleanText = String(rawText || "").replace(/\s+/g, "").trim();
     if (!cleanText) cleanText = createDefaultContactContent().curtainText.replace(/\s+/g, "");
 
@@ -2746,8 +2744,13 @@
     var reducedMotion = Boolean(reduceMotionQuery && reduceMotionQuery.matches);
     var inViewport = true;
     var pageVisible = !document.hidden;
-    var idleFrames = 0;
-    var lastPointer = { x: 0, y: 0, t: 0, handled: 0 };
+    var lastFrame = performance.now();
+    var lastInteraction = 0;
+    var quietFrames = 0;
+    var lastActivity = 0;
+    var strands = [];
+    var glyphCache = new Map();
+    var pointer = { x: -999, y: -999, t: 0 };
 
     var metrics = {
       pointerMoves: 0,
@@ -2770,11 +2773,6 @@
       return Math.max(min, Math.min(max, value));
     }
 
-    function smoothstep(edge0, edge1, value) {
-      var t = clamp((value - edge0) / Math.max(0.0001, edge1 - edge0), 0, 1);
-      return t * t * (3 - 2 * t);
-    }
-
     function nextChar(index) {
       return cleanText.charAt(index % cleanText.length) || "·";
     }
@@ -2795,23 +2793,50 @@
       anchorY = width < 720 ? 250 : Math.min(height * 0.40, 410);
     }
 
+    function getGlyph(ch, size, accent, alphaBand) {
+      var key = [ch, size, accent ? 1 : 0, alphaBand].join("|");
+      if (glyphCache.has(key)) return glyphCache.get(key);
+      var scale = 2;
+      var pad = 5;
+      var c = document.createElement("canvas");
+      var w = Math.ceil(size * 1.55 + pad * 2);
+      var h = Math.ceil(size * 1.7 + pad * 2);
+      c.width = w * scale;
+      c.height = h * scale;
+      var g = c.getContext("2d");
+      g.scale(scale, scale);
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.font = size + 'px "Noto Serif SC", "Songti SC", "SimSun", serif';
+      var alpha = 0.30 + alphaBand * 0.13;
+      g.fillStyle = accent ? 'rgba(159,207,180,' + alpha + ')' : 'rgba(239,235,223,' + alpha + ')';
+      g.fillText(ch, w / 2, h / 2);
+      var out = { canvas: c, w: w, h: h };
+      glyphCache.set(key, out);
+      return out;
+    }
+
+    function makeNode(x, y, fixed) {
+      return { x: x, y: y, px: x, py: y, baseX: x, baseY: y, fixed: !!fixed, pending: [] };
+    }
+
     function buildStrands() {
       strands = [];
-      pendingImpulses = [];
+      glyphCache.clear();
       readArchitectureGeometry();
       var mobile = width < 720;
       var availableWidth = Math.max(120, curtainRight - curtainLeft);
       var target = mobile
         ? Math.max(16, Math.min(22, Math.round(availableWidth / 26)))
         : Math.max(30, Math.min(38, Math.round(availableWidth / 23)));
-      var charCursor = 0;
-      var beadCount = 0;
       var positions = [];
+      var charCursor = 0;
+      var totalChars = 0;
 
       for (var i = 0; i < target; i += 1) {
         var t = target === 1 ? 0.5 : i / (target - 1);
         var jitter = (seeded(i + 19) - 0.5) * (mobile ? 0.012 : 0.008);
-        positions.push(clamp(t + jitter, 0, 1));
+        positions.push(Math.max(0, Math.min(1, t + jitter)));
       }
       positions.sort(function (a, b) { return a - b; });
 
@@ -2826,65 +2851,61 @@
         var desktopLengthBoost = mobile ? 1 : 1.40;
         var strandLength = Math.max(mobile ? 110 : 120, availableHeight * lengthFactor * desktopLengthBoost);
         var baseStep = mobile ? 15 : 16;
-        var beadTotal = Math.max(10, Math.floor(strandLength / baseStep));
+        var charTotal = Math.max(10, Math.floor(strandLength / baseStep));
         var restX = curtainLeft + t * availableWidth;
-        var restY = 0;
-        var chars = [];
         var strandAccent = s % 8 === 0 || seeded(s + 501) > 0.9;
-
-        for (var b = 0; b < beadTotal; b += 1) {
-          var depth = b / Math.max(1, beadTotal - 1);
-          var step = baseStep + Math.round((seeded(b + s * 41) - 0.5) * (mobile ? 3 : 4));
-          if (b > 0) restY += Math.max(11, step);
-          var gapSeed = seeded(b * 17 + s * 59 + 811);
-          var visible = !(b > 3 && gapSeed < (depth > 0.78 ? 0.055 : 0.02));
-          var sizeSeed = seeded(b + s * 19 + 927);
-          var fontSize = 8 + Math.round(sizeSeed * (mobile ? 4 : 7));
+        var nodeCount = mobile ? 9 : 14;
+        var seg = strandLength / Math.max(1, nodeCount - 1);
+        var nodes = [];
+        for (var n = 0; n < nodeCount; n += 1) {
+          nodes.push(makeNode(restX, top + seg * n, n === 0));
+        }
+        var chars = [];
+        for (var c = 0; c < charTotal; c += 1) {
+          var depth = c / Math.max(1, charTotal - 1);
+          var gapSeed = seeded(c * 17 + s * 59 + 811);
+          var visible = !(c > 3 && gapSeed < (depth > 0.78 ? 0.055 : 0.02));
+          var sizeSeed = seeded(c + s * 19 + 927);
+          var fontSize = (mobile ? 8 : 8) + Math.round(sizeSeed * (mobile ? 4 : 7));
           if (gapSeed > 0.968) fontSize += mobile ? 1 : 2;
-          var alphaSeed = seeded(b + s * 23 + 1111);
-          var blurSeed = seeded(b + s * 29 + 1319);
+          var alphaSeed = seeded(c + s * 23 + 1111);
+          var blurSeed = seeded(c + s * 29 + 1319);
           chars.push({
-            index: b,
-            char: nextChar(charCursor++),
-            restY: restY,
+            ch: nextChar(charCursor++),
+            u: c / Math.max(1, charTotal - 1),
             visible: visible,
             fontSize: fontSize,
             alphaScale: 0.46 + alphaSeed * 0.64,
             blur: blurSeed > 0.95 ? 0.55 : (blurSeed > 0.86 ? 0.22 : 0),
-            stretchY: 0.90 + seeded(b + s * 31 + 1451) * 0.24
+            stretchY: 0.90 + seeded(c + s * 31 + 1451) * 0.24,
+            alphaBand: Math.floor(seeded(s * 59 + c * 23 + 13) * 4),
+            accent: strandAccent,
+            depth: depth
           });
-          if (b % 9 === 0) charCursor += 1;
+          if (c % 9 === 0) charCursor += 1;
         }
-
-        beadCount += chars.length;
+        totalChars += chars.length;
         strands.push({
           index: s,
-          restX: restX,
           top: top,
-          length: Math.max(1, restY),
+          restX: restX,
+          length: strandLength,
+          seg: seg,
           opacity: 0.56 + seeded(s + 151) * 0.18 + centerWeight * 0.08,
           accent: strandAccent,
-          chars: chars,
-          focus: 0.56,
-          spread: 0.18,
-          lift: 0,
-          liftV: 0,
-          sway: 0,
-          swayV: 0,
-          hasOvershot: false,
-          glow: 0
+          nodes: nodes,
+          chars: chars
         });
       });
-
       metrics.strandCount = strands.length;
-      metrics.beadCount = beadCount;
+      metrics.beadCount = totalChars;
     }
 
     function resize() {
       var rect = stage.getBoundingClientRect();
       width = Math.max(1, Math.round(rect.width));
       height = Math.max(1, Math.round(rect.height));
-      dpr = Math.min(1.1, Math.max(1, window.devicePixelRatio || 1));
+      dpr = Math.min(1.25, Math.max(1, window.devicePixelRatio || 1));
       canvas.width = Math.max(1, Math.round(width * dpr));
       canvas.height = Math.max(1, Math.round(height * dpr));
       canvas.style.width = width + "px";
@@ -2895,209 +2916,234 @@
       stage.classList.add("is-curtain-ready");
     }
 
-    function queueStrandImpulse(strandIndex, focus, liftImpulse, swayImpulse, influence, delay) {
-      if (strandIndex < 0 || strandIndex >= strands.length) return;
-      pendingImpulses.push({
-        due: performance.now() + delay,
-        strandIndex: strandIndex,
-        focus: focus,
-        liftImpulse: liftImpulse,
-        swayImpulse: swayImpulse,
-        influence: influence
-      });
+    function queueImpulse(node, delay, vx, vy) {
+      if (!node) return;
+      node.pending.push({ delay: Math.max(0, delay | 0), vx: vx, vy: vy });
+      if (node.pending.length > 6) node.pending.splice(0, node.pending.length - 6);
     }
 
-    function applyStrandImpulse(strand, focus, liftImpulse, swayImpulse, influence) {
-      if (!strand) return;
-      var blend = clamp(0.34 + influence * 0.46, 0.34, 0.82);
-      strand.focus += (focus - strand.focus) * blend;
-      strand.spread = 0.14 + (1 - influence) * 0.07;
-      strand.liftV -= liftImpulse * influence;
-      strand.swayV += swayImpulse * influence;
-      strand.lift = Math.min(strand.lift, -1.5);
-      strand.hasOvershot = false;
-      strand.glow = Math.min(1, strand.glow + influence * 0.62);
-      metrics.impulses += 1;
+    function closestPointOnSegment(px, py, ax, ay, bx, by) {
+      var abx = bx - ax;
+      var aby = by - ay;
+      var den = abx * abx + aby * aby || 1;
+      var t = clamp(((px - ax) * abx + (py - ay) * aby) / den, 0, 1);
+      return { x: ax + abx * t, y: ay + aby * t, t: t };
     }
 
-    function processPendingImpulses(now) {
-      if (!pendingImpulses.length) return;
-      var waiting = [];
-      pendingImpulses.forEach(function (item) {
-        if (item.due > now) {
-          waiting.push(item);
-          return;
-        }
-        applyStrandImpulse(
-          strands[item.strandIndex],
-          item.focus,
-          item.liftImpulse,
-          item.swayImpulse,
-          item.influence
-        );
-      });
-      pendingImpulses = waiting;
-    }
-
-    function applyImpulse(x, y, vx, vy, pointerType) {
-      if (reducedMotion) return;
+    function collideSweep(ax, ay, bx, by, vx, vy, pointerType) {
       var mobile = width < 720 || pointerType === "touch";
-      var speed = Math.sqrt(vx * vx + vy * vy);
-      if (speed < (mobile ? 0.7 : 1.0)) return;
+      var radius = mobile ? 40 : 44;
+      var speed = clamp(Math.hypot(vx, vy), 0, 62);
+      if (speed < 0.22) return;
 
-      var horizontalRadius = mobile ? 82 : 118;
-      var cappedSpeed = Math.min(mobile ? 34 : 48, speed);
-      var liftImpulse = (mobile ? 3.2 : 4.4) + cappedSpeed * (mobile ? 0.075 : 0.105);
-      var swayImpulse = clamp(vx * (mobile ? 0.07 : 0.09), mobile ? -4.8 : -6.4, mobile ? 4.8 : 6.4);
+      var speedGain = 0.34 + 0.92 * (1 - Math.exp(-speed / 6.4));
+      var dirLen = Math.hypot(vx, vy) || 1;
+      var dirX = vx / dirLen;
+      var dirY = vy / dirLen;
+      var anyHit = false;
 
       strands.forEach(function (strand, strandIndex) {
-        var xDistance = Math.abs(strand.restX - x);
-        if (xDistance > horizontalRadius) return;
-        if (y < strand.top - 24 || y > strand.top + strand.length + 36) return;
+        var hitIndex = -1;
+        var hitDist = Infinity;
+        var hitQ = null;
+        for (var ni = 1; ni < strand.nodes.length; ni += 1) {
+          var p = strand.nodes[ni];
+          var q = closestPointOnSegment(p.x, p.y, ax, ay, bx, by);
+          var d = Math.hypot(p.x - q.x, p.y - q.y);
+          if (d < hitDist) {
+            hitDist = d;
+            hitIndex = ni;
+            hitQ = q;
+          }
+        }
+        if (hitIndex < 1 || hitDist >= radius) return;
+        anyHit = true;
+        metrics.impulses += 1;
 
-        var focus = clamp((y - strand.top) / Math.max(1, strand.length), 0.16, 0.90);
-        var influence = Math.pow(1 - xDistance / horizontalRadius, 1.65);
-        var distanceRank = Math.round(xDistance / Math.max(1, availableStrandSpacing()));
-        var delay = mobile ? Math.min(70, distanceRank * 18) : Math.min(96, distanceRank * 22);
-        queueStrandImpulse(
-          strandIndex,
-          focus,
-          liftImpulse,
-          swayImpulse,
-          influence,
-          delay
-        );
+        var hit = strand.nodes[hitIndex];
+        var dx = hit.x - hitQ.x;
+        var dy = hit.y - hitQ.y;
+        var dist = Math.hypot(dx, dy);
+        if (dist < 0.001) {
+          dx = -dirY;
+          dy = dirX;
+          dist = 1;
+        }
+        var nx = dx / dist;
+        var ny = dy / dist;
+        var contact = Math.pow(1 - hitDist / radius, 1.25);
+        var hitDepth = hitIndex / Math.max(1, strand.nodes.length - 1);
+        var baseKick = (4.8 + speedGain * 9.2) * contact * (0.72 + hitDepth * 0.28);
+        var normalPush = (radius - hitDist) * 0.10 * contact;
+
+        for (var offset = -2; offset <= 2; offset += 1) {
+          var idx = hitIndex + offset;
+          if (idx < 1 || idx >= strand.nodes.length) continue;
+          var local = Math.exp(-0.72 * offset * offset) * contact;
+          var node = strand.nodes[idx];
+          node.x += nx * normalPush * local;
+          node.y += ny * normalPush * local;
+        }
+
+        for (var index = 1; index < strand.nodes.length; index += 1) {
+          var relative = index - hitIndex;
+          var weight, delay;
+          if (relative < 0) {
+            weight = Math.exp(relative * 0.78) * 0.34;
+            delay = 0;
+          } else {
+            var tailSpan = Math.max(1, strand.nodes.length - 1 - hitIndex);
+            var tailT = relative / tailSpan;
+            weight = 0.92 + tailT * 0.30;
+            delay = Math.min(4, Math.round(tailT * 3));
+          }
+          var current = strand.nodes[index];
+          var strandFalloff = 0.94 + seeded(strandIndex * 13 + index) * 0.08;
+          var kick = baseKick * weight * strandFalloff;
+          queueImpulse(current, delay, dirX * kick, dirY * kick);
+        }
       });
 
-      idleFrames = 0;
-      startLoop();
+      if (anyHit) {
+        lastInteraction = performance.now();
+        quietFrames = 0;
+        startLoop();
+      }
     }
 
-    function availableStrandSpacing() {
-      if (strands.length < 2) return 24;
-      return Math.max(8, Math.abs(strands[1].restX - strands[0].restX));
+    function integrate(dtScale) {
+      var activity = 0;
+      strands.forEach(function (strand) {
+        for (var i = 1; i < strand.nodes.length; i += 1) {
+          var p = strand.nodes[i];
+          var depth = i / Math.max(1, strand.nodes.length - 1);
+          if (p.pending.length) {
+            for (var k = p.pending.length - 1; k >= 0; k -= 1) {
+              var impulse = p.pending[k];
+              if (impulse.delay > 0) {
+                impulse.delay -= 1;
+                continue;
+              }
+              p.px -= impulse.vx;
+              p.py -= impulse.vy;
+              p.pending.splice(k, 1);
+            }
+          }
+          var damping = 0.930 + depth * 0.022;
+          var ivx = (p.x - p.px) * damping;
+          var ivy = (p.y - p.py) * damping;
+          p.px = p.x;
+          p.py = p.y;
+          var gravity = 0.040 + depth * 0.011;
+          p.x += ivx;
+          p.y += ivy + gravity * dtScale * dtScale;
+          activity += Math.abs(ivx) + Math.abs(ivy) + Math.abs(p.x - p.baseX) * 0.008;
+        }
+      });
+      return activity;
     }
 
-    function deformationWeight(strand, t) {
-      var delta = t - strand.focus;
-      var sigma = Math.max(0.08, strand.spread);
-      var gaussian = Math.exp(-(delta * delta) / (2 * sigma * sigma));
-      var tail = t > strand.focus ? Math.exp(-delta / 0.40) * 0.44 : 0;
-      var anchorFade = smoothstep(0.02, 0.16, t);
-      return Math.max(gaussian, tail) * anchorFade;
+    function solveConstraints() {
+      for (var iter = 0; iter < 3; iter += 1) {
+        strands.forEach(function (strand) {
+          var nodes = strand.nodes;
+          nodes[0].x = nodes[0].baseX;
+          nodes[0].y = nodes[0].baseY;
+          for (var i = 1; i < nodes.length; i += 1) {
+            var a = nodes[i - 1];
+            var b = nodes[i];
+            var dx = b.x - a.x;
+            var dy = b.y - a.y;
+            var d = Math.hypot(dx, dy) || 1;
+            var error = (d - strand.seg) / d;
+            var compliance = 0.68;
+            if (a.fixed) {
+              b.x -= dx * error * compliance;
+              b.y -= dy * error * compliance;
+            } else {
+              var wa = 0.43;
+              var wb = 0.57;
+              a.x += dx * error * wa * compliance;
+              a.y += dy * error * wa * compliance;
+              b.x -= dx * error * wb * compliance;
+              b.y -= dy * error * wb * compliance;
+            }
+          }
+          for (var j = 1; j < nodes.length - 1; j += 1) {
+            var point = nodes[j];
+            var mx = (nodes[j - 1].x + nodes[j + 1].x) * 0.5;
+            var my = (nodes[j - 1].y + nodes[j + 1].y) * 0.5;
+            var depth = j / Math.max(1, nodes.length - 1);
+            var bend = 0.026 * (1 - depth * 0.45);
+            point.x += (mx - point.x) * bend;
+            point.y += (my - point.y) * bend;
+          }
+          nodes[0].x = nodes[0].baseX;
+          nodes[0].y = nodes[0].baseY;
+          for (var n = 1; n < nodes.length; n += 1) {
+            var depthN = n / Math.max(1, nodes.length - 1);
+            var limit = (width < 720 ? 52 : 84) + depthN * (width < 720 ? 62 : 96);
+            var liftLimit = (width < 720 ? 40 : 54) + depthN * (width < 720 ? 84 : 136);
+            nodes[n].x = clamp(nodes[n].x, nodes[n].baseX - limit, nodes[n].baseX + limit);
+            nodes[n].y = clamp(nodes[n].y, nodes[n].baseY - liftLimit, nodes[n].baseY + 36);
+          }
+        });
+      }
     }
 
-    function strandPoint(strand, restY) {
-      var t = clamp(restY / Math.max(1, strand.length), 0, 1);
-      var weight = deformationWeight(strand, t);
-      var lowerFreedom = 0.40 + t * 0.60;
+    function polylineSample(nodes, u) {
+      var lengths = [0];
+      var total = 0;
+      for (var i = 1; i < nodes.length; i += 1) {
+        total += Math.hypot(nodes[i].x - nodes[i - 1].x, nodes[i].y - nodes[i - 1].y);
+        lengths.push(total);
+      }
+      var target = u * total;
+      var idx = 1;
+      while (idx < lengths.length - 1 && lengths[idx] < target) idx += 1;
+      var a = nodes[idx - 1];
+      var b = nodes[idx];
+      var seg = Math.max(0.001, lengths[idx] - lengths[idx - 1]);
+      var t = (target - lengths[idx - 1]) / seg;
       return {
-        x: strand.restX + strand.sway * weight * lowerFreedom,
-        y: strand.top + restY + strand.lift * weight * lowerFreedom
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+        angle: Math.atan2(b.y - a.y, b.x - a.x)
       };
     }
 
-    function updateStrand(strand) {
-      var oldLift = strand.lift;
-
-      if (strand.lift < 0 || strand.liftV < 0) {
-        strand.liftV += -strand.lift * 0.0065;
-        strand.liftV *= strand.liftV < 0 ? 0.86 : 0.975;
-      } else {
-        strand.liftV += -strand.lift * 0.08;
-        strand.liftV *= 0.72;
-      }
-      strand.lift += strand.liftV;
-
-      if (!strand.hasOvershot && oldLift < 0 && strand.lift >= 0 && strand.liftV > 0) {
-        strand.hasOvershot = true;
-        strand.lift = Math.min(2.2, strand.lift);
-        strand.liftV *= 0.15;
-      }
-      if (strand.hasOvershot && Math.abs(strand.lift) < 0.12 && Math.abs(strand.liftV) < 0.06) {
-        strand.lift = 0;
-        strand.liftV = 0;
-      }
-
-      strand.swayV += -strand.sway * 0.048;
-      strand.swayV *= 0.89;
-      strand.sway += strand.swayV;
-
-      strand.lift = clamp(strand.lift, width < 720 ? -48 : -70, 2.4);
-      strand.sway = clamp(strand.sway, width < 720 ? -18 : -26, width < 720 ? 18 : 26);
-      strand.glow *= 0.948;
-    }
-
-    function update() {
-      processPendingImpulses(performance.now());
-      var moving = 0;
-      metrics.maxNodeDisplacement = 0;
-      metrics.movingNodes = 0;
-
-      strands.forEach(function (strand) {
-        updateStrand(strand);
-        var displacement = Math.sqrt(strand.lift * strand.lift + strand.sway * strand.sway);
-        if (displacement > metrics.maxNodeDisplacement) metrics.maxNodeDisplacement = displacement;
-        if (displacement > 0.08 || Math.abs(strand.liftV) > 0.035 || Math.abs(strand.swayV) > 0.035) {
-          moving += 1;
-          metrics.movingNodes += 1;
-        }
-      });
-      return moving;
-    }
-
-    function drawStrandPath(strand) {
-      var samples = 18;
+    function drawString(strand, strandIndex) {
+      if (!strand || !strand.nodes || !strand.nodes.length) return;
       ctx.save();
       ctx.beginPath();
-      var first = strandPoint(strand, 0);
-      ctx.moveTo(first.x, first.y);
-      var previous = first;
-      for (var i = 1; i <= samples; i += 1) {
-        var restY = strand.length * (i / samples);
-        var point = strandPoint(strand, restY);
-        ctx.quadraticCurveTo(previous.x, previous.y, (previous.x + point.x) * 0.5, (previous.y + point.y) * 0.5);
-        previous = point;
-      }
-      ctx.strokeStyle = strand.accent ? "rgba(150,191,169,0.055)" : "rgba(238,233,219,0.045)";
-      ctx.lineWidth = strand.accent ? 0.68 : 0.52;
+      ctx.moveTo(strand.nodes[0].x, strand.nodes[0].y);
+      for (var i = 1; i < strand.nodes.length; i += 1) ctx.lineTo(strand.nodes[i].x, strand.nodes[i].y);
+      ctx.strokeStyle = strand.accent ? "rgba(150,191,169,0.06)" : "rgba(238,233,219,0.05)";
+      ctx.lineWidth = strand.accent ? 0.70 : 0.56;
       ctx.stroke();
       ctx.restore();
-    }
 
-    function drawString(strand) {
-      drawStrandPath(strand);
-      var chars = strand.chars;
-      if (!chars || !chars.length) return;
-
-      chars.forEach(function (item, index) {
-        if (!item.visible) return;
-        var point = strandPoint(strand, item.restY);
-        var prevY = Math.max(0, item.restY - 3);
-        var nextY = Math.min(strand.length, item.restY + 3);
-        var before = strandPoint(strand, prevY);
-        var after = strandPoint(strand, nextY);
-        var rotation = clamp(-Math.atan2(after.x - before.x, after.y - before.y) * 0.34, -0.18, 0.18);
-        var depth = index / Math.max(1, chars.length - 1);
-        var alpha = Math.min(0.96, (strand.opacity + strand.glow * 0.14 - depth * 0.024) * item.alphaScale);
+      strand.chars.forEach(function (charInfo, index) {
+        if (!charInfo.visible) return;
+        var p = polylineSample(strand.nodes, charInfo.u);
+        var depth = index / Math.max(1, strand.chars.length - 1);
+        var alpha = Math.min(0.96, (strand.opacity - depth * 0.024) * charInfo.alphaScale);
         if (alpha <= 0.03) return;
-
+        var fade = charInfo.u > 0.88 ? clamp(1 - (charInfo.u - 0.88) / 0.14, 0, 1) : 1;
+        if (fade <= 0.02) return;
+        var glyph = getGlyph(charInfo.ch, charInfo.fontSize, charInfo.accent, charInfo.alphaBand);
+        var tilt = clamp(p.angle - Math.PI / 2, -0.42, 0.42) * 0.28;
         ctx.save();
-        ctx.translate(point.x, point.y);
-        ctx.rotate(rotation);
-        ctx.scale(1, item.stretchY);
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = item.fontSize + 'px "Noto Serif SC", "Songti SC", "SimSun", serif';
-        if (item.blur > 0) ctx.filter = "blur(" + item.blur.toFixed(2) + "px)";
-        if (strand.glow > 0.1) {
-          ctx.shadowColor = strand.accent ? "rgba(128,186,156,0.14)" : "rgba(233,231,223,0.10)";
-          ctx.shadowBlur = 1.4 + strand.glow * 1.8;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(tilt);
+        ctx.scale(1, charInfo.stretchY);
+        ctx.globalAlpha = fade;
+        if (charInfo.blur > 0) ctx.filter = "blur(" + charInfo.blur.toFixed(2) + "px)";
+        if (strand.accent) {
+          ctx.shadowColor = "rgba(128,186,156,0.08)";
+          ctx.shadowBlur = 1.2;
         }
-        ctx.fillStyle = strand.accent
-          ? "rgba(172,211,188," + alpha.toFixed(3) + ")"
-          : "rgba(240,235,223," + alpha.toFixed(3) + ")";
-        ctx.fillText(item.char, 0, 0);
+        ctx.drawImage(glyph.canvas, -glyph.w / 2, -glyph.h / 2, glyph.w, glyph.h);
         ctx.restore();
       });
     }
@@ -3107,28 +3153,90 @@
       strands.forEach(drawString);
     }
 
-    function frame() {
+    function frame(now) {
       raf = 0;
       if (destroyed || reducedMotion || !inViewport || !pageVisible) {
         metrics.running = false;
         return;
       }
-      var moving = update();
+      var dt = Math.min(2, Math.max(0.45, (now - lastFrame) / 16.667));
+      lastFrame = now;
+      var activity = integrate(dt);
+      solveConstraints();
+      var since = lastInteraction ? now - lastInteraction : 9999;
+      var maxDisp = 0;
+      var maxVel = 0;
+
+      if (since > 1700) {
+        var settle = clamp((since - 1700) / 1100, 0, 1);
+        var pull = 0.012 + settle * 0.055;
+        strands.forEach(function (strand) {
+          strand.nodes.forEach(function (p, index) {
+            if (index === 0) return;
+            var vx = p.x - p.px;
+            var vy = p.y - p.py;
+            p.x += (p.baseX - p.x) * pull;
+            p.y += (p.baseY - p.y) * pull;
+            p.px = p.x - vx * (0.82 - settle * 0.24);
+            p.py = p.y - vy * (0.82 - settle * 0.24);
+          });
+        });
+        solveConstraints();
+      }
+
+      strands.forEach(function (strand) {
+        strand.nodes.forEach(function (p, index) {
+          if (index === 0) return;
+          var displacement = Math.hypot(p.x - p.baseX, p.y - p.baseY);
+          var velocity = Math.hypot(p.x - p.px, p.y - p.py);
+          maxDisp = Math.max(maxDisp, displacement);
+          maxVel = Math.max(maxVel, velocity);
+        });
+      });
+      lastActivity = activity;
+      metrics.maxNodeDisplacement = maxDisp;
+      metrics.movingNodes = 0;
+      strands.forEach(function (strand) {
+        strand.nodes.forEach(function (p, index) {
+          if (index === 0) return;
+          if (Math.hypot(p.x - p.baseX, p.y - p.baseY) > 0.8 || Math.hypot(p.x - p.px, p.y - p.py) > 0.22) {
+            metrics.movingNodes += 1;
+          }
+        });
+      });
+
+      if (since > 3200 && ((maxDisp < 1.1 && maxVel < 0.38) || since > 4700)) {
+        strands.forEach(function (strand) {
+          strand.nodes.forEach(function (p, index) {
+            p.x = p.baseX;
+            p.y = p.baseY;
+            p.px = p.baseX;
+            p.py = p.baseY;
+            p.pending.length = 0;
+          });
+        });
+        draw();
+        quietFrames = 0;
+        metrics.running = false;
+        return;
+      }
+
       draw();
       metrics.running = true;
-      if (moving > 0 || pendingImpulses.length) {
-        idleFrames = 0;
+      if (activity > 0.30 || maxDisp > 0.8 || maxVel > 0.22) {
+        quietFrames = 0;
+        raf = window.requestAnimationFrame(frame);
+      } else if (quietFrames++ < 8) {
         raf = window.requestAnimationFrame(frame);
       } else {
-        idleFrames += 1;
-        if (idleFrames < 5) raf = window.requestAnimationFrame(frame);
-        else metrics.running = false;
+        metrics.running = false;
       }
     }
 
     function startLoop() {
       if (destroyed || reducedMotion || !inViewport || !pageVisible || raf) return;
       metrics.running = true;
+      lastFrame = performance.now();
       raf = window.requestAnimationFrame(frame);
     }
 
@@ -3138,37 +3246,40 @@
         var coalesced = event.getCoalescedEvents();
         if (coalesced && coalesced.length) source = coalesced[coalesced.length - 1];
       }
-      var now = performance.now();
-      if (now - lastPointer.handled < 12) return;
-
       var rect = stage.getBoundingClientRect();
       var x = source.clientX - rect.left;
       var y = source.clientY - rect.top;
-      if (!lastPointer.t) {
-        lastPointer.x = x;
-        lastPointer.y = y;
-        lastPointer.t = now;
-        lastPointer.handled = now;
+      var now = performance.now();
+      if (!pointer.t) {
+        pointer.x = x;
+        pointer.y = y;
+        pointer.t = now;
         return;
       }
-
-      var dt = Math.max(8, now - lastPointer.t);
-      var vx = (x - lastPointer.x) / dt * 16;
-      var vy = (y - lastPointer.y) / dt * 16;
-      lastPointer.x = x;
-      lastPointer.y = y;
-      lastPointer.t = now;
-      lastPointer.handled = now;
+      var prevX = pointer.x;
+      var prevY = pointer.y;
+      var dt = Math.max(7, now - pointer.t);
+      var vx = (x - prevX) / dt * 16;
+      var vy = (y - prevY) / dt * 16;
+      pointer.x = x;
+      pointer.y = y;
+      pointer.t = now;
       metrics.pointerMoves += 1;
-      applyImpulse(x, y, vx, vy, event.pointerType || "mouse");
+      collideSweep(prevX, prevY, x, y, vx, vy, event.pointerType || "mouse");
     }
 
     function clearPointer() {
-      lastPointer.t = 0;
+      pointer.t = 0;
     }
 
     function touchFallback(event) {
-      if (event.touches && event.touches[0]) eventPoint(event.touches[0]);
+      if (event.touches && event.touches[0]) {
+        eventPoint({
+          clientX: event.touches[0].clientX,
+          clientY: event.touches[0].clientY,
+          pointerType: "touch"
+        });
+      }
     }
 
     function bindEvents() {
@@ -3212,13 +3323,11 @@
     }
 
     stage.__contactCurtainKick = function (x, y, vx, vy) {
-      applyImpulse(
-        Number.isFinite(x) ? x : width * 0.52,
-        Number.isFinite(y) ? y : Math.min(height - 120, anchorY + 180),
-        Number.isFinite(vx) ? vx : 24,
-        Number.isFinite(vy) ? vy : -1,
-        "test"
-      );
+      var kickX = Number.isFinite(x) ? x : width * 0.52;
+      var kickY = Number.isFinite(y) ? y : Math.min(height - 120, anchorY + 160);
+      var vectorX = Number.isFinite(vx) ? vx : 24;
+      var vectorY = Number.isFinite(vy) ? vy : -2;
+      collideSweep(kickX - vectorX, kickY - vectorY, kickX, kickY, vectorX, vectorY, "test");
     };
 
     stage.__contactCurtainDebug = function () {
@@ -3233,7 +3342,8 @@
         inViewport: inViewport,
         running: metrics.running,
         reducedMotion: reducedMotion,
-        renderer: "canvas-curve-strand-curtain-v77"
+        renderer: "canvas-real-text-curtain-v78-v5-integrated",
+        lastActivity: Number(lastActivity.toFixed(3))
       };
     };
 

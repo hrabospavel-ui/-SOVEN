@@ -2622,16 +2622,35 @@
     }
     var raw = String(value || "").trim();
     var lines = splitHeroManifestoLines(raw);
-    title.innerHTML = lines.map(function (line) {
-      return '<span class="hero-manifesto-line">' + escapeHTML(line) + '</span>';
+    title.innerHTML = lines.map(function (line, index) {
+      var indentClass = lines.length >= 4 && index >= 2 ? " is-indent" : "";
+      return '<span class="hero-manifesto-line' + indentClass + '">' + escapeHTML(line) + '</span>';
     }).join("");
     title.setAttribute("aria-label", raw.replace(/\s*\r?\n\s*/g, " "));
+  }
+
+  function renderBrandName(value) {
+    var target = qs("#navStudioName");
+    if (!target) {
+      return;
+    }
+    var raw = String(value || "").trim();
+    var parts = raw.split(/[|｜]/).map(function (part) {
+      return part.trim();
+    }).filter(Boolean);
+    if (parts.length > 1) {
+      target.innerHTML = '<span class="brand-name-cn">' + escapeHTML(parts.shift()) + '</span>' +
+        '<span class="brand-name-divider" aria-hidden="true">｜</span>' +
+        '<span class="brand-name-en">' + escapeHTML(parts.join(" | ")) + '</span>';
+      return;
+    }
+    target.innerHTML = '<span class="brand-name-cn">' + escapeHTML(raw) + '</span>';
   }
 
   function renderSettings() {
     var settings = state.settings;
     document.title = settings.studioName + " | Independent Design Studio";
-    setText("navStudioName", settings.studioName);
+    renderBrandName(settings.studioName);
     setText("brandSeal", settings.studioSeal.slice(0, 1));
     renderHeroManifesto(settings.taglineCN);
     setText("heroTitleEN", settings.taglineEN);
@@ -3751,7 +3770,11 @@
   }
 
   function navLinkHTML(item) {
-    return '<a href="' + escapeHTML(item.href) + '" data-nav-link title="' + escapeHTML(item.labelEN) + '"><span>' + escapeHTML(item.labelEN) + ' / ' + escapeHTML(item.labelCN) + '</span></a>';
+    return '<a href="' + escapeHTML(item.href) + '" data-nav-link title="' + escapeHTML(item.labelEN) + '">' +
+      '<span class="nav-label-en">' + escapeHTML(item.labelEN) + '</span>' +
+      '<span class="nav-label-divider" aria-hidden="true">/</span>' +
+      '<span class="nav-label-cn">' + escapeHTML(item.labelCN) + '</span>' +
+      '</a>';
   }
 
   function emptyStateHTML(title, text) {

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>SOVEN / Archive Console Access</title>
+  <style>
+    :root{color-scheme:dark;--bg:#050708;--ink:#ecebe3;--muted:#8b938f;--line:rgba(255,255,255,.12);--accent:#88a895}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink)}
+    body{min-height:100svh;display:grid;place-items:center;padding:24px;font-family:Inter,system-ui,-apple-system,"Noto Sans SC",sans-serif;background:radial-gradient(circle at 50% 20%,rgba(81,111,98,.16),transparent 34%),linear-gradient(180deg,#080b0c,#040607)}
+    .card{width:min(460px,100%);padding:34px;border:1px solid var(--line);border-radius:24px;background:rgba(13,17,17,.76);box-shadow:0 28px 90px rgba(0,0,0,.35);backdrop-filter:blur(18px)}
+    .eyebrow{margin:0 0 10px;font-size:11px;letter-spacing:.16em;color:var(--accent)}
+    h1{margin:0 0 10px;font-size:28px;font-weight:600;letter-spacing:.01em}p{margin:0;color:var(--muted);line-height:1.7;font-size:14px}
+    form{margin-top:26px;display:grid;gap:14px}label{display:grid;gap:8px;font-size:12px;color:#c9cec9}input{width:100%;height:48px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:#080b0c;color:var(--ink);font:inherit;outline:none}input:focus{border-color:rgba(136,168,149,.58);box-shadow:0 0 0 3px rgba(136,168,149,.10)}
+    button{height:46px;border:0;border-radius:12px;background:#d9ded9;color:#0b100d;font-weight:700;letter-spacing:.05em;cursor:pointer}button:hover{filter:brightness(1.06)}
+    .status{min-height:24px;margin-top:12px;font-size:13px}.status.error{color:#d8998f}.status.ok{color:#9bc1a9}
+    .back{display:inline-block;margin-top:18px;color:#9da7a1;text-decoration:none;font-size:12px}.back:hover{color:#fff}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <p class="eyebrow">SOVEN / ARCHIVE CONSOLE</p>
+    <h1>后台维护入口</h1>
+    <p>输入新的维护密码。验证通过后会回到主站并自动进入案卷维护台。</p>
+    <form id="loginForm" autocomplete="off">
+      <label>维护密码
+        <input id="password" type="password" autocomplete="current-password" required autofocus>
+      </label>
+      <button type="submit">进入维护台</button>
+    </form>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+    <a class="back" href="./">← 返回 SOVEN</a>
+  </main>
+  <script>
+  (function(){
+    'use strict';
+    var EXPECTED_HASH='abfaea103bb7fa93f1711d9ede1eb34aa2d2f20b75f232a8fa926bbb8f467a39';
+    var SESSION_KEY='northernAtelier.adminSession.v1';
+    var form=document.getElementById('loginForm');
+    var input=document.getElementById('password');
+    var status=document.getElementById('status');
+    async function sha256Hex(value){
+      if(!window.crypto||!window.crypto.subtle||typeof TextEncoder==='undefined')throw new Error('browser');
+      var bytes=new TextEncoder().encode(String(value||''));
+      var digest=await window.crypto.subtle.digest('SHA-256',bytes);
+      return Array.prototype.map.call(new Uint8Array(digest),function(byte){return byte.toString(16).padStart(2,'0')}).join('');
+    }
+    form.addEventListener('submit',async function(event){
+      event.preventDefault();
+      status.className='status';status.textContent='正在验证…';
+      try{
+        var hash=await sha256Hex(input.value);
+        if(hash!==EXPECTED_HASH){status.className='status error';status.textContent='密码不正确。';input.select();return;}
+        sessionStorage.setItem(SESSION_KEY,'ok');
+        status.className='status ok';status.textContent='验证通过，正在进入维护台…';
+        window.setTimeout(function(){window.location.replace('./#atelier-console')},180);
+      }catch(error){status.className='status error';status.textContent='当前浏览器无法完成密码校验，请换用新版浏览器。';}
+    });
+  })();
+  </script>
+</body>
+</html>
